@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم مدير النظام</title>
+  <script src="https://cdn.tailwindcss.com/3.4.15"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#050811] text-slate-100 font-['Cairo'] min-h-screen flex items-center justify-center">
+  <div class="bg-[#0b1120]/75 border border-white/5 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl backdrop-blur-2xl">
+    <span class="text-4xl">👑</span>
+    <h1 class="text-xl font-black mt-4 text-cyan-400">لوحة تحكم مدير النظام</h1>
+    <p class="text-sm text-slate-400 mt-2">مرحباً بك يا مدير النظام (Super Admin). تم تسجيل دخولك وتوجيهك بنجاح!</p>
+    <button onclick="logout()" class="mt-6 w-full py-3 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/20 rounded-xl font-bold transition-all duration-300">تسجيل الخروج</button>
+  </div>
+  <script>
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>

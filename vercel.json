@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/app.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/uploads/$1"
+    },
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/super-admin",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/gallery-dashboard",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/my-vehicle",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/driver-login",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/health",
+      "dest": "src/app.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

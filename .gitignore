@@ -1,0 +1,17 @@
+# Dependency directories
+node_modules/
+
+# Compiled files
+dist/
+out/
+
+# Environment variables (Confidential)
+.env
+.env.local
+
+# Local uploads folder
+uploads/
+
+# OS files
+.DS_Store
+Thumbs.db

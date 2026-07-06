@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>بوابة المستأجرين الموحدة - دخول السائقين</title>
+  
+  <!-- Cairo & Outfit fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Outfit:wght@400;600;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS v3 via CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.15"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'Outfit', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-image: linear-gradient(to bottom, rgba(3, 5, 10, 0.88), rgba(5, 8, 17, 0.96)), url('bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .glass-input {
+      background: rgba(5, 8, 17, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-input:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.25);
+    }
+
+    /* iOS Passcode Failure Shake Animation */
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      15%, 45%, 75% { transform: translateX(-8px); }
+      30%, 60%, 90% { transform: translateX(8px); }
+    }
+    .card-shake {
+      animation: shakeError 0.45s ease-in-out;
+    }
+
+    /* Springy Exit Curve Transition */
+    @keyframes springExit {
+      0% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+      30% { transform: scale(1.03) translateY(-10px); opacity: 0.95; }
+      100% { transform: scale(0.85) translateY(120px); opacity: 0; filter: blur(25px); }
+    }
+    .card-exit {
+      animation: springExit 0.85s cubic-bezier(0.68, -0.6, 0.32, 1.6) forwards;
+    }
+
+    /* Logo floating/catch light animation */
+    @keyframes floatEmblem {
+      0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.2)); }
+      50% { transform: translateY(-6px) rotate(1deg); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.45)); }
+    }
+    .emblem-float {
+      animation: floatEmblem 4s ease-in-out infinite;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast-anim {
+      animation: fadeDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex flex-col justify-center items-center overflow-y-auto px-4 py-8 relative">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="absolute top-6 left-6 right-6 z-50 flex flex-col gap-3 max-w-[380px] mx-auto pointer-events-none"></div>
+
+  <!-- MOBILE-FIRST SMARTPHONE SHELL WRAPPER -->
+  <main id="app-shell" class="w-full max-w-[420px] min-h-screen sm:min-h-0 sm:h-[780px] bg-[#050811]/90 backdrop-blur-3xl sm:border sm:border-white/10 sm:rounded-[40px] sm:shadow-[0_45px_90px_rgba(0,0,0,0.95),0_0_0_12px_rgba(255,255,255,0.015)] flex flex-col justify-center items-center p-6 relative overflow-hidden z-10">
+    
+    <!-- Amethyst glowing energy filaments -->
+    <div class="absolute top-[-10%] right-[-10%] w-[220px] h-[220px] rounded-full bg-purple-500/10 blur-[80px] pointer-events-none z-0"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[250px] h-[250px] rounded-full bg-violet-600/10 blur-[90px] pointer-events-none z-0"></div>
+
+    <!-- Top Branding & Emblem -->
+    <div id="brand-logo" class="flex flex-col items-center text-center z-10 mb-8 transition-all duration-500">
+      <img src="logo.png" alt="Auto Emblem" class="w-20 h-20 object-contain emblem-float" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+      <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 mt-3 tracking-wide">بوابة المستأجرين</h1>
+      <p class="text-[10px] text-purple-400 font-bold tracking-wider mt-1">بوابة الدخول الفاخرة للتحكم في مركبتك</p>
+    </div>
+
+    <!-- Login Card Panel -->
+    <div id="login-card" class="bg-[#0b1224]/55 backdrop-blur-3xl border border-purple-500/15 rounded-3xl p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.05),0_0_30px_rgba(168,85,247,0.04)] w-full relative overflow-hidden transition-all duration-300 z-10">
+      
+      <h2 class="text-xs font-black text-slate-200 border-b border-white/5 pb-4 mb-6 flex items-center gap-2 justify-center">
+        <span class="text-xl">🔑</span>
+        <span>تسجيل دخول السائقين</span>
+      </h2>
+
+      <form id="loginForm" class="space-y-6">
+        
+        <!-- Email/Username -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-400 block">البريد الإلكتروني للمستأجر</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-purple-400/80">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </span>
+            <input type="email" id="emailInput" required placeholder="driver@example.com" 
+                   class="w-full h-12 pr-12 pl-4 bg-[#050811]/85 border border-white/10 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300">
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-400 block">رقم المرور السري</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-indigo-400/80">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l1.056 1.056a2.25 2.25 0 003.182 0L19.5 4.5M9 9H4.5m4.5 0v4.5m3.75 4.5l.056.056a2.25 2.25 0 003.182 0L21 13.5M12.75 18H8.25m4.5 0v-4.5" />
+              </svg>
+            </span>
+            <input type="password" id="passwordInput" required placeholder="••••••••" 
+                   class="w-full h-12 pr-12 pl-4 bg-[#050811]/85 border border-white/10 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="relative w-full rounded-xl overflow-hidden">
+          <button type="submit" id="login-submit-btn" 
+                  class="relative w-full h-12 bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-500 hover:shadow-[0_0_25px_rgba(168,85,247,0.45)] text-white text-sm font-black rounded-xl transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 z-10">
+            <span>تسجيل الدخول المستأجر 🚙</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Redirect Links -->
+    <div id="demo-notice" class="mt-8 text-center space-y-2 z-10 transition-opacity duration-300">
+      <p class="text-[10px] text-slate-500">خاص بالسائقين فقط. هل أنت صاحب معرض؟</p>
+      <a href="index.html" class="text-[10px] font-black text-cyan-400 hover:underline flex items-center justify-center gap-1">
+        <span>🏢</span> دخول أصحاب المعارض والمدراء
+      </a>
+    </div>
+
+  </main>
+
+  <script>
+    const loginCard = document.getElementById('login-card');
+    loginCard.addEventListener('animationend', (e) => {
+      if (e.animationName === 'shakeError') {
+        loginCard.classList.remove('card-shake');
+      }
+    });
+
+    function triggerAlert(title, message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let borderCol = 'border-emerald-500/30';
+      let icon = '✅';
+      if (type === 'error') {
+        borderCol = 'border-rose-500/30';
+        icon = '❌';
+      }
+
+      toast.className = `toast-anim bg-[#080d1a]/95 border ${borderCol} p-4 rounded-xl shadow-2xl backdrop-blur-xl flex gap-3 pointer-events-auto w-full`;
+      toast.innerHTML = `
+        <span class="text-xl shrink-0">${icon}</span>
+        <div class="flex flex-col">
+          <span class="text-xs font-black text-slate-100">${title}</span>
+          <span class="text-[10px] text-slate-400 mt-0.5">${message}</span>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); 
+
+        const email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        const submitBtn = document.getElementById('login-submit-btn');
+
+        console.log("محاولة تسجيل دخول سائق بـ:", email);
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>جاري التحقق...</span>
+        `;
+
+        try {
+          const res = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || 'خطأ في البريد الإلكتروني أو كلمة المرور');
+          }
+
+          // منع الإداريين والمعارض من الدخول من هنا
+          if (data.user.role !== 'TENANT') {
+            throw new Error('عذراً، هذا الحساب غير مخصص للسائقين. يرجى الدخول من بوابة الإدارة.');
+          }
+
+          // حفظ الرمز والجلسة الفعلية
+          localStorage.setItem('auth_token', data.token);
+          localStorage.setItem('auth_user', JSON.stringify(data.user));
+
+          triggerAlert('مرحباً بك', 'تم التحقق بنجاح! جاري تحميل بوابة السائق...', 'success');
+
+          setTimeout(() => {
+            document.getElementById('brand-logo').classList.add('card-exit');
+            document.getElementById('demo-notice').style.opacity = '0';
+            loginCard.classList.add('card-exit');
+          }, 150);
+
+          setTimeout(() => {
+            console.log("تم التعرف على: المستأجر. جاري التحويل...");
+            window.location.href = "my_vehicle.html"; 
+          }, 800);
+
+        } catch (err) {
+          loginCard.classList.add('card-shake');
+          triggerAlert('فشل الدخول', err.message, 'error');
+          
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>تسجيل الدخول المستأجر 🚙</span>`;
+        }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تسجيل الدخول الموحد - منصة تأجير السيارات</title>
+  
+  <!-- Cairo & Outfit fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700;800;900&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS v3 via CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.15"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'Outfit', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Body Background Styling using the Generated Cosmic-Cyber Image */
+    body {
+      background-image: linear-gradient(to bottom, rgba(3, 5, 10, 0.85), rgba(5, 8, 17, 0.95)), url('/bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* Sub-surface button micro-texture styling */
+    .button-texture {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
+      background-size: 4px 4px;
+    }
+
+    /* Premium glow backdrops and animations */
+    .glow-circle-1 {
+      filter: blur(120px);
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, transparent 70%);
+    }
+    .glow-circle-2 {
+      filter: blur(120px);
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+    }
+    
+    /* Toast slide-in animation */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast-anim {
+      animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* PREMIUM SHAKE ERROR ANIMATION (iOS Style) */
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      15%, 45%, 75% { transform: translateX(-8px); }
+      30%, 60%, 90% { transform: translateX(8px); }
+    }
+    .card-shake {
+      animation: shakeError 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    /* ELASTIC EXIT ANIMATION ON LOGIN SUCCESS */
+    @keyframes elasticExit {
+      0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+      }
+      30% {
+        transform: scale(1.02) translateY(5px);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.92) translateY(-50px);
+        filter: blur(8px);
+      }
+    }
+    .card-exit {
+      animation: elasticExit 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes logoExit {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-25px) scale(0.95);
+        filter: blur(4px);
+      }
+    }
+    .logo-exit {
+      animation: logoExit 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex justify-center items-center overflow-y-auto relative py-4 sm:py-10">
+
+  <!-- Tech Glowing Grid Filaments in Background -->
+  <div class="absolute w-[400px] h-[400px] top-[-100px] right-[-100px] glow-circle-1 pointer-events-none z-0"></div>
+  <div class="absolute w-[450px] h-[450px] bottom-[-150px] left-[-150px] glow-circle-2 pointer-events-none z-0"></div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="absolute top-6 left-6 right-6 z-50 flex flex-col gap-3 max-w-[380px] mx-auto pointer-events-none"></div>
+
+  <!-- MOBILE-FIRST SMARTPHONE SHELL WRAPPER -->
+  <main id="app-shell" class="w-full max-w-[440px] min-h-screen sm:min-h-0 sm:h-[820px] bg-[#050811]/90 backdrop-blur-3xl sm:border sm:border-white/10 sm:rounded-[40px] sm:shadow-[0_45px_90px_rgba(0,0,0,0.95),0_0_0_12px_rgba(255,255,255,0.015)] flex flex-col justify-center px-8 py-6 relative overflow-y-auto z-10 transition-all duration-500">
+    
+    <!-- Top Brand Logo (Platinium-crystal multifaceted emblem) -->
+    <div id="brand-logo" class="text-center mb-8 transition-all duration-300">
+      
+      <!-- Generated Emblem Showcase -->
+      <div class="relative w-28 h-28 mx-auto mb-4 rounded-full flex items-center justify-center p-1 bg-gradient-to-tr from-cyan-500/30 via-purple-500/20 to-transparent border border-white/10 shadow-[0_0_35px_rgba(6,182,212,0.22)] animate-pulse">
+        <img src="/logo.png" alt="Car Emblem Logo" class="w-full h-full object-cover rounded-full filter drop-shadow-[0_0_15px_rgba(6,182,212,0.45)]">
+      </div>
+      
+      <!-- Electric-cyan edge-glow styled Titles -->
+      <h1 class="text-3xl font-black bg-gradient-to-l from-cyan-300 via-slate-100 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(6,182,212,0.55)] tracking-tight">تأجير السيارات</h1>
+      <p class="text-xs text-cyan-400/80 font-semibold mt-1.5 tracking-wide">بوابة الدخول الموحدة للمعارض والسائقين</p>
+    </div>
+
+    <!-- Login Smart Glass obsidian module Panel -->
+    <div id="login-card" class="bg-[#0b1224]/55 backdrop-blur-3xl border border-cyan-500/15 rounded-3xl p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.05),0_0_30px_rgba(6,182,212,0.04)] relative overflow-hidden transition-all duration-300">
+      
+      <h2 class="text-sm font-black text-slate-200 border-b border-white/5 pb-4 mb-6 flex items-center gap-2 justify-center">
+        <!-- Gold Key Icon -->
+        <svg class="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.75 3a7.5 7.5 0 00-7.5 7.5c0 1.94.74 3.71 1.95 5.05L2.22 20.78a.75.75 0 001.06 1.06l5.05-5.05A7.46 7.46 0 0012.75 18a7.5 7.5 0 007.5-7.5C20.25 6.36 16.89 3 12.75 3zm0 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+        </svg>
+        <span>تسجيل الدخول للمنصة</span>
+      </h2>
+
+      <form id="loginForm" class="space-y-6">
+        
+        <!-- Username/Email Field (with biometric scan icon) -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-400 tracking-wide block">البريد الإلكتروني أو اسم المستخدم</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-cyan-400/80">
+              <!-- Biometric scanning outline -->
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632zM3 9.75h18M3 14.25h18" />
+              </svg>
+            </span>
+            <input type="email" id="emailInput" required placeholder="email@saas.com" 
+                   class="w-full h-12 pr-12 pl-4 bg-[#050811]/85 border border-white/10 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-300">
+          </div>
+        </div>
+
+        <!-- Password Field (with Interlocking data shards icons) -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-400 tracking-wide block">كلمة المرور</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-indigo-400/80">
+              <!-- Interlocking tech authentication shards -->
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l1.056 1.056a2.25 2.25 0 003.182 0L19.5 4.5M9 9H4.5m4.5 0v4.5m3.75 4.5l.056.056a2.25 2.25 0 003.182 0L21 13.5M12.75 18H8.25m4.5 0v-4.5" />
+              </svg>
+            </span>
+            <input type="password" id="passwordInput" required placeholder="••••••••" 
+                   class="w-full h-12 pr-12 pl-4 bg-[#050811]/85 border border-white/10 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-300">
+          </div>
+        </div>
+
+        <!-- Submit Button (Cobalt-to-cyan gradient with micro-textured surface and haptic glow) -->
+        <div class="relative w-full rounded-xl overflow-hidden">
+          <button type="submit" id="login-submit-btn" 
+                  class="relative w-full h-12 bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-500 hover:shadow-[0_0_25px_rgba(6,182,212,0.45)] text-white text-sm font-black rounded-xl transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 z-10">
+            <!-- Micro-textured overlay -->
+            <div class="absolute inset-0 button-texture opacity-40 pointer-events-none"></div>
+            <span class="relative z-20">تسجيل الدخول</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Info Notice/Shortcut -->
+    <div id="demo-notice" class="mt-8 text-center space-y-2 z-10 transition-all duration-300">
+      <p class="text-[10px] text-slate-500">حساب تجريبي للإدارة: <span class="text-cyan-400/80 font-bold">admin@saas.com / admin123</span></p>
+      <div class="pt-1">
+        <a href="driver_login.html" class="text-[10px] font-black text-purple-400 hover:underline flex items-center justify-center gap-1.5">
+          <span>🚙</span> هل أنت مستأجر/سائق؟ دخول بوابة السائقين
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC ENGINE -->
+  <script>
+    // Remove error shake class when animation finishes
+    const loginCard = document.getElementById('login-card');
+    loginCard.addEventListener('animationend', (e) => {
+      if (e.animationName === 'shakeError') {
+        loginCard.classList.remove('card-shake');
+      }
+    });
+
+    // Premium Toast Alerts
+    function triggerAlert(title, message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let borderCol = 'border-emerald-500/30';
+      let icon = '✅';
+      if (type === 'error') {
+        borderCol = 'border-rose-500/30';
+        icon = '❌';
+      } else if (type === 'warning') {
+        borderCol = 'border-amber-500/30';
+        icon = '⚠️';
+      }
+
+      toast.className = `toast-anim bg-[#080d1a]/95 border ${borderCol} p-4 rounded-xl shadow-2xl backdrop-blur-xl flex gap-3 pointer-events-auto w-full`;
+      toast.innerHTML = `
+        <span class="text-xl shrink-0">${icon}</span>
+        <div class="flex flex-col">
+          <span class="text-xs font-black text-slate-100">${title}</span>
+          <span class="text-[10px] text-slate-400 mt-0.5">${message}</span>
+        </div>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // كود معالجة تسجيل الدخول والتوجيه لملفات الـ HTML المحلية
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        // 1. منع الصفحة من عمل Refresh تلقائي
+        event.preventDefault(); 
+
+        // 2. جلب البيانات من الخانات
+        const email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        const submitBtn = document.getElementById('login-submit-btn');
+
+        console.log("محاولة تسجيل دخول بـ:", email);
+
+        // تحديث حالة الزر للتفاعل والتحميل
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>جاري التحقق...</span>
+        `;
+
+        try {
+          const res = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || 'خطأ في البريد الإلكتروني أو كلمة المرور');
+          }
+
+          // منع السائقين من الدخول من هنا
+          if (data.user.role === 'TENANT') {
+            throw new Error('عذراً، هذا الحساب غير مصرح له بالولوج لبوابة المعارض. يرجى الدخول من بوابة السائقين.');
+          }
+
+          // حفظ الرمز والجلسة الفعلية
+          localStorage.setItem('auth_token', data.token);
+          localStorage.setItem('auth_user', JSON.stringify(data.user));
+
+          triggerAlert('مرحباً بك', 'تم التحقق بنجاح! جاري تحميل بوابتك...', 'success');
+
+          // تأثير الخروج الحركي الفاخر
+          setTimeout(() => {
+            document.getElementById('brand-logo').classList.add('logo-exit');
+            document.getElementById('demo-notice').style.opacity = '0';
+            loginCard.classList.add('card-exit');
+          }, 150);
+
+          setTimeout(() => {
+            if (data.user.role === 'SUPER_ADMIN') {
+              console.log("Redirecting to super_admin.html...");
+              window.location.href = "super_admin.html";
+            } else {
+              console.log("Redirecting to gallery_dashboard.html...");
+              window.location.href = "gallery_dashboard.html";
+            }
+          }, 800);
+
+        } catch (err) {
+          loginCard.classList.add('card-shake');
+          triggerAlert('فشل الدخول', err.message, 'error');
+          resetButton();
+        }
+
+        function resetButton() {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `
+            <div class="absolute inset-0 button-texture opacity-40 pointer-events-none"></div>
+            <span class="relative z-20">تسجيل الدخول</span>
+          `;
+        }
+    });
+  </script>
+</body>
+</html>
