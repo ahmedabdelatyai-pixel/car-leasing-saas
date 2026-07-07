@@ -35,10 +35,18 @@ app.get('/driver-login', (req, res) => {
 
 // Default Health-Check Endpoint
 app.get('/health', (req, res) => {
+  const dbUrl = process.env.DATABASE_URL;
   res.json({
     status: 'UP',
     timestamp: new Date().toISOString(),
-    service: 'Car Leasing SaaS Platform API'
+    service: 'Car Leasing SaaS Platform API',
+    diagnostics: {
+      DATABASE_URL_PRESENT: !!dbUrl,
+      DATABASE_URL_LENGTH: dbUrl ? dbUrl.length : 0,
+      DATABASE_URL_PREVIEW: dbUrl ? `${dbUrl.substring(0, 15)}...` : 'NONE',
+      DIRECT_URL_PRESENT: !!process.env.DIRECT_URL,
+      DIRECT_URL_LENGTH: process.env.DIRECT_URL ? process.env.DIRECT_URL.length : 0
+    }
   });
 });
 
