@@ -173,6 +173,23 @@
   </main>
 
   <script>
+    // Safe LocalStorage Wrapper to prevent Security Exceptions
+    const safeStorage = {
+      _data: {},
+      setItem(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { this._data[key] = value; }
+      },
+      getItem(key) {
+        try { return localStorage.getItem(key); } catch (e) { return this._data[key] || null; }
+      },
+      removeItem(key) {
+        try { localStorage.removeItem(key); } catch (e) { delete this._data[key]; }
+      },
+      clear() {
+        try { localStorage.clear(); } catch (e) { this._data = {}; }
+      }
+    };
+
     const loginCard = document.getElementById('login-card');
     loginCard.addEventListener('animationend', (e) => {
       if (e.animationName === 'shakeError') {
@@ -246,8 +263,8 @@
           }
 
           // حفظ الرمز والجلسة الفعلية
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('auth_user', JSON.stringify(data.user));
+          safeStorage.setItem('auth_token', data.token);
+          safeStorage.setItem('auth_user', JSON.stringify(data.user));
 
           triggerAlert('مرحباً بك', 'تم التحقق بنجاح! جاري تحميل بوابة السائق...', 'success');
 

@@ -757,12 +757,29 @@
 
   <!-- JAVASCRIPT LOGIC ENGINE -->
   <script>
+    // Safe LocalStorage Wrapper to prevent Security Exceptions
+    const safeStorage = {
+      _data: {},
+      setItem(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { this._data[key] = value; }
+      },
+      getItem(key) {
+        try { return localStorage.getItem(key); } catch (e) { return this._data[key] || null; }
+      },
+      removeItem(key) {
+        try { localStorage.removeItem(key); } catch (e) { delete this._data[key]; }
+      },
+      clear() {
+        try { localStorage.clear(); } catch (e) { this._data = {}; }
+      }
+    };
+
     // Auth Check
-    const token = localStorage.getItem('auth_token');
-    const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+    const token = safeStorage.getItem('auth_token');
+    const user = JSON.parse(safeStorage.getItem('auth_user') || '{}');
 
     if (!token || (user.role !== 'GALLERY_OWNER' && user.role !== 'SUPER_ADMIN')) {
-      localStorage.clear();
+      safeStorage.clear();
       window.location.href = 'index.html';
     }
 
@@ -874,7 +891,7 @@
 
     // Logout
     function logoutSession() {
-      localStorage.clear();
+      safeStorage.clear();
       window.location.href = 'index.html';
     }
 
