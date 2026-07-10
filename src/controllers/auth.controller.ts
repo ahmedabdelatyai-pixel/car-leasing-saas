@@ -18,8 +18,10 @@ export class AuthController {
         return res.status(400).json({ error: 'Missing required parameters: name, ownerEmail, ownerPassword.' });
       }
 
+      const cleanEmail = ownerEmail.toLowerCase().trim();
+
       // Check if user already exists
-      const existingUser = await prisma.user.findUnique({ where: { email: ownerEmail } });
+      const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } });
       if (existingUser) {
         return res.status(409).json({ error: 'User with this email is already registered.' });
       }
@@ -35,7 +37,7 @@ export class AuthController {
         // 2. Create the Gallery Owner user
         const owner = await tx.user.create({
           data: {
-            email: ownerEmail,
+            email: cleanEmail,
             passwordHash,
             role: Role.GALLERY_OWNER,
             galleryId: gallery.id
@@ -104,8 +106,10 @@ export class AuthController {
         return res.status(400).json({ error: 'Missing required credentials (email, password, role).' });
       }
 
+      const cleanEmail = email.toLowerCase().trim();
+
       // Check if user already exists
-      const existingUser = await prisma.user.findUnique({ where: { email } });
+      const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } });
       if (existingUser) {
         return res.status(409).json({ error: 'User with this email already exists.' });
       }
@@ -126,7 +130,7 @@ export class AuthController {
         // Create the user
         const newUser = await tx.user.create({
           data: {
-            email,
+            email: cleanEmail,
             passwordHash,
             role,
             galleryId: associatedGalleryId
@@ -181,7 +185,9 @@ export class AuthController {
         return res.status(400).json({ error: 'Email and password are required.' });
       }
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const cleanEmail = email.toLowerCase().trim();
+
+      const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
       if (!user) {
         return res.status(401).json({ error: 'Invalid email or password.' });
       }
