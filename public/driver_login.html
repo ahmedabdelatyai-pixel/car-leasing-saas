@@ -113,6 +113,18 @@
       <p class="text-[10px] text-purple-400 font-bold tracking-wider mt-1">بوابة الدخول الفاخرة للتحكم في مركبتك</p>
     </div>
 
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="hidden w-full mb-6 bg-gradient-to-r from-purple-950/40 via-[#0b1224]/85 to-cyan-950/40 border border-purple-500/20 rounded-2xl p-3.5 items-center justify-between shadow-[0_15px_30px_rgba(168,85,247,0.1)] backdrop-blur-xl animate-pulse z-10">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">📲</span>
+        <div class="flex flex-col text-right">
+          <span class="text-xs font-black text-slate-100">تطبيق الهاتف جاهز للتثبيت</span>
+          <span class="text-[9px] text-slate-400 mt-0.5">تثبيت التطبيق للوصول السريع والسلس</span>
+        </div>
+      </div>
+      <button onclick="installPWA()" class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-[10px] font-black rounded-lg text-white shadow-lg transition-all active:scale-95 shrink-0">تثبيت 📥</button>
+    </div>
+
     <!-- Login Card Panel -->
     <div id="login-card" class="bg-[#0b1224]/55 backdrop-blur-3xl border border-purple-500/15 rounded-3xl p-6 sm:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.05),0_0_30px_rgba(168,85,247,0.04)] w-full relative overflow-hidden transition-all duration-300 z-10">
       
@@ -296,6 +308,64 @@
           .catch(err => console.log('Service Worker registration failed:', err));
       });
     }
+
+    // PWA Installation Banner logic
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      }
+    });
+
+    async function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User choice: ${outcome}`);
+        deferredPrompt = null;
+        hideInstallBanner();
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          triggerAlert('تثبيت على آيفون 🍏', 'اضغط على زر مشاركة 📤 في متصفح سفاري ثم اختر "إضافة إلى الشاشة الرئيسية".', 'warning');
+        } else {
+          triggerAlert('تثبيت التطبيق', 'التطبيق مثبت بالفعل أو أن متصفحك لا يدعم التثبيت المباشر.', 'warning');
+        }
+      }
+    }
+
+    function hideInstallBanner() {
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) {
+        banner.classList.remove('flex');
+        banner.classList.add('hidden');
+      }
+    }
+
+    window.addEventListener('appinstalled', (event) => {
+      deferredPrompt = null;
+      hideInstallBanner();
+      triggerAlert('تم التثبيت 🎉', 'تم إضافة التطبيق بنجاح لشاشتك الرئيسية!', 'success');
+    });
+
+    // Proactive display of banner for iOS users not running in standalone mode
+    window.addEventListener('DOMContentLoaded', () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (!isStandalone) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          const banner = document.getElementById('pwa-install-banner');
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.classList.add('flex');
+          }
+        }
+      }
+    });
   </script>
 
 </body>
