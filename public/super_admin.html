@@ -147,6 +147,10 @@
             <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الخاصة به للولوج</label>
             <input type="password" id="new-owner-password" placeholder="••••••••" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
           </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">رابط شعار المعرض (Optional Logo URL)</label>
+            <input type="text" id="new-gallery-logo" placeholder="https://example.com/logo.png" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
           <button type="submit" id="create-gallery-btn" class="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] text-white text-xs font-black rounded-lg transition-all duration-300">تسجيل وتأمين المعرض 🏢</button>
         </form>
       </div>
@@ -240,6 +244,10 @@
         <div class="space-y-1">
           <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الجديدة (اتركه فارغاً لعدم التغيير)</label>
           <input type="password" id="edit-gal-password" placeholder="••••••••" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رابط شعار المعرض (Logo URL)</label>
+          <input type="text" id="edit-gal-logo" placeholder="https://example.com/logo.png" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
         </div>
         <div class="flex gap-2 pt-2">
           <button type="submit" class="flex-1 h-10 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">حفظ 💾</button>
@@ -493,7 +501,7 @@
               <span class="text-[9px] text-slate-500 block">بريد المالك: ${ownerEmail}</span>
             </div>
             <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <button onclick="openEditGalleryModal('${gal.id}', '${gal.name}', '${ownerEmail}')" class="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded font-bold hover:bg-cyan-500/25">تعديل 📝</button>
+              <button onclick="openEditGalleryModal('${gal.id}', '${gal.name}', '${ownerEmail}', '${gal.logoUrl || ''}')" class="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded font-bold hover:bg-cyan-500/25">تعديل 📝</button>
               <button onclick="deleteGallery('${gal.id}')" class="text-[9px] text-rose-500 hover:text-rose-400 font-bold px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded">حذف 🗑️</button>
               <span class="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-1 rounded font-bold hover:bg-indigo-500/20 cursor-pointer" onclick="selectGalleryScope('${gal.id}', '${gal.name}')">معاينة 🔍</span>
             </div>
@@ -513,14 +521,16 @@
         const name = document.getElementById('new-gallery-name').value;
         const ownerEmail = document.getElementById('new-owner-email').value;
         const ownerPassword = document.getElementById('new-owner-password').value;
+        const logoUrl = document.getElementById('new-gallery-logo').value;
 
-        await apiPost('/api/v1/auth/create-gallery', { name, ownerEmail, ownerPassword });
+        await apiPost('/api/v1/auth/create-gallery', { name, ownerEmail, ownerPassword, logoUrl });
         triggerAlert('تم التسجيل!', 'تم إنشاء المعرض وحساب مالكه بنجاح.', 'success');
 
         // Clear inputs
         document.getElementById('new-gallery-name').value = '';
         document.getElementById('new-owner-email').value = '';
         document.getElementById('new-owner-password').value = '';
+        document.getElementById('new-gallery-logo').value = '';
 
         await loadAllGalleries();
       } catch (err) {
@@ -562,11 +572,12 @@
     // ====================================================
     // EDIT GALLERY MODAL ACTIONS
     // ====================================================
-    function openEditGalleryModal(id, name, email) {
+    function openEditGalleryModal(id, name, email, logoUrl) {
       document.getElementById('edit-gal-id').value = id;
       document.getElementById('edit-gal-name').value = name;
       document.getElementById('edit-gal-email').value = email;
       document.getElementById('edit-gal-password').value = '';
+      document.getElementById('edit-gal-logo').value = logoUrl || '';
       document.getElementById('edit-gallery-modal').style.display = 'flex';
     }
 
@@ -581,8 +592,9 @@
         const name = document.getElementById('edit-gal-name').value;
         const ownerEmail = document.getElementById('edit-gal-email').value;
         const ownerPassword = document.getElementById('edit-gal-password').value;
+        const logoUrl = document.getElementById('edit-gal-logo').value;
 
-        const body = { name, ownerEmail };
+        const body = { name, ownerEmail, logoUrl };
         if (ownerPassword) body.ownerPassword = ownerPassword;
 
         await apiPut(`/api/v1/galleries/${id}`, body);

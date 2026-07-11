@@ -12,7 +12,7 @@ export class AuthController {
    */
   static async createGallery(req: Request, res: Response) {
     try {
-      const { name, ownerEmail, ownerPassword } = req.body;
+      const { name, ownerEmail, ownerPassword, logoUrl } = req.body;
 
       if (!name || !ownerEmail || !ownerPassword) {
         return res.status(400).json({ error: 'Missing required parameters: name, ownerEmail, ownerPassword.' });
@@ -31,7 +31,7 @@ export class AuthController {
       const result = await prisma.$transaction(async (tx) => {
         // 1. Create the new Gallery
         const gallery = await tx.gallery.create({
-          data: { name }
+          data: { name, logoUrl: logoUrl || null }
         });
 
         // 2. Create the Gallery Owner user
@@ -51,6 +51,7 @@ export class AuthController {
         message: 'Gallery and owner account created successfully',
         galleryId: result.gallery.id,
         galleryName: result.gallery.name,
+        galleryLogo: result.gallery.logoUrl,
         owner: {
           id: result.owner.id,
           email: result.owner.email
@@ -87,7 +88,7 @@ export class AuthController {
   static async getPublicGalleries(req: Request, res: Response) {
     try {
       const galleries = await prisma.gallery.findMany({
-        select: { id: true, name: true }
+        select: { id: true, name: true, logoUrl: true }
       });
       return res.json(galleries);
     } catch (error: any) {
@@ -207,6 +208,22 @@ export class AuthController {
 
       const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 
+      // Fetch gallery name and logo if user belongs to a gallery
+      let galleryInfo = null;
+      if (user.galleryId) {
+        const gallery = await prisma.gallery.findUnique({
+          where: { id: user.galleryId },
+          select: { id: true, name: true, logoUrl: true }
+        });
+        if (gallery) {
+          galleryInfo = {
+            id: gallery.id,
+            name: gallery.name,
+            logoUrl: gallery.logoUrl
+          };
+        }
+      }
+
       return res.json({
         message: 'Login successful',
         token,
@@ -214,7 +231,8 @@ export class AuthController {
           id: user.id,
           email: user.email,
           role: user.role,
-          galleryId: user.galleryId
+          galleryId: user.galleryId,
+          gallery: galleryInfo
         }
       });
     } catch (error: any) {
@@ -303,6 +321,47 @@ export class AuthController {
       return res.json({ message: 'Gallery and all associated data deleted successfully.' });
     } catch (error: any) {
       return res.status(500).json({ error: 'Failed to delete gallery', message: error.message });
+    }
+  }
+
+  /**
+   * Update current gallery details (name, logoUrl). Restricted to GALLERY_OWNER.
+   */
+  static async updateMyGallery(req: Request, res: Response) {
+    try {
+      const galleryId = req.galleryId;
+      if (!galleryId) {
+        return res.status(400).json({ error: 'User is not associated with any gallery.' });
+      }
+
+      const { name, logoUrl } = req.body;
+
+      const gallery = await prisma.gallery.findUnique({
+        where: { id: galleryId }
+      });
+
+      if (!gallery) {
+        return res.status(404).json({ error: 'Gallery not found.' });
+      }
+
+      const updated = await prisma.gallery.update({
+        where: { id: galleryId },
+        data: {
+          name: name || gallery.name,
+          logoUrl: logoUrl !== undefined ? logoUrl : gallery.logoUrl
+        }
+      });
+
+      return res.json({
+        message: 'Gallery updated successfully.',
+        gallery: {
+          id: updated.id,
+          name: updated.name,
+          logoUrl: updated.logoUrl
+        }
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: 'Failed to update gallery details.', message: error.message });
     }
   }
 }

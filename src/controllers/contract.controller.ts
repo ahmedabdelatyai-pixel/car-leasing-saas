@@ -90,6 +90,13 @@ export class ContractController {
                 year: true,
                 color: true
               }
+            },
+            gallery: {
+              select: {
+                id: true,
+                name: true,
+                logoUrl: true
+              }
             }
           }
         });

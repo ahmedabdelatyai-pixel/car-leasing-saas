@@ -35,6 +35,13 @@ router.put(
   AuthController.updateGallery
 );
 
+router.put(
+  '/gallery/me',
+  authenticateToken,
+  authorizeRoles([Role.GALLERY_OWNER]),
+  AuthController.updateMyGallery
+);
+
 router.delete(
   '/galleries/:id',
   authenticateToken,
