@@ -910,11 +910,36 @@
     // AI Scanner Controllers
     function showAIScanner(engineCode, titleText) {
       document.getElementById('ai-scan-title').innerText = titleText;
-      document.getElementById('ai-scan-log').innerText = `${engineCode}_INITIALIZATION_OK`;
+      document.getElementById('ai-scan-engine').innerText = engineCode;
       document.getElementById('ai-scanning-overlay').classList.remove('hidden');
+      
+      const logBox = document.getElementById('ai-scan-log-matrix');
+      logBox.innerHTML = `<div>> INITIALIZING ${engineCode}...</div>`;
+      
+      const logs = [
+        `> ESTABLISHING SECURE CONNECTION...`,
+        `> ANALYZING IMAGE TENSORS...`,
+        `> COMPUTING HOLOGRAPHIC DIAGNOSTICS...`,
+        `> EXTRACTING METADATA DICTIONARIES...`,
+        `> SUCCESS: INJECTING VALUES TO FRONTEND.`
+      ];
+      
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < logs.length) {
+          logBox.innerHTML += `<div class="text-cyan-400/80 animate-pulse">> ${logs[index]}</div>`;
+          logBox.scrollTop = logBox.scrollHeight;
+          index++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 400);
+      
+      window.aiScanInterval = interval;
     }
 
     function hideAIScanner() {
+      if (window.aiScanInterval) clearInterval(window.aiScanInterval);
       document.getElementById('ai-scanning-overlay').classList.add('hidden');
     }
 
