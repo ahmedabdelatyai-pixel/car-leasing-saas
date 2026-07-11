@@ -63,7 +63,7 @@ async function handleFileUpload(file: Express.Multer.File): Promise<string> {
 
   const cleanFilename = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
 
-  if (supabaseUrl && supabaseKey) {
+  if (supabaseUrl && supabaseKey && supabaseKey !== 'anon') {
     try {
       const cleanUrl = supabaseUrl.replace(/\/$/, '');
       const uploadPath = `uploads/${cleanFilename}`;
@@ -78,24 +78,30 @@ async function handleFileUpload(file: Express.Multer.File): Promise<string> {
       });
 
       const resData = (await response.json()) as any;
-      if (!response.ok) {
-        throw new Error((resData && resData.error) || 'Supabase storage error');
+      if (response.ok) {
+        return `${cleanUrl}/storage/v1/object/public/${supabaseBucket}/${uploadPath}`;
+      } else {
+        console.warn('Supabase storage returned error, falling back:', resData);
       }
-
-      return `${cleanUrl}/storage/v1/object/public/${supabaseBucket}/${uploadPath}`;
     } catch (err: any) {
       console.error('[SUPABASE UPLOAD ERROR, FALLING BACK TO DISK]:', err);
     }
   }
 
   // Local Storage Fallback
-  const uploadDir = path.join(__dirname, '../../uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+  try {
+    const uploadDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(uploadDir, cleanFilename), file.buffer);
+    return `/uploads/${cleanFilename}`;
+  } catch (localWriteErr: any) {
+    console.warn('[LOCAL DISK WRITE FAILED (RO Filesystem), FALLING BACK TO BASE64 DATA URL]:', localWriteErr);
+    // Base64 Data URL fallback for serverless environments (Vercel)
+    const base64Content = file.buffer.toString('base64');
+    return `data:${file.mimetype};base64,${base64Content}`;
   }
-
-  fs.writeFileSync(path.join(uploadDir, cleanFilename), file.buffer);
-  return `/uploads/${cleanFilename}`;
 }
 
 router.post('/upload', upload.single('file'), async (req, res) => {
