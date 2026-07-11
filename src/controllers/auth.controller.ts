@@ -257,9 +257,10 @@ export class AuthController {
 
         // 2. Update Owner credentials if exists
         if (owner) {
-          if (ownerEmail && ownerEmail !== owner.email) {
+          const cleanOwnerEmail = ownerEmail ? ownerEmail.toLowerCase().trim() : null;
+          if (cleanOwnerEmail && cleanOwnerEmail !== owner.email) {
             const existingEmail = await tx.user.findFirst({
-              where: { email: ownerEmail, NOT: { id: owner.id } }
+              where: { email: cleanOwnerEmail, NOT: { id: owner.id } }
             });
             if (existingEmail) {
               throw new Error('User with this email is already registered.');
@@ -267,7 +268,7 @@ export class AuthController {
           }
 
           const userUpdates: any = {};
-          if (ownerEmail) userUpdates.email = ownerEmail;
+          if (cleanOwnerEmail) userUpdates.email = cleanOwnerEmail;
           if (ownerPassword) userUpdates.passwordHash = await bcrypt.hash(ownerPassword, 10);
 
           if (Object.keys(userUpdates).length > 0) {
