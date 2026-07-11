@@ -38,6 +38,7 @@ router.put(
 router.put(
   '/gallery/me',
   authenticateToken,
+  enforceTenantIsolation,
   authorizeRoles([Role.GALLERY_OWNER]),
   AuthController.updateMyGallery
 );
