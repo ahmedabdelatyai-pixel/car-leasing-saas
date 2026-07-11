@@ -8,7 +8,7 @@ export class ContractController {
    */
   static async createContract(req: Request, res: Response) {
     try {
-      const { carId, tenantId, rentalValue, startDate, endDate, allowedMonthlyKm, status, documentUrl } = req.body;
+      const { carId, tenantId, rentalValue, startDate, endDate, allowedMonthlyKm, status, documentUrl, signature } = req.body;
       const galleryId = req.galleryId;
 
       if (!galleryId) {
@@ -41,7 +41,8 @@ export class ContractController {
           endDate: new Date(endDate),
           allowedMonthlyKm: Number(allowedMonthlyKm),
           status: status || undefined,
-          documentUrl: documentUrl || null
+          documentUrl: documentUrl || null,
+          signature: signature || null
         }
       });
 
@@ -173,15 +174,26 @@ export class ContractController {
   static async updateContract(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      const user = req.user;
       const galleryId = req.galleryId;
-      const { carId, tenantId, rentalValue, startDate, endDate, allowedMonthlyKm, status, documentUrl } = req.body;
+      const { carId, tenantId, rentalValue, startDate, endDate, allowedMonthlyKm, status, documentUrl, signature } = req.body;
 
-      const contract = await prisma.contract.findFirst({
-        where: {
-          id,
-          ...(galleryId ? { galleryId } : {})
+      // If user is a tenant, restrict update access to signing their own contract
+      let contract;
+      if (user && user.role === Role.TENANT) {
+        const profile = await prisma.tenantProfile.findUnique({ where: { userId: user.userId } });
+        if (!profile) {
+          return res.status(404).json({ error: 'Tenant profile not found.' });
         }
-      });
+        contract = await prisma.contract.findFirst({ where: { id, tenantId: profile.id } });
+      } else {
+        contract = await prisma.contract.findFirst({
+          where: {
+            id,
+            ...(galleryId ? { galleryId } : {})
+          }
+        });
+      }
 
       if (!contract) {
         return res.status(404).json({ error: 'Contract not found or unauthorized.' });
@@ -197,7 +209,8 @@ export class ContractController {
           endDate: endDate ? new Date(endDate) : undefined,
           allowedMonthlyKm: allowedMonthlyKm !== undefined ? Number(allowedMonthlyKm) : undefined,
           status: status || undefined,
-          documentUrl: documentUrl !== undefined ? documentUrl : undefined
+          documentUrl: documentUrl !== undefined ? documentUrl : undefined,
+          signature: signature !== undefined ? signature : undefined
         }
       });
 

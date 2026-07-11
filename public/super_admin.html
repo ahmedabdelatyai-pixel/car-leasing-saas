@@ -720,6 +720,12 @@
             <span>القيمة: <strong class="text-emerald-400">$${con.rentalValue}</strong></span>
             <span>العداد المسموح: ${con.allowedMonthlyKm} كم</span>
           </div>
+          ${con.signature ? `
+            <div class="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
+              <span class="text-[8px] text-slate-500 font-bold">التوقيع الرقمي:</span>
+              <img src="${con.signature}" alt="توقيع المستأجر" class="max-h-[30px] object-contain filter invert drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
+            </div>
+          ` : ''}
         </div>
       `).join('');
     }

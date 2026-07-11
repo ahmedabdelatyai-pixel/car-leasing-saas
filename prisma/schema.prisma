@@ -138,6 +138,7 @@ model Contract {
   allowedMonthlyKm Int            @map("allowed_monthly_km")
   status           ContractStatus @default(PENDING)
   documentUrl      String?        @map("document_url") @db.VarChar(2048) // Added contract document URL
+  signature        String?        @db.Text
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 

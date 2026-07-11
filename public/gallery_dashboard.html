@@ -126,6 +126,20 @@
     .toast-anim {
       animation: toastSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+
+    /* Hide scrollbars */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Top Progress Glow Loader */
+    #top-glow-loader {
+      transition: width 0.35s ease-out, opacity 0.3s ease-out;
+    }
   </style>
 </head>
 <body class="text-slate-100 font-sans min-h-screen flex justify-center items-center overflow-y-auto relative py-4 sm:py-10">
@@ -136,15 +150,39 @@
   <!-- MOBILE-FIRST SMARTPHONE SHELL WRAPPER -->
   <main id="app-shell" class="w-full max-w-[440px] min-h-screen sm:min-h-0 sm:h-[820px] bg-[#050811]/90 backdrop-blur-3xl sm:border sm:border-white/10 sm:rounded-[40px] sm:shadow-[0_45px_90px_rgba(0,0,0,0.95),0_0_0_12px_rgba(255,255,255,0.015)] flex flex-col relative overflow-hidden z-10">
     
+    <!-- Top Glow Progress Loader -->
+    <div id="top-glow-loader" class="absolute top-0 left-0 w-0 h-[2.5px] bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-500 shadow-[0_0_12px_#06b6d4] transition-all duration-300 z-50 pointer-events-none opacity-0"></div>
+
     <!-- AI LASER SCANNING OVERLAY -->
-    <div id="ai-scanning-overlay" class="absolute inset-0 bg-[#050811]/95 z-50 flex flex-col items-center justify-center hidden">
+    <div id="ai-scanning-overlay" class="absolute inset-0 bg-[#050811]/98 z-50 flex flex-col items-center justify-center hidden">
       <div class="w-full h-full relative overflow-hidden flex flex-col items-center justify-center p-8 text-center">
-        <div class="laser-line"></div>
-        <div class="w-32 h-32 border border-emerald-500/20 rounded-3xl flex items-center justify-center bg-emerald-500/5 relative overflow-hidden animate-pulse">
-          <span class="text-5xl">🤖</span>
+        <!-- Holographic HUD Radar Ring -->
+        <div class="relative w-40 h-40 mb-6 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border border-cyan-500/20 animate-spin" style="animation-duration: 8s;"></div>
+          <div class="absolute inset-2 rounded-full border border-dashed border-purple-500/30 animate-spin" style="animation-duration: 4s; animation-direction: reverse;"></div>
+          <div class="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-r-2 border-cyan-500/60 rounded-tr-md"></div>
+          <div class="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-l-2 border-cyan-500/60 rounded-tl-md"></div>
+          <div class="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-r-2 border-cyan-500/60 rounded-br-md"></div>
+          <div class="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-l-2 border-cyan-500/60 rounded-bl-md"></div>
+          <div class="w-28 h-28 rounded-2xl flex items-center justify-center bg-cyan-500/5 border border-cyan-500/10 shadow-[0_0_40px_rgba(6,182,212,0.15)] relative overflow-hidden">
+            <div class="absolute left-0 w-full h-[3px] bg-cyan-500 shadow-[0_0_15px_#06b6d4] animate-bounce" style="animation-duration: 2.2s;"></div>
+            <span class="text-5xl filter drop-shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse">🤖</span>
+          </div>
         </div>
-        <span id="ai-scan-title" class="text-xs font-black text-emerald-400 mt-5 tracking-wider animate-pulse">جاري فحص المستندات بالذكاء الاصطناعي...</span>
-        <span id="ai-scan-log" class="text-[9px] text-slate-500 font-mono mt-2 block">AI_OCR_DIAGNOSTICS_ACTIVE</span>
+        
+        <span id="ai-scan-title" class="text-xs font-black text-cyan-400 mt-2 tracking-wider">جاري فحص المستندات بالذكاء الاصطناعي...</span>
+        
+        <!-- Live diagnostic code matrix -->
+        <div class="w-full max-w-[280px] mt-4 bg-black/60 border border-white/5 rounded-xl p-3 text-right font-mono text-[8px] text-slate-400 space-y-1 overflow-hidden h-[90px]">
+          <div class="flex justify-between border-b border-white/5 pb-1">
+            <span class="text-purple-400 font-bold">STATUS: ACTIVE</span>
+            <span id="ai-scan-engine" class="text-cyan-400 font-bold">AI_OCR_ENGINE_v4</span>
+          </div>
+          <div id="ai-scan-log-matrix" class="space-y-0.5 mt-1 text-[7px] text-slate-500 max-h-[60px] overflow-hidden leading-relaxed">
+            <div>> INITIALIZING OCR CORE GATE...</div>
+            <div>> LOADED MOCK NEURAL TENSOR MAPS.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -293,6 +331,16 @@
                   <input type="file" id="wizard-doc-file" accept="application/pdf,image/*" onchange="uploadWizardContractDoc()" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
                 <input type="hidden" id="wizard-doc-url">
+              </div>
+
+              <!-- Digital Signature Pad Component -->
+              <div class="space-y-1 mt-2">
+                <label class="text-[9px] text-slate-400 block font-bold">توقيع ممثل المعرض الرقمي (إصدار إلكتروني حي)</label>
+                <div class="relative bg-black/40 rounded-xl border border-white/10 overflow-hidden">
+                  <canvas id="signature-canvas-owner" width="340" height="100" class="w-full h-[100px] cursor-crosshair block bg-black/20"></canvas>
+                  <button type="button" onclick="clearOwnerSignature()" class="absolute bottom-2 left-2 px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[8px] font-black text-rose-400 border border-rose-500/20 rounded-lg transition-all">مسح التوقيع 🔄</button>
+                </div>
+                <input type="hidden" id="wizard-signature-data">
               </div>
             </div>
           </div>
@@ -486,6 +534,16 @@
       </div>
       <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col justify-end">
         <p class="text-[10px] text-slate-500 text-center my-auto">تواصل مباشرة مع المستأجرين النشطين هنا.</p>
+      </div>
+      <!-- Typing Indicator -->
+      <div id="chat-typing-indicator" class="px-4 py-1 text-[8px] text-slate-400 hidden shrink-0 text-right animate-pulse">
+        💬 جاري كتابة رد من المستأجر...
+      </div>
+      <!-- Quick replies buttons scrollbox -->
+      <div class="px-2 py-1.5 bg-black/20 border-t border-white/5 flex gap-1.5 overflow-x-auto shrink-0 scrollbar-none">
+        <button type="button" onclick="sendQuickReply('مرحباً بك، كيف يمكننا مساعدتك اليوم؟')" class="px-2.5 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-[8px] font-bold text-cyan-400 rounded-lg whitespace-nowrap transition-all shrink-0">مرحباً 👋</button>
+        <button type="button" onclick="sendQuickReply('تمت الموافقة على طلب الصيانة وتوجيهه الفني.')" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[8px] font-bold text-emerald-400 rounded-lg whitespace-nowrap transition-all shrink-0">صيانة 🛠️</button>
+        <button type="button" onclick="sendQuickReply('الرجاء سداد قيمة الإيجار المتأخرة لتجنب الغرامات.')" class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-[8px] font-bold text-rose-400 rounded-lg whitespace-nowrap transition-all shrink-0">سداد 💳</button>
       </div>
       <form onsubmit="sendChatMessage(event)" class="h-14 border-t border-white/5 bg-black/30 p-2 flex gap-2 shrink-0">
         <input type="text" id="chat-input" placeholder="اكتب رسالة..." required class="flex-1 px-3 bg-white/5 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 border border-white/10">
@@ -931,6 +989,10 @@
         nextBtn.style.display = 'block';
         nextBtn.innerHTML = 'التالي';
       }
+
+      if (activeStep === 3) {
+        setTimeout(initSignaturePad, 100);
+      }
     }
 
     function jumpToStep(step) {
@@ -996,42 +1058,79 @@
     // ====================================================
     // API CALLS & DATA RETRIEVAL
     // ====================================================
+    function startGlowLoader() {
+      const loader = document.getElementById('top-glow-loader');
+      if (!loader) return;
+      loader.style.width = '30%';
+      loader.style.opacity = '1';
+      setTimeout(() => {
+        if (loader.style.width === '30%') loader.style.width = '75%';
+      }, 150);
+    }
+    
+    function endGlowLoader() {
+      const loader = document.getElementById('top-glow-loader');
+      if (!loader) return;
+      loader.style.width = '100%';
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.width = '0%';
+        }, 300);
+      }, 150);
+    }
+
     async function apiGet(endpoint) {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const res = await fetch(endpoint, { headers });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API GET Error');
-      return data;
+      startGlowLoader();
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const res = await fetch(endpoint, { headers });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'API GET Error');
+        return data;
+      } finally {
+        endGlowLoader();
+      }
     }
 
     async function apiPost(endpoint, body) {
-      const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API POST Error');
-      return data;
+      startGlowLoader();
+      try {
+        const headers = { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'API POST Error');
+        return data;
+      } finally {
+        endGlowLoader();
+      }
     }
 
     async function apiPut(endpoint, body) {
-      const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      const res = await fetch(endpoint, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API PUT Error');
-      return data;
+      startGlowLoader();
+      try {
+        const headers = { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'API PUT Error');
+        return data;
+      } finally {
+        endGlowLoader();
+      }
     }
 
     // Populate data
@@ -1371,6 +1470,7 @@
         const startDate = document.getElementById('contract-start-date').value;
         const endDate = document.getElementById('contract-end-date').value;
         const documentUrl = document.getElementById('wizard-doc-url').value;
+        const signature = document.getElementById('wizard-signature-data').value || null;
 
         const contractRes = await apiPost('/api/v1/contracts', {
           carId: selectedCarId,
@@ -1380,7 +1480,8 @@
           startDate,
           endDate,
           status: 'ACTIVE',
-          documentUrl
+          documentUrl,
+          signature
         });
 
         const contractId = contractRes.contract.id;
@@ -1409,6 +1510,8 @@
         
         document.getElementById('wizard-doc-url').value = '';
         document.getElementById('wizard-doc-text').innerText = 'اضغط لرفع ملف العقد الموثق';
+        document.getElementById('wizard-signature-data').value = '';
+        clearOwnerSignature();
         document.getElementById('wizard-media-preview-urls').innerHTML = '';
         document.getElementById('wizard-media-text').innerText = 'اضغط لرفع صور معاينة الخدوش';
 
