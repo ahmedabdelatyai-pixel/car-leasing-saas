@@ -1166,6 +1166,9 @@
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
         });
+        if (res.status === 401 || res.status === 403) {
+          handleAuthFailure();
+        }
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -1227,11 +1230,23 @@
       }, 150);
     }
 
+    function handleAuthFailure() {
+      safeStorage.clear();
+      triggerAlert('انتهت الجلسة ⚠️', 'انتهت صلاحية الجلسة الخاصة بك. يرجى تسجيل الدخول مرة أخرى.', 'warning');
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 2000);
+      throw new Error('Session expired');
+    }
+
     async function apiGet(endpoint) {
       startGlowLoader();
       try {
         const headers = { 'Authorization': `Bearer ${token}` };
         const res = await fetch(endpoint, { headers });
+        if (res.status === 401 || res.status === 403) {
+          handleAuthFailure();
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API GET Error');
         return data;
@@ -1252,6 +1267,9 @@
           headers,
           body: JSON.stringify(body)
         });
+        if (res.status === 401 || res.status === 403) {
+          handleAuthFailure();
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API POST Error');
         return data;
@@ -1272,6 +1290,9 @@
           headers,
           body: JSON.stringify(body)
         });
+        if (res.status === 401 || res.status === 403) {
+          handleAuthFailure();
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API PUT Error');
         return data;
@@ -1441,6 +1462,9 @@
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
+      if (res.status === 401 || res.status === 403) {
+        handleAuthFailure();
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       return data.url;
@@ -1460,6 +1484,9 @@
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
+      if (res.status === 401 || res.status === 403) {
+        handleAuthFailure();
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       return data.urls;
