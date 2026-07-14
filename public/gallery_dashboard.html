@@ -1373,6 +1373,76 @@
       }
     }
 
+    // Owner Signature Canvas Logic
+    let isDrawingOwner = false;
+    let ownerCanvas, ownerCtx;
+
+    function initSignaturePad() {
+      ownerCanvas = document.getElementById('signature-canvas-owner');
+      if (!ownerCanvas) return;
+      ownerCtx = ownerCanvas.getContext('2d');
+      ownerCtx.strokeStyle = '#06b6d4'; // Cyan neon stroke
+      ownerCtx.lineWidth = 2.5;
+      ownerCtx.lineCap = 'round';
+
+      // Mouse events
+      ownerCanvas.addEventListener('mousedown', startDrawingOwner);
+      ownerCanvas.addEventListener('mousemove', drawOwner);
+      ownerCanvas.addEventListener('mouseup', stopDrawingOwner);
+      ownerCanvas.addEventListener('mouseout', stopDrawingOwner);
+
+      // Touch events (for mobile devices)
+      ownerCanvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const rect = ownerCanvas.getBoundingClientRect();
+        ownerCtx.beginPath();
+        ownerCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        isDrawingOwner = true;
+      });
+      ownerCanvas.addEventListener('touchmove', (e) => {
+        if (!isDrawingOwner) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = ownerCanvas.getBoundingClientRect();
+        ownerCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ownerCtx.stroke();
+        
+        // Save to hidden input on touchmove/touchend
+        document.getElementById('wizard-signature-data').value = ownerCanvas.toDataURL();
+      });
+      ownerCanvas.addEventListener('touchend', () => {
+        stopDrawingOwner();
+        document.getElementById('wizard-signature-data').value = ownerCanvas.toDataURL();
+      });
+    }
+
+    function startDrawingOwner(e) {
+      isDrawingOwner = true;
+      const rect = ownerCanvas.getBoundingClientRect();
+      ownerCtx.beginPath();
+      ownerCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function drawOwner(e) {
+      if (!isDrawingOwner) return;
+      const rect = ownerCanvas.getBoundingClientRect();
+      ownerCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ownerCtx.stroke();
+    }
+
+    function stopDrawingOwner() {
+      if (isDrawingOwner) {
+        isDrawingOwner = false;
+        document.getElementById('wizard-signature-data').value = ownerCanvas.toDataURL();
+      }
+    }
+
+    function clearOwnerSignature() {
+      if (!ownerCanvas) return;
+      ownerCtx.clearRect(0, 0, ownerCanvas.width, ownerCanvas.height);
+      document.getElementById('wizard-signature-data').value = '';
+    }
+
     // Gallery Branding / settings methods
     function initGalleryHeaderBranding() {
       if (user.gallery) {
