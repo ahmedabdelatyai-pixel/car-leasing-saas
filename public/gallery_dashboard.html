@@ -848,6 +848,117 @@
     </div>
   </div>
 
+  <!-- EDIT CAR MODAL -->
+  <div id="edit-car-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
+      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">🚗 تعديل بيانات السيارة</h3>
+      <form onsubmit="submitEditCar(event)" class="space-y-3">
+        <input type="hidden" id="edit-car-id">
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رقم اللوحة (غير قابل للتعديل)</label>
+          <input type="text" id="edit-car-plate" readonly disabled class="w-full h-10 px-3 rounded-lg text-xs text-slate-400 glass-input opacity-70 cursor-not-allowed">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">الموديل والنوع</label>
+          <input type="text" id="edit-car-model" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">سنة الصنع</label>
+            <input type="number" id="edit-car-year" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">اللون</label>
+            <input type="text" id="edit-car-color" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">تغيير الزيت (كم)</label>
+            <input type="number" id="edit-car-oil-interval" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">تغيير الفلتر (كم)</label>
+            <input type="number" id="edit-car-filter-interval" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">تاريخ بداية الترخيص</label>
+            <input type="date" id="edit-car-license-start" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">تاريخ نهاية الترخيص</label>
+            <input type="date" id="edit-car-license-end" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">صورة السيارة</label>
+          <div class="relative h-12 border border-dashed border-white/10 hover:border-cyan-500/30 rounded-xl bg-black/20 flex items-center justify-center cursor-pointer transition-all duration-300">
+            <span id="edit-car-photo-text" class="text-[8px] text-slate-400 font-bold">تغيير صورة السيارة (اختياري)</span>
+            <input type="file" id="edit-car-photo-file" accept="image/*" onchange="uploadEditCarPhoto()" class="absolute inset-0 opacity-0 cursor-pointer">
+          </div>
+          <input type="hidden" id="edit-car-img-url">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 h-10 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all shadow-md active:scale-95">تحديث 💾</button>
+          <button type="button" onclick="closeEditCarModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT DRIVER MODAL -->
+  <div id="edit-driver-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
+      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">👤 تعديل بيانات السائق</h3>
+      <form onsubmit="submitEditDriver(event)" class="space-y-3">
+        <input type="hidden" id="edit-driver-id">
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">الاسم الكامل</label>
+          <input type="text" id="edit-driver-name" required placeholder="علي الكابتن" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">الرقم القومي (غير قابل للتعديل)</label>
+          <input type="text" id="edit-driver-national-id" readonly disabled class="w-full h-10 px-3 rounded-lg text-xs text-slate-400 glass-input opacity-70 cursor-not-allowed">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني للولوج</label>
+          <input type="email" id="edit-driver-email" required placeholder="aly@driver" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الجديدة (اتركه فارغاً لعدم التغيير)</label>
+          <input type="password" id="edit-driver-password" placeholder="••••••••" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        </div>
+        
+        <!-- Document Uploads -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">رخصة القيادة (ملف/صورة)</label>
+            <div class="relative h-12 border border-dashed border-white/10 hover:border-indigo-500/30 rounded-xl bg-black/20 flex items-center justify-center cursor-pointer transition-all duration-300">
+              <span id="edit-drv-lic-text" class="text-[8px] text-slate-400 font-bold text-center">تحديث الرخصة</span>
+              <input type="file" id="edit-drv-lic-file" accept="image/*,application/pdf" onchange="uploadEditDriverLicense()" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
+            <input type="hidden" id="edit-drv-lic-url">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">صورة الهوية القومية</label>
+            <div class="relative h-12 border border-dashed border-white/10 hover:border-indigo-500/30 rounded-xl bg-black/20 flex items-center justify-center cursor-pointer transition-all duration-300">
+              <span id="edit-drv-national-text" class="text-[8px] text-slate-400 font-bold text-center">تحديث الهوية</span>
+              <input type="file" id="edit-drv-national-file" accept="image/*,application/pdf" onchange="uploadEditDriverNationalId()" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
+            <input type="hidden" id="edit-drv-national-url">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 h-10 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all shadow-md active:scale-95">تحديث 💾</button>
+          <button type="button" onclick="closeEditDriverModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT LOGIC ENGINE -->
   <script>
     // Safe LocalStorage Wrapper to prevent Security Exceptions
@@ -1115,6 +1226,151 @@
     function openDriverModal() { document.getElementById('driver-modal').style.display = 'flex'; }
     function closeDriverModal() { document.getElementById('driver-modal').style.display = 'none'; }
 
+    // EDIT CAR METHODS
+    function openEditCarModal(carId) {
+      const car = localCars.find(c => c.id === carId);
+      if (!car) return;
+
+      document.getElementById('edit-car-id').value = car.id;
+      document.getElementById('edit-car-plate').value = car.plateNumber;
+      document.getElementById('edit-car-model').value = car.model;
+      document.getElementById('edit-car-year').value = car.year;
+      document.getElementById('edit-car-color').value = car.color;
+      document.getElementById('edit-car-oil-interval').value = car.oilChangeInterval;
+      document.getElementById('edit-car-filter-interval').value = car.filterChangeInterval;
+      document.getElementById('edit-car-license-start').value = car.licenseStartDate ? new Date(car.licenseStartDate).toISOString().split('T')[0] : '';
+      document.getElementById('edit-car-license-end').value = car.licenseEndDate ? new Date(car.licenseEndDate).toISOString().split('T')[0] : '';
+      document.getElementById('edit-car-img-url').value = car.imageUrl || '';
+      document.getElementById('edit-car-photo-text').innerText = car.imageUrl ? '✅ تم الرفع. اضغط لتحديث الصورة' : 'تغيير صورة السيارة (اختياري)';
+
+      document.getElementById('edit-car-modal').style.display = 'flex';
+    }
+
+    function closeEditCarModal() {
+      document.getElementById('edit-car-modal').style.display = 'none';
+    }
+
+    async function uploadEditCarPhoto() {
+      const fileInput = document.getElementById('edit-car-photo-file');
+      const text = document.getElementById('edit-car-photo-text');
+      if (fileInput.files.length === 0) return;
+
+      text.innerText = '🔄 جاري الرفع...';
+      try {
+        const url = await uploadSingleFileDirectly('edit-car-photo-file');
+        document.getElementById('edit-car-img-url').value = url;
+        text.innerText = '✅ تم الرفع بنجاح';
+        triggerAlert('تم الرفع', 'تم رفع صورة السيارة بنجاح.');
+      } catch (err) {
+        text.innerText = '❌ فشل الرفع';
+        triggerAlert('خطأ بالرفع', err.message, 'error');
+      }
+    }
+
+    async function submitEditCar(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-car-id').value;
+      const model = document.getElementById('edit-car-model').value;
+      const year = Number(document.getElementById('edit-car-year').value);
+      const color = document.getElementById('edit-car-color').value;
+      const oilChangeInterval = Number(document.getElementById('edit-car-oil-interval').value);
+      const filterChangeInterval = Number(document.getElementById('edit-car-filter-interval').value);
+      const licenseStartDate = document.getElementById('edit-car-license-start').value;
+      const licenseEndDate = document.getElementById('edit-car-license-end').value;
+      const imageUrl = document.getElementById('edit-car-img-url').value || null;
+
+      try {
+        await apiPut(`/api/v1/cars/${id}`, {
+          model,
+          year,
+          color,
+          oilChangeInterval,
+          filterChangeInterval,
+          licenseStartDate,
+          licenseEndDate,
+          imageUrl
+        });
+
+        triggerAlert('تم التحديث', 'تم تحديث بيانات السيارة بنجاح.', 'success');
+        closeEditCarModal();
+        await loadGalleryData();
+      } catch (err) {
+        triggerAlert('خطأ بالتحديث', err.message, 'error');
+      }
+    }
+
+    // EDIT DRIVER METHODS
+    function openEditDriverModal(driverId) {
+      const drv = localDrivers.find(d => d.id === driverId);
+      if (!drv) return;
+
+      document.getElementById('edit-driver-id').value = drv.id;
+      document.getElementById('edit-driver-name').value = drv.fullName;
+      document.getElementById('edit-driver-national-id').value = drv.nationalId;
+      document.getElementById('edit-driver-email').value = drv.user.email;
+      document.getElementById('edit-driver-password').value = '';
+      document.getElementById('edit-drv-lic-url').value = drv.drivingLicenseUrl || '';
+      document.getElementById('edit-drv-national-url').value = drv.nationalIdUrl || '';
+      
+      document.getElementById('edit-drv-lic-text').innerText = drv.drivingLicenseUrl ? '✅ رخصة القيادة' : 'تحديث الرخصة';
+      document.getElementById('edit-drv-national-text').innerText = drv.nationalIdUrl ? '✅ الهوية القومية' : 'تحديث الهوية';
+
+      document.getElementById('edit-driver-modal').style.display = 'flex';
+    }
+
+    function closeEditDriverModal() {
+      document.getElementById('edit-driver-modal').style.display = 'none';
+    }
+
+    async function uploadEditDriverLicense() {
+      const text = document.getElementById('edit-drv-lic-text');
+      text.innerText = '🔄 جاري الرفع...';
+      try {
+        const url = await uploadSingleFileDirectly('edit-drv-lic-file');
+        document.getElementById('edit-drv-lic-url').value = url;
+        text.innerText = '✅ رخصة القيادة 🪪';
+        triggerAlert('تم الرفع', 'تم رفع ملف الرخصة بنجاح.');
+      } catch (err) {
+        text.innerText = '❌ فشل الرفع';
+      }
+    }
+
+    async function uploadEditDriverNationalId() {
+      const text = document.getElementById('edit-drv-national-text');
+      text.innerText = '🔄 جاري الرفع...';
+      try {
+        const url = await uploadSingleFileDirectly('edit-drv-national-file');
+        document.getElementById('edit-drv-national-url').value = url;
+        text.innerText = '✅ الهوية القومية 🪪';
+        triggerAlert('تم الرفع', 'تم رفع ملف الهوية بنجاح.');
+      } catch (err) {
+        text.innerText = '❌ فشل الرفع';
+      }
+    }
+
+    async function submitEditDriver(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-driver-id').value;
+      const fullName = document.getElementById('edit-driver-name').value;
+      const email = document.getElementById('edit-driver-email').value;
+      const password = document.getElementById('edit-driver-password').value || null;
+      const drivingLicenseUrl = document.getElementById('edit-drv-lic-url').value || null;
+      const nationalIdUrl = document.getElementById('edit-drv-national-url').value || null;
+
+      try {
+        const body = { fullName, email, drivingLicenseUrl, nationalIdUrl };
+        if (password) body.password = password;
+
+        await apiPut(`/api/v1/drivers/${id}`, body);
+
+        triggerAlert('تم التحديث', 'تم تحديث بيانات السائق بنجاح.', 'success');
+        closeEditDriverModal();
+        await loadGalleryData();
+      } catch (err) {
+        triggerAlert('خطأ بالتحديث', err.message, 'error');
+      }
+    }
+
     // Gallery Branding / settings methods
     function initGalleryHeaderBranding() {
       if (user.gallery) {
@@ -1350,7 +1606,10 @@
               </div>
               <div class="flex justify-between items-end text-[10px] text-slate-400 mt-1">
                 <span>الممشى: <strong class="text-cyan-400 font-bold">${car.currentOdometer.toLocaleString()} كم</strong></span>
-                <span class="text-[9px] text-slate-500 font-mono">اللوحة: ${car.plateNumber}</span>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="openEditCarModal('${car.id}')" class="text-[9px] text-cyan-400 hover:text-cyan-300 font-black bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 rounded px-1.5 py-0.5">تعديل 📝</button>
+                  <span class="text-[9px] text-slate-500 font-mono">${car.plateNumber}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1408,8 +1667,11 @@
               <span class="text-xs font-bold block text-slate-200">${drv.fullName}</span>
               <span class="text-[9px] text-slate-500 block mt-0.5">${drv.user.email}</span>
             </div>
-            <div class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded font-black text-[9px] tracking-widest shadow-[0_0_8px_rgba(124,58,237,0.15)]">
-              كود: ${securityCode}
+            <div class="flex items-center gap-2">
+              <button onclick="openEditDriverModal('${drv.id}')" class="text-[9px] text-indigo-400 hover:text-indigo-300 font-black bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded px-1.5 py-0.5">تعديل 📝</button>
+              <div class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded font-black text-[9px] tracking-widest shadow-[0_0_8px_rgba(124,58,237,0.15)]">
+                كود: ${securityCode}
+              </div>
             </div>
           </div>
         `;
