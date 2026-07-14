@@ -855,8 +855,8 @@
       <form onsubmit="submitEditCar(event)" class="space-y-3">
         <input type="hidden" id="edit-car-id">
         <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">رقم اللوحة (غير قابل للتعديل)</label>
-          <input type="text" id="edit-car-plate" readonly disabled class="w-full h-10 px-3 rounded-lg text-xs text-slate-400 glass-input opacity-70 cursor-not-allowed">
+          <label class="text-[10px] text-slate-400 block font-semibold">رقم اللوحة</label>
+          <input type="text" id="edit-car-plate" required placeholder="1212 أ ب ج" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
         </div>
         <div class="space-y-1">
           <label class="text-[10px] text-slate-400 block font-semibold">الموديل والنوع</label>
@@ -1270,6 +1270,7 @@
     async function submitEditCar(e) {
       e.preventDefault();
       const id = document.getElementById('edit-car-id').value;
+      const plateNumber = document.getElementById('edit-car-plate').value;
       const model = document.getElementById('edit-car-model').value;
       const year = Number(document.getElementById('edit-car-year').value);
       const color = document.getElementById('edit-car-color').value;
@@ -1281,6 +1282,7 @@
 
       try {
         await apiPut(`/api/v1/cars/${id}`, {
+          plateNumber,
           model,
           year,
           color,
