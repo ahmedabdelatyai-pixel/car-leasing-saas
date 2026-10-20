@@ -37,11 +37,17 @@ enum PaymentStatus {
 model Restaurant {
   id              String      @id @default(uuid()) @db.Uuid
   name            String      @default("مطعم ضجة") @db.VarChar(255)
-  tagline         String?     @default("طعم يعمل ضجة! 🔥") @db.VarChar(255)
+  tagline         String?     @default("الأكل طعمه حكاية 🔥") @db.VarChar(255)
   logoUrl         String?     @map("logo_url") @db.Text
-  phone           String?     @default("01000000000") @db.VarChar(50)
-  address         String?     @default("القاهرة - مصر") @db.VarChar(255)
+  phone           String?     @default("01210783175 - 01272022986") @db.VarChar(100)
+  whatsappNumber  String?     @default("01210783175") @map("whatsapp_number") @db.VarChar(50)
+  address         String?     @default("ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب") @db.VarChar(255)
   deliveryFee     Decimal     @default(15.00) @map("delivery_fee") @db.Decimal(10, 2)
+  minOrderAmount  Decimal     @default(0.00) @map("min_order_amount") @db.Decimal(10, 2)
+  estimatedTime   String?     @default("30 - 45 دقيقة") @map("estimated_time") @db.VarChar(50)
+  allowDelivery   Boolean     @default(true) @map("allow_delivery")
+  allowTakeaway   Boolean     @default(true) @map("allow_takeaway")
+  receiptFooter   String?     @default("شكراً لاختياركم مطعم ضجة! 🔥") @map("receipt_footer") @db.VarChar(255)
   isOpen          Boolean     @default(true) @map("is_open")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")

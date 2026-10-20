@@ -62,11 +62,17 @@
       </button>
     </div>
 
+    <!-- Closed Restaurant Alert Banner (Hidden by default) -->
+    <div id="closed-restaurant-banner" class="hidden bg-rose-500/15 border border-rose-500/30 rounded-2xl p-3.5 text-center space-y-1">
+      <span class="text-xs font-black text-rose-400 block">🔴 نعتذر، المطعم مغلق حالياً</span>
+      <p class="text-[11px] text-slate-300">سيعاود مطعم ضجة استقبال طلبات التيك واي والدليفري قريباً، نسعد بخدمتكم دائماً!</p>
+    </div>
+
     <!-- Delivery Fee & Time Info Banner -->
     <div class="bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
       <div class="flex items-center gap-2 text-slate-300">
         <span class="text-lg">⏱️</span>
-        <span>وقت التوصيل: <strong class="text-orange-400 font-bold">30 - 45 دقيقة</strong></span>
+        <span>وقت التوصيل: <strong class="text-orange-400 font-bold" id="rest-time-badge">30 - 45 دقيقة</strong></span>
       </div>
       <div class="text-slate-300">
         <span id="delivery-fee-badge">خدمة التوصيل: <strong class="text-emerald-400 font-bold" id="rest-delivery-fee">15 ج.م</strong></span>
@@ -215,10 +221,43 @@
         const data = await res.json();
         restaurantData = data;
 
-        document.getElementById('rest-name').innerHTML = `${data.name} <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>`;
+        const isOpen = data.isOpen !== false;
+        const statusBadge = isOpen 
+          ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>`
+          : `<span class="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full font-bold">مغلق حالياً 🔴</span>`;
+
+        document.getElementById('rest-name').innerHTML = `${data.name} ${statusBadge}`;
         if (data.tagline) document.getElementById('rest-tagline').innerText = data.tagline;
         if (data.deliveryFee) document.getElementById('rest-delivery-fee').innerText = `${Number(data.deliveryFee)} ج.م`;
         if (data.address) document.getElementById('rest-address').innerText = data.address;
+        if (data.estimatedTime) document.getElementById('rest-time-badge').innerText = data.estimatedTime;
+
+        // Closed Restaurant Notice
+        if (!isOpen) {
+          const banner = document.getElementById('closed-restaurant-banner');
+          if (banner) banner.classList.remove('hidden');
+        }
+
+        // Allow Delivery / Takeaway Toggles
+        const btnDelivery = document.getElementById('btn-delivery');
+        const btnTakeaway = document.getElementById('btn-takeaway');
+        if (data.allowDelivery === false && btnDelivery) {
+          btnDelivery.style.display = 'none';
+          setOrderType('TAKEAWAY');
+        }
+        if (data.allowTakeaway === false && btnTakeaway) {
+          btnTakeaway.style.display = 'none';
+          setOrderType('DELIVERY');
+        }
+
+        // WhatsApp direct link if available
+        if (data.whatsappNumber) {
+          const waLink = document.getElementById('rest-whatsapp-link');
+          if (waLink) {
+            waLink.href = `https://wa.me/2${data.whatsappNumber.replace(/[^0-9]/g, '')}`;
+            waLink.classList.remove('hidden');
+          }
+        }
 
         renderCategoriesPills();
         renderMenuCards();

@@ -165,16 +165,36 @@ export class RestaurantController {
   static async updateSettings(req: Request, res: Response) {
     try {
       const restaurant = await RestaurantController.getOrCreateRestaurant();
-      const { name, tagline, phone, address, deliveryFee, isOpen, logoUrl } = req.body;
+      const {
+        name,
+        tagline,
+        phone,
+        whatsappNumber,
+        address,
+        deliveryFee,
+        minOrderAmount,
+        estimatedTime,
+        allowDelivery,
+        allowTakeaway,
+        receiptFooter,
+        isOpen,
+        logoUrl
+      } = req.body;
 
       const updated = await prisma.restaurant.update({
         where: { id: restaurant.id },
         data: {
-          name: name || undefined,
-          tagline: tagline || undefined,
-          phone: phone || undefined,
-          address: address || undefined,
+          name: name !== undefined ? name.trim() : undefined,
+          tagline: tagline !== undefined ? tagline.trim() : undefined,
+          phone: phone !== undefined ? phone.trim() : undefined,
+          whatsappNumber: whatsappNumber !== undefined ? whatsappNumber.trim() : undefined,
+          address: address !== undefined ? address.trim() : undefined,
           deliveryFee: deliveryFee !== undefined ? Number(deliveryFee) : undefined,
+          minOrderAmount: minOrderAmount !== undefined ? Number(minOrderAmount) : undefined,
+          estimatedTime: estimatedTime !== undefined ? estimatedTime.trim() : undefined,
+          allowDelivery: allowDelivery !== undefined ? Boolean(allowDelivery) : undefined,
+          allowTakeaway: allowTakeaway !== undefined ? Boolean(allowTakeaway) : undefined,
+          receiptFooter: receiptFooter !== undefined ? receiptFooter.trim() : undefined,
           isOpen: isOpen !== undefined ? Boolean(isOpen) : undefined,
           logoUrl: logoUrl !== undefined ? logoUrl : undefined
         }

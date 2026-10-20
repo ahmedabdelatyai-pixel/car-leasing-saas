@@ -122,4 +122,43 @@ export class AuthController {
       return res.status(500).json({ error: 'Registration failed', message: err.message });
     }
   }
+
+  /**
+   * Change password for logged in admin / staff.
+   */
+  static async changePassword(req: Request, res: Response) {
+    try {
+      const { newPassword, currentPassword } = req.body;
+      const userPayload = (req as any).user;
+
+      if (!newPassword || newPassword.length < 4) {
+        return res.status(400).json({ error: 'كلمة المرور الجديدة يجب أن تكون 4 خانات على الأقل' });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userPayload.userId }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+
+      if (currentPassword) {
+        const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!isMatch) {
+          return res.status(400).json({ error: 'كلمة المرور الحالية غير صحيحة' });
+        }
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash }
+      });
+
+      return res.json({ message: 'تم تغيير كلمة المرور بنجاح 🔐' });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل تغيير كلمة المرور', message: err.message });
+    }
+  }
 }

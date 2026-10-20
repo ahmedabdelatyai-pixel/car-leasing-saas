@@ -63,6 +63,7 @@ router.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
 // ==========================================
 router.post('/auth/login', AuthController.login);
 router.post('/auth/register', AuthController.register);
+router.post('/auth/change-password', authenticateToken, AuthController.changePassword);
 
 // ==========================================
 // 3. RESTAURANT & MENU MANAGEMENT

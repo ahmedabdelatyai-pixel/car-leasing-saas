@@ -422,44 +422,206 @@
     <!-- ==============================================
          TAB 6: RESTAURANT SETTINGS PANE
          ============================================== -->
-    <section id="pane-settings" class="max-w-xl mx-auto space-y-4 hidden">
-      <div class="bg-[#111827] border border-white/5 rounded-2xl p-6 space-y-4">
-        <h2 class="text-sm font-black text-white border-b border-white/5 pb-3">⚙️ إعدادات مطعم ضجة</h2>
+    <section id="pane-settings" class="max-w-3xl mx-auto space-y-6 hidden">
+      
+      <!-- 1. CUSTOMER ORDER LINK SHARING CARD (رابط الزبون للطلب) -->
+      <div class="bg-gradient-to-r from-orange-600/20 via-amber-600/10 to-transparent border border-orange-500/30 rounded-3xl p-6 space-y-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-2xl shadow-lg glow-orange">
+            🔗
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white">رابط طلب الزبائن (أونلاين)</h3>
+            <p class="text-xs text-slate-300">انسخ هذا الرابط وشاركه مع زبائنك على الواتساب أو السوشيال ميديا للطلب المباشر</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-black/50 p-2 rounded-2xl border border-white/10">
+          <input type="text" id="share-customer-link" readonly value="" class="flex-1 bg-transparent px-3 text-xs text-orange-400 font-mono font-bold select-all focus:outline-none">
+          <div class="flex gap-2">
+            <button onclick="copyCustomerLink()" id="btn-copy-link" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0">
+              <span>📋</span>
+              <span id="copy-btn-text">نسخ الرابط</span>
+            </button>
+            <button onclick="shareOnWhatsApp()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 shrink-0">
+              <span>📲</span>
+              <span>مشاركة واتساب</span>
+            </button>
+            <a id="preview-customer-link" href="order.html" target="_blank" class="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0">
+              <span>🌐</span>
+              <span>معاينة</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 flex items-center gap-2 bg-white/5 p-2.5 rounded-xl border border-white/5">
+          <span>💡</span>
+          <span>يمكن للزبون من هذا الرابط اختيار وجباته وتحديد (تيك واي أو دليفري) وتتبع الأوردر لحظياً.</span>
+        </div>
+      </div>
+
+      <!-- 2. FULL RESTAURANT CONTROLS FORM (التحكم في كل إعدادات المطعم) -->
+      <div class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
+        <div class="border-b border-white/5 pb-4 flex justify-between items-center">
+          <div>
+            <h2 class="text-sm font-black text-white flex items-center gap-2">
+              <span>⚙️</span> التحكم الشامل في إعدادات مطعم ضجة
+            </h2>
+            <p class="text-xs text-slate-400">تحكم في حالة المطعم، خيارات التوصيل، الأسعار، الفاتورة، وكلمة المرور</p>
+          </div>
+          <span id="settings-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            مفتوح الآن 🟢
+          </span>
+        </div>
         
-        <form onsubmit="submitRestaurantSettings(event)" class="space-y-3">
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">اسم المطعم</label>
-            <input type="text" id="set-name" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
-          </div>
+        <form onsubmit="submitRestaurantSettings(event)" class="space-y-5">
+          
+          <!-- SECTION A: حالة المطعم وخيارات الطلب -->
+          <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-3">
+            <h4 class="text-xs font-black text-orange-400 flex items-center gap-1.5">
+              <span>🟢</span> حالة التشغيل وخيارات الطلب
+            </h4>
 
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">الشعار اللفظي (Slogan)</label>
-            <input type="text" id="set-tagline" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
-          </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <!-- Is Open Switch -->
+              <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                <input type="checkbox" id="set-is-open" class="w-4 h-4 rounded text-orange-600 bg-black border-white/20">
+                <div>
+                  <span class="text-xs font-bold text-white block">المطعم مفتوح</span>
+                  <span class="text-[10px] text-slate-400">استقبال الطلبات للعملاء</span>
+                </div>
+              </label>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للعملاء</label>
-              <input type="text" id="set-phone" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              <!-- Allow Delivery Switch -->
+              <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                <input type="checkbox" id="set-allow-delivery" class="w-4 h-4 rounded text-orange-600 bg-black border-white/20">
+                <div>
+                  <span class="text-xs font-bold text-white block">خدمة الدليفري 🛵</span>
+                  <span class="text-[10px] text-slate-400">توصيل للمنازل</span>
+                </div>
+              </label>
+
+              <!-- Allow Takeaway Switch -->
+              <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                <input type="checkbox" id="set-allow-takeaway" class="w-4 h-4 rounded text-orange-600 bg-black border-white/20">
+                <div>
+                  <span class="text-xs font-bold text-white block">خدمة التيك واي 🥡</span>
+                  <span class="text-[10px] text-slate-400">استلام من الفرع</span>
+                </div>
+              </label>
             </div>
+          </div>
+
+          <!-- SECTION B: معلومات المطعم الأساسية -->
+          <div class="space-y-3">
+            <h4 class="text-xs font-black text-slate-300 flex items-center gap-1.5">
+              <span>🏷️</span> هوية ومعلومات المطعم
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">اسم المطعم</label>
+                <input type="text" id="set-name" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">الشعار اللفظي (Slogan)</label>
+                <input type="text" id="set-tagline" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">أرقام الهاتف للاتصال المباشر</label>
+                <input type="text" id="set-phone" placeholder="01210783175 - 01272022986" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">رقم الواتساب للطلبات والاستفسار</label>
+                <input type="tel" id="set-whatsapp" placeholder="01210783175" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              </div>
+            </div>
+
             <div class="space-y-1">
-              <label class="text-[10px] text-slate-400 block font-semibold">تكلفة التوصيل الافتراضية (ج.م)</label>
-              <input type="number" id="set-delivery-fee" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              <label class="text-[10px] text-slate-400 block font-semibold">عنوان الفرع بالتفصيل</label>
+              <input type="text" id="set-address" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
             </div>
           </div>
 
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">عنوان الفرع الرئيسي</label>
-            <input type="text" id="set-address" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+          <!-- SECTION C: شروط التوصيل والوقت -->
+          <div class="space-y-3 pt-2">
+            <h4 class="text-xs font-black text-slate-300 flex items-center gap-1.5">
+              <span>🛵</span> شروط التوصيل والوقت
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">تكلفة التوصيل الافتراضية (ج.م)</label>
+                <input type="number" step="0.5" id="set-delivery-fee" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">الحد الأدنى لقيمة الأوردر (ج.م)</label>
+                <input type="number" id="set-min-order" value="0" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">متوسط وقت التوصيل المتوقع</label>
+                <input type="text" id="set-estimated-time" placeholder="30 - 45 دقيقة" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+              </div>
+            </div>
           </div>
 
-          <div class="pt-3">
-            <button type="submit" class="w-full h-11 bg-orange-600 hover:bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all">
-              حفظ التعديلات 💾
+          <!-- SECTION D: إعدادات الفاتورة والبون -->
+          <div class="space-y-3 pt-2">
+            <h4 class="text-xs font-black text-slate-300 flex items-center gap-1.5">
+              <span>🧾</span> إعدادات الفاتورة وبون الطباعة
+            </h4>
+
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">رسالة تذييل الفاتورة للعميل</label>
+              <input type="text" id="set-receipt-footer" placeholder="شكراً لاختياركم مطعم ضجة! 🔥 نتشرف بخدمتكم دائماً" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-white/5">
+            <button type="submit" id="btn-save-settings" class="w-full h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-xl shadow-xl glow-orange transition-all flex items-center justify-center gap-2">
+              <span>💾</span>
+              <span>حفظ كافة إعدادات المطعم</span>
             </button>
           </div>
         </form>
       </div>
+
+      <!-- 3. SECURITY & PASSWORD CHANGE (تغيير كلمة المرور) -->
+      <div class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
+        <div class="border-b border-white/5 pb-3">
+          <h3 class="text-xs font-black text-white flex items-center gap-2">
+            <span>🔐</span> تغيير كلمة مرور حساب لوحة التحكم
+          </h3>
+          <p class="text-[10px] text-slate-400">تغيير كلمة المرور الخاصة بحساب الإدارة والكاشير</p>
+        </div>
+
+        <form onsubmit="submitChangePassword(event)" class="space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الجديدة</label>
+              <input type="password" id="new-password" required placeholder="••••••••" minlength="4" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">تأكيد كلمة المرور الجديدة</label>
+              <input type="password" id="confirm-password" required placeholder="••••••••" minlength="4" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="btn-change-pass" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-xs rounded-xl transition-all">
+              تحديث كلمة المرور 🔒
+            </button>
+          </div>
+        </form>
+      </div>
+
     </section>
 
   </main>
@@ -1509,37 +1671,140 @@
     }
 
     // ==============================================
-    // 7. RESTAURANT SETTINGS
+    // 7. RESTAURANT SETTINGS & LINK SHARING
     // ==============================================
+    function getCustomerOrderUrl() {
+      const origin = window.location.origin;
+      return `${origin}/order.html`;
+    }
+
     async function loadSettingsData() {
       try {
         const res = await apiFetch('/api/v1/restaurant/menu');
+        currentRestaurant = res;
+
+        // 1. Link Sharing Card
+        const orderUrl = getCustomerOrderUrl();
+        const linkInput = document.getElementById('share-customer-link');
+        if (linkInput) linkInput.value = orderUrl;
+        const prevLink = document.getElementById('preview-customer-link');
+        if (prevLink) prevLink.href = orderUrl;
+
+        // 2. Status Badge
+        const isOpen = res.isOpen !== false;
+        const badge = document.getElementById('settings-status-badge');
+        if (badge) {
+          badge.className = isOpen 
+            ? "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+          badge.innerText = isOpen ? "مفتوح الآن 🟢" : "مغلق حالياً 🔴";
+        }
+
+        // 3. Form fields
+        document.getElementById('set-is-open').checked = isOpen;
+        document.getElementById('set-allow-delivery').checked = res.allowDelivery !== false;
+        document.getElementById('set-allow-takeaway').checked = res.allowTakeaway !== false;
+
         document.getElementById('set-name').value = res.name || 'مطعم ضجة';
-        document.getElementById('set-tagline').value = res.tagline || '';
-        document.getElementById('set-phone').value = res.phone || '';
+        document.getElementById('set-tagline').value = res.tagline || 'الأكل طعمه حكاية 🔥';
+        document.getElementById('set-phone').value = res.phone || '01210783175 - 01272022986';
+        document.getElementById('set-whatsapp').value = res.whatsappNumber || '01210783175';
         document.getElementById('set-address').value = res.address || '';
-        document.getElementById('set-delivery-fee').value = res.deliveryFee || 15;
+        document.getElementById('set-delivery-fee').value = res.deliveryFee !== undefined ? Number(res.deliveryFee) : 15;
+        document.getElementById('set-min-order').value = res.minOrderAmount !== undefined ? Number(res.minOrderAmount) : 0;
+        document.getElementById('set-estimated-time').value = res.estimatedTime || '30 - 45 دقيقة';
+        document.getElementById('set-receipt-footer').value = res.receiptFooter || 'شكراً لاختياركم مطعم ضجة! 🔥 نتشرف بخدمتكم دائماً';
+
       } catch (err) {
         console.error('Settings error:', err);
       }
     }
 
+    function copyCustomerLink() {
+      const orderUrl = getCustomerOrderUrl();
+      navigator.clipboard.writeText(orderUrl).then(() => {
+        const btnText = document.getElementById('copy-btn-text');
+        btnText.innerText = 'تم النسخ! ✅';
+        setTimeout(() => { btnText.innerText = 'نسخ الرابط'; }, 2000);
+      }).catch(() => {
+        const input = document.getElementById('share-customer-link');
+        input.select();
+        document.execCommand('copy');
+        alert('تم نسخ الرابط بنجاح! 📋');
+      });
+    }
+
+    function shareOnWhatsApp() {
+      const orderUrl = getCustomerOrderUrl();
+      const restName = currentRestaurant?.name || 'مطعم ضجة';
+      const msg = `أهلاً بيك في ${restName} 🔥🍔\nالأكل طعمه حكاية! تقدر تطلب أونلاين تيك واي ودليفري وتتابع طلبك لحظياً من الرابط ده:\n${orderUrl}`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank');
+    }
+
     async function submitRestaurantSettings(e) {
       e.preventDefault();
-      const name = document.getElementById('set-name').value.trim();
-      const tagline = document.getElementById('set-tagline').value.trim();
-      const phone = document.getElementById('set-phone').value.trim();
-      const address = document.getElementById('set-address').value.trim();
-      const deliveryFee = Number(document.getElementById('set-delivery-fee').value);
+      const btn = document.getElementById('btn-save-settings');
+      btn.disabled = true;
+      btn.innerText = 'جاري الحفظ... ⏳';
+
+      const payload = {
+        name: document.getElementById('set-name').value.trim(),
+        tagline: document.getElementById('set-tagline').value.trim(),
+        phone: document.getElementById('set-phone').value.trim(),
+        whatsappNumber: document.getElementById('set-whatsapp').value.trim(),
+        address: document.getElementById('set-address').value.trim(),
+        deliveryFee: Number(document.getElementById('set-delivery-fee').value),
+        minOrderAmount: Number(document.getElementById('set-min-order').value),
+        estimatedTime: document.getElementById('set-estimated-time').value.trim(),
+        receiptFooter: document.getElementById('set-receipt-footer').value.trim(),
+        isOpen: document.getElementById('set-is-open').checked,
+        allowDelivery: document.getElementById('set-allow-delivery').checked,
+        allowTakeaway: document.getElementById('set-allow-takeaway').checked
+      };
 
       try {
         await apiFetch('/api/v1/restaurant/settings', {
           method: 'PUT',
-          body: JSON.stringify({ name, tagline, phone, address, deliveryFee })
+          body: JSON.stringify(payload)
         });
-        alert('تم حفظ إعدادات المطعم بنجاح! 💾');
+        alert('تم حفظ وتحديث كافة إعدادات مطعم ضجة بنجاح! 💾');
+        loadSettingsData();
       } catch (err) {
-        alert(err.message);
+        alert('فشل حفظ الإعدادات: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span><span>حفظ كافة إعدادات المطعم</span>';
+      }
+    }
+
+    async function submitChangePassword(e) {
+      e.preventDefault();
+      const newPassword = document.getElementById('new-password').value.trim();
+      const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+      if (newPassword !== confirmPassword) {
+        alert('كلمتا المرور غير متطابقتين!');
+        return;
+      }
+
+      const btn = document.getElementById('btn-change-pass');
+      btn.disabled = true;
+      btn.innerText = 'جاري التحديث... ⏳';
+
+      try {
+        await apiFetch('/api/v1/auth/change-password', {
+          method: 'POST',
+          body: JSON.stringify({ newPassword })
+        });
+        alert('تم تغيير كلمة المرور بنجاح! 🔐 يمكنك استخدامها في تسجيل الدخول القادم.');
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-password').value = '';
+      } catch (err) {
+        alert('فشل تغيير كلمة المرور: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'تحديث كلمة المرور 🔒';
       }
     }
 
