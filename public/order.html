@@ -72,6 +72,20 @@
         <span id="delivery-fee-badge">خدمة التوصيل: <strong class="text-emerald-400 font-bold" id="rest-delivery-fee">15 ج.م</strong></span>
       </div>
     </div>
+
+    <!-- Contact & Address Quick Banner -->
+    <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px] text-slate-400">
+      <div class="flex items-center gap-1.5 text-slate-300">
+        <span>📍</span>
+        <span id="rest-address">ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span>📞</span>
+        <a href="tel:01210783175" class="text-orange-400 font-mono font-bold hover:underline">01210783175</a>
+        <span class="text-slate-600">|</span>
+        <a href="tel:01272022986" class="text-orange-400 font-mono font-bold hover:underline">01272022986</a>
+      </div>
+    </div>
   </section>
 
   <!-- CATEGORY PILLS BAR -->
@@ -204,6 +218,7 @@
         document.getElementById('rest-name').innerHTML = `${data.name} <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>`;
         if (data.tagline) document.getElementById('rest-tagline').innerText = data.tagline;
         if (data.deliveryFee) document.getElementById('rest-delivery-fee').innerText = `${Number(data.deliveryFee)} ج.م`;
+        if (data.address) document.getElementById('rest-address').innerText = data.address;
 
         renderCategoriesPills();
         renderMenuCards();

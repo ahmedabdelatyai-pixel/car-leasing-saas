@@ -20,18 +20,15 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Application Routing
 app.use('/api/v1', router);
 
-// Serve role-specific portal HTML pages
-app.get('/super-admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/super_admin.html'));
+// Serve Dajja Restaurant portal HTML pages
+app.get(['/dajja', '/dajja-dashboard', '/dashboard'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dajja_dashboard.html'));
 });
-app.get('/gallery-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/gallery_dashboard.html'));
+app.get('/order', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/order.html'));
 });
-app.get('/my-vehicle', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/my_vehicle.html'));
-});
-app.get('/driver-login', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/driver_login.html'));
+app.get('/restaurant-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dajja_dashboard.html'));
 });
 
 // Default Health-Check Endpoint
