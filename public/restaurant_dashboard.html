@@ -37,19 +37,85 @@
     .glow-emerald {
       box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
     }
+    /* =========================================================
+       80MM THERMAL PRINTER (ESC/POS & U-POS AI-330) STYLES
+       ========================================================= */
     @media print {
+      @page {
+        size: 80mm auto;
+        margin: 0;
+      }
+      *, *::before, *::after {
+        color: #000000 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+      }
+      html, body {
+        width: 80mm !important;
+        min-width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        font-family: 'Cairo', 'Courier New', monospace, sans-serif !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       .no-print {
         display: none !important;
       }
-      #print-receipt-modal:not(.hidden), #closure-details-modal:not(.hidden) {
-        position: fixed !important;
-        inset: 0 !important;
-        background: white !important;
-        padding: 0 !important;
+      body * {
+        visibility: hidden;
+      }
+      /* Customer Receipt Modal Printing */
+      #print-receipt-modal:not(.hidden),
+      #print-receipt-modal:not(.hidden) * {
+        visibility: visible;
+      }
+      #print-receipt-modal:not(.hidden) {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
         margin: 0 !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: flex-start !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        display: block !important;
+      }
+      #thermal-receipt-card {
+        width: 76mm !important;
+        max-width: 76mm !important;
+        margin: 0 auto !important;
+        padding: 2mm 2.5mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      /* Shift Closure Z-Report Printing */
+      #closure-details-modal:not(.hidden),
+      #closure-details-modal:not(.hidden) * {
+        visibility: visible;
+      }
+      #closure-details-modal:not(.hidden) {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        display: block !important;
+      }
+      #thermal-zreport-card {
+        width: 76mm !important;
+        max-width: 76mm !important;
+        margin: 0 auto !important;
+        padding: 2mm 2.5mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
       }
     }
   </style>
@@ -999,62 +1065,103 @@
     </div>
   </div>
 
-  <!-- PRINT RECEIPT MODAL -->
-  <div id="print-receipt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="bg-white text-black p-6 rounded-2xl w-80 space-y-3 font-mono text-xs shadow-2xl">
-      <div class="text-center border-b pb-2">
-        <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-16 h-16 rounded-full mx-auto object-cover border border-black/20 mb-1">
-        <h2 class="text-base font-black">مطعم ضجة 🔥</h2>
-        <p class="text-[10px] text-gray-700 font-bold">للمشويات والسندوتشات</p>
-        <p class="text-[9px] text-gray-500">فاتورة طلب العميل</p>
-        <p class="text-[10px]" id="receipt-date"></p>
-      </div>
-      <div class="flex justify-between font-bold">
-        <span>رقم الطلب:</span>
-        <span id="receipt-number" class="text-sm"></span>
-      </div>
-      <div class="flex justify-between">
-        <span>نوع الطلب:</span>
-        <span id="receipt-type" class="font-bold"></span>
-      </div>
-      <div class="flex justify-between">
-        <span>العميل:</span>
-        <span id="receipt-cust"></span>
-      </div>
-      <div class="flex justify-between">
-        <span>الهاتف:</span>
-        <span id="receipt-phone"></span>
-      </div>
-      <div id="receipt-addr-row" class="text-[10px] border-b pb-1">
-        <span>العنوان: </span><span id="receipt-addr"></span>
+  <!-- PRINT RECEIPT MODAL (OPTIMIZED FOR 80MM THERMAL PRINTERS e.g. U-POS AI-330) -->
+  <div id="print-receipt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div id="thermal-receipt-card" class="bg-white text-black p-4 rounded-2xl w-[78mm] max-w-full space-y-2 font-mono text-xs shadow-2xl border border-gray-200">
+      
+      <!-- LOGO & BRANDING -->
+      <div class="text-center pb-2 border-b-2 border-black border-dashed">
+        <img src="/dajja_logo_thermal.png" alt="لوجو مطعم ضجة" class="w-24 h-24 mx-auto object-contain mb-1">
+        <h1 class="text-lg font-black tracking-tight leading-tight text-black">مطعم ضـجـة 🔥</h1>
+        <p class="text-xs font-black text-black">للمشويات والسندوتشات</p>
+        <p class="text-[10px] font-bold text-gray-800">إدارة: مصطفى أبو مليكة</p>
+        <p class="text-[9px] text-gray-700 leading-tight mt-0.5">ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه</p>
+        <p class="text-[10px] font-black font-mono tracking-wider mt-0.5">📞 01210783175 - 01272022986</p>
       </div>
 
-      <!-- Items List -->
-      <div id="receipt-items" class="space-y-1 border-b py-2 text-[11px]"></div>
+      <!-- ORDER TYPE BADGE (BIG & BOLD) -->
+      <div id="receipt-type-badge" class="border-2 border-black p-1 text-center font-black text-xs my-1 bg-black text-white">
+        <!-- populated dynamically -->
+      </div>
 
-      <div class="space-y-1 pt-1 font-bold">
+      <!-- META INFO -->
+      <div class="border-b-2 border-black border-dashed pb-2 space-y-1 text-[11px] font-bold">
+        <div class="flex justify-between items-center">
+          <span>رقم الفاتورة:</span>
+          <span id="receipt-number" class="text-sm font-black font-mono"></span>
+        </div>
+        <div class="flex justify-between">
+          <span>التاريخ والوقت:</span>
+          <span id="receipt-date" class="font-mono text-[10px]"></span>
+        </div>
+        <div class="flex justify-between">
+          <span>العميل:</span>
+          <span id="receipt-cust" class="font-bold"></span>
+        </div>
+        <div class="flex justify-between">
+          <span>الهاتف:</span>
+          <span id="receipt-phone" class="font-mono"></span>
+        </div>
+        <div id="receipt-addr-row" class="text-[10px] bg-gray-100 p-1 rounded border border-black/20 mt-1">
+          <span class="font-black block text-[9px] text-black">العنوان:</span>
+          <span id="receipt-addr" class="font-bold block leading-snug"></span>
+        </div>
+        <div id="receipt-notes-row" class="text-[10px] bg-yellow-50 p-1 rounded border border-black/20 mt-1 hidden">
+          <span class="font-black block text-[9px]">ملاحظات:</span>
+          <span id="receipt-notes" class="font-bold"></span>
+        </div>
+      </div>
+
+      <!-- ITEMS TABLE HEADER -->
+      <div class="border-b-2 border-black pt-1 pb-1">
+        <div class="flex justify-between text-[11px] font-black">
+          <span class="flex-1 text-right">الصنف / الوجبة</span>
+          <span class="w-10 text-center">الكمية</span>
+          <span class="w-14 text-center">السعر</span>
+          <span class="w-14 text-left">الإجمالي</span>
+        </div>
+      </div>
+
+      <!-- ITEMS LIST -->
+      <div id="receipt-items" class="space-y-1 border-b-2 border-black border-dashed py-2 text-[11px]"></div>
+
+      <!-- FINANCIAL SUMMARY -->
+      <div class="space-y-1 pt-1 font-bold text-xs border-b-2 border-black border-dashed pb-2">
         <div class="flex justify-between">
           <span>المجموع الفرعي:</span>
-          <span id="receipt-subtotal"></span>
+          <span id="receipt-subtotal" class="font-mono"></span>
         </div>
         <div class="flex justify-between" id="receipt-fee-row">
-          <span>التوصيل:</span>
-          <span id="receipt-fee"></span>
+          <span>خدمة التوصيل:</span>
+          <span id="receipt-fee" class="font-mono"></span>
         </div>
-        <div class="flex justify-between text-sm font-black border-t pt-1">
+        <div class="flex justify-between text-sm font-black border-t-2 border-black pt-1 mt-1">
           <span>الإجمالي النهائي:</span>
-          <span id="receipt-total" class="text-base"></span>
+          <span id="receipt-total" class="text-base font-black font-mono"></span>
         </div>
       </div>
 
-      <div class="text-center text-[10px] text-gray-500 pt-1">
-        شكراً لاختياركم مطعم ضجة! 🔥
+      <!-- BARCODE & FOOTER -->
+      <div class="text-center pt-1 space-y-1">
+        <div class="flex justify-center py-0.5">
+          <svg id="receipt-barcode" class="w-44 h-9 mx-auto"></svg>
+        </div>
+        <p class="text-[11px] font-black">شكراً لاختياركم مطعم ضجة! 🔥</p>
+        <p class="text-[9px] font-bold">الأكل طعمه حكاية ❤️</p>
+        <p class="text-[8px] text-gray-600">نظام كاشير مطعم ضجة الذكي</p>
       </div>
 
+      <!-- ACTIONS (NO PRINT) -->
       <div class="flex gap-2 pt-2 border-t no-print">
-        <button onclick="window.print()" class="flex-1 h-9 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800">طباعة 🖨️</button>
-        <button onclick="closeReceiptModal()" class="flex-1 h-9 bg-gray-200 text-gray-800 text-xs font-bold rounded-lg hover:bg-gray-300">إغلاق</button>
+        <button onclick="window.print()" class="flex-1 h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95">
+          <span>🖨️</span>
+          <span>طباعة الفاتورة</span>
+        </button>
+        <button onclick="closeReceiptModal()" class="flex-1 h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
+          إغلاق
+        </button>
       </div>
+
     </div>
   </div>
 
@@ -1108,17 +1215,17 @@
     </div>
   </div>
 
-  <!-- CLOSURE DETAILS & PRINT Z-REPORT MODAL -->
-  <div id="closure-details-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="bg-white text-black max-w-sm w-full p-6 rounded-3xl space-y-4 font-mono text-xs shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
+  <!-- CLOSURE DETAILS & PRINT Z-REPORT MODAL (80MM THERMAL) -->
+  <div id="closure-details-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div id="thermal-zreport-card" class="bg-white text-black w-[78mm] max-w-full p-4 rounded-2xl space-y-3 font-mono text-xs shadow-2xl border border-gray-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
       <!-- Thermal Receipt Header -->
-      <div class="text-center border-b pb-3 space-y-1">
-        <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-16 h-16 rounded-full mx-auto object-cover border border-black/20 mb-1">
-        <h2 class="text-lg font-black tracking-tight">مطعم ضجة 🔥</h2>
-        <p class="text-[10px] font-bold text-gray-700">للمشويات والسندوتشات</p>
-        <p class="text-[11px] font-bold text-gray-700">تقرير إغلاق اليومية المالي (Z-REPORT)</p>
-        <p class="text-[10px] text-gray-500" id="z-report-date">تاريخ الإغلاق: --</p>
-        <p class="text-[9px] text-gray-500" id="z-report-duration">الوردية: --</p>
+      <div class="text-center border-b-2 border-black border-dashed pb-2 space-y-1">
+        <img src="/dajja_logo_thermal.png" alt="لوجو مطعم ضجة" class="w-20 h-20 mx-auto object-contain mb-1">
+        <h2 class="text-lg font-black tracking-tight leading-tight text-black">مطعم ضجة 🔥</h2>
+        <p class="text-[10px] font-bold text-gray-800">للمشويات والسندوتشات</p>
+        <p class="text-xs font-black text-black bg-gray-100 p-1 border border-black/20 my-1">تقرير إغلاق اليومية المالي (Z-REPORT)</p>
+        <p class="text-[10px] text-gray-700" id="z-report-date">تاريخ الإغلاق: --</p>
+        <p class="text-[9px] text-gray-600" id="z-report-duration">الوردية: --</p>
       </div>
 
       <!-- Financial Summary -->
@@ -2590,16 +2697,46 @@
     }
 
     // ==============================================
-    // 8. PRINT RECEIPT HELPER
+    // 8. PRINT RECEIPT HELPER (80MM THERMAL OPTIMIZED)
     // ==============================================
+    function renderReceiptBarcode(text, svgElement) {
+      if (!svgElement || !text) return;
+      let bars = '';
+      let x = 8;
+      // Start guard
+      bars += `<rect x="${x}" y="0" width="2.2" height="26" fill="#000" />`;
+      x += 4;
+      bars += `<rect x="${x}" y="0" width="1.5" height="26" fill="#000" />`;
+      x += 4;
+      for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        const w1 = ((c * 3) % 3) + 1.2;
+        const w2 = ((c * 7) % 2) + 1.2;
+        bars += `<rect x="${x}" y="0" width="${w1}" height="24" fill="#000" />`;
+        x += w1 + 2.4;
+        bars += `<rect x="${x}" y="0" width="${w2}" height="24" fill="#000" />`;
+        x += w2 + 2.4;
+      }
+      // End guard
+      bars += `<rect x="${x}" y="0" width="2" height="26" fill="#000" />`;
+      x += 10;
+      svgElement.setAttribute('viewBox', `0 0 ${x} 38`);
+      svgElement.innerHTML = `${bars}<text x="${x/2}" y="36" font-size="9" font-family="monospace" font-weight="900" text-anchor="middle" fill="#000">${text}</text>`;
+    }
+
     function printOrderReceipt(orderId, orderObj = null) {
       const order = orderObj || allOrders.find(o => o.id === orderId);
       if (!order) return;
 
       document.getElementById('receipt-date').innerText = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
       document.getElementById('receipt-number').innerText = order.orderNumber;
-      document.getElementById('receipt-type').innerText = order.orderType === 'DELIVERY' ? 'دليفري (توصيل)' : 'تيك واي (استلام)';
-      document.getElementById('receipt-cust').innerText = order.customerName || 'عميل';
+      
+      const typeBadge = document.getElementById('receipt-type-badge');
+      if (typeBadge) {
+        typeBadge.innerText = order.orderType === 'DELIVERY' ? '🛵 طلب دليفري (توصيل للمنزل)' : '🥡 طلب تيك واي (استلام من الفرع)';
+      }
+
+      document.getElementById('receipt-cust').innerText = order.customerName || 'عميل نقدي';
       document.getElementById('receipt-phone').innerText = order.customerPhone || '-';
 
       const addrRow = document.getElementById('receipt-addr-row');
@@ -2610,12 +2747,25 @@
         addrRow.style.display = 'none';
       }
 
-      document.getElementById('receipt-items').innerHTML = (order.items || []).map(it => `
-        <div class="flex justify-between">
-          <span>${it.quantity}x ${it.name}</span>
-          <span>${it.totalPrice} ج.م</span>
-        </div>
-      `).join('');
+      const notesRow = document.getElementById('receipt-notes-row');
+      if (order.notes && order.notes.trim()) {
+        notesRow.classList.remove('hidden');
+        document.getElementById('receipt-notes').innerText = order.notes;
+      } else {
+        notesRow.classList.add('hidden');
+      }
+
+      document.getElementById('receipt-items').innerHTML = (order.items || []).map(it => {
+        const uPrice = it.unitPrice || Math.round(it.totalPrice / it.quantity);
+        return `
+          <div class="flex justify-between items-center text-[11px] font-bold">
+            <span class="flex-1 text-right truncate pr-1">${it.name}</span>
+            <span class="w-10 text-center font-mono">${it.quantity}</span>
+            <span class="w-14 text-center font-mono">${uPrice}</span>
+            <span class="w-14 text-left font-mono font-black">${it.totalPrice}</span>
+          </div>
+        `;
+      }).join('');
 
       document.getElementById('receipt-subtotal').innerText = `${order.subtotal} ج.م`;
       const feeRow = document.getElementById('receipt-fee-row');
@@ -2627,6 +2777,9 @@
       }
 
       document.getElementById('receipt-total').innerText = `${order.totalAmount} ج.م`;
+
+      // Render barcode
+      renderReceiptBarcode(order.orderNumber, document.getElementById('receipt-barcode'));
 
       document.getElementById('print-receipt-modal').classList.remove('hidden');
       document.getElementById('print-receipt-modal').classList.add('flex');
