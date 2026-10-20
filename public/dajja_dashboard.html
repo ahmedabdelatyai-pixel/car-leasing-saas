@@ -1152,14 +1152,23 @@
       </div>
 
       <!-- ACTIONS (NO PRINT) -->
-      <div class="flex gap-2 pt-2 border-t no-print">
-        <button onclick="window.print()" class="flex-1 h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95">
-          <span>🖨️</span>
-          <span>طباعة الفاتورة</span>
-        </button>
-        <button onclick="closeReceiptModal()" class="flex-1 h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
-          إغلاق
-        </button>
+      <div class="space-y-2 pt-2 border-t no-print">
+        <div class="flex items-center justify-between px-1">
+          <label class="flex items-center gap-1.5 text-[11px] text-gray-800 font-bold cursor-pointer select-none">
+            <input type="checkbox" id="receipt-show-logo" checked class="w-4 h-4 accent-black rounded">
+            <span>طباعة اللوجو في الفاتورة</span>
+          </label>
+          <span class="text-[10px] text-gray-500 font-mono">طابعة 80mm</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="executeThermalReceiptPrint()" class="flex-1 h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95">
+            <span>🖨️</span>
+            <span>طباعة الفاتورة</span>
+          </button>
+          <button onclick="closeReceiptModal()" class="flex-1 h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
+            إغلاق
+          </button>
+        </div>
       </div>
 
     </div>
@@ -1274,7 +1283,7 @@
 
       <!-- Actions (No Print) -->
       <div class="flex gap-2 pt-2 border-t no-print">
-        <button onclick="window.print()" class="flex-1 h-9 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
+        <button onclick="executeZReportThermalPrint()" class="flex-1 h-9 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95">
           <span>🖨️</span>
           <span>طباعة بون Z-Report</span>
         </button>
@@ -2355,12 +2364,14 @@
       }
     }
 
+    let activeClosureObj = null;
+
     async function viewClosureDetails(closureId, triggerPrint = false) {
       try {
         const closure = await apiFetch(`/api/v1/reports/closures/${closureId}`);
         renderClosureDetails(closure);
         if (triggerPrint) {
-          setTimeout(() => window.print(), 300);
+          setTimeout(() => executeZReportThermalPrint(), 350);
         }
       } catch (err) {
         alert('فشل جلب تفاصيل إغلاق اليوم: ' + err.message);
@@ -2368,6 +2379,7 @@
     }
 
     function renderClosureDetails(c) {
+      activeClosureObj = c;
       document.getElementById('z-report-date').innerText = `تاريخ الإغلاق: ${new Date(c.closureDate).toLocaleDateString('ar-EG')} - ${new Date(c.closedAt).toLocaleTimeString('ar-EG')}`;
       document.getElementById('z-report-duration').innerText = `الوردية: من ${new Date(c.openedAt).toLocaleTimeString('ar-EG')} إلى ${new Date(c.closedAt).toLocaleTimeString('ar-EG')}`;
       document.getElementById('z-report-total').innerText = `${c.totalSales} ج.م`;
@@ -2724,9 +2736,12 @@
       svgElement.innerHTML = `${bars}<text x="${x/2}" y="36" font-size="9" font-family="monospace" font-weight="900" text-anchor="middle" fill="#000">${text}</text>`;
     }
 
+    let activeReceiptOrder = null;
+
     function printOrderReceipt(orderId, orderObj = null) {
       const order = orderObj || allOrders.find(o => o.id === orderId);
       if (!order) return;
+      activeReceiptOrder = order;
 
       document.getElementById('receipt-date').innerText = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
       document.getElementById('receipt-number').innerText = order.orderNumber;
@@ -2783,6 +2798,337 @@
 
       document.getElementById('print-receipt-modal').classList.remove('hidden');
       document.getElementById('print-receipt-modal').classList.add('flex');
+    }
+
+    // ------------------------------------------------------------------
+    // ISOLATED THERMAL PRINT ENGINE (FOR 80MM PRINTERS e.g. U-POS AI-330)
+    // ------------------------------------------------------------------
+    function printThroughIsolatedIframe(htmlContent) {
+      let printFrame = document.getElementById('thermal-print-frame');
+      if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'thermal-print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        printFrame.style.visibility = 'hidden';
+        document.body.appendChild(printFrame);
+      }
+
+      const frameDoc = printFrame.contentWindow.document;
+      frameDoc.open();
+      frameDoc.write(htmlContent);
+      frameDoc.close();
+
+      setTimeout(() => {
+        try {
+          printFrame.contentWindow.focus();
+          printFrame.contentWindow.print();
+        } catch (err) {
+          console.error('Iframe print error, fallback to window.print():', err);
+          window.print();
+        }
+      }, 350);
+    }
+
+    function executeThermalReceiptPrint() {
+      if (!activeReceiptOrder) {
+        window.print();
+        return;
+      }
+      const order = activeReceiptOrder;
+      const showLogo = document.getElementById('receipt-show-logo')?.checked !== false;
+      const orderDate = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
+      const isDelivery = order.orderType === 'DELIVERY';
+
+      const itemsRows = (order.items || []).map(it => {
+        const uPrice = it.unitPrice || Math.round(it.totalPrice / it.quantity);
+        return `
+          <tr>
+            <td style="text-align: right; font-weight: 700; padding: 2.5px 0;">${it.name}</td>
+            <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${it.quantity}</td>
+            <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${uPrice}</td>
+            <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2.5px 0;">${it.totalPrice}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const logoSection = showLogo ? `
+        <div style="text-align: center; margin-bottom: 2px;">
+          <img src="/dajja_logo_thermal.png" style="width: 44mm; height: 44mm; object-fit: contain; margin: 0 auto; display: block;" />
+        </div>
+      ` : '';
+
+      const notesSection = (order.notes && order.notes.trim()) ? `
+        <div style="border: 1px dashed #000; padding: 3px 4px; margin: 4px 0; font-size: 10px; background: #fff;">
+          <strong>ملاحظات العميل:</strong> ${order.notes}
+        </div>
+      ` : '';
+
+      const addressSection = isDelivery && order.deliveryAddress ? `
+        <div style="border: 1px solid #000; padding: 3px 4px; margin: 4px 0; font-size: 10.5px; background: #fff;">
+          <strong>عنوان التوصيل:</strong> ${order.deliveryAddress}
+        </div>
+      ` : '';
+
+      const deliveryFeeRow = isDelivery ? `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+          <span>خدمة التوصيل:</span>
+          <span style="font-family: monospace; font-weight: bold;">${order.deliveryFee || 0} ج.م</span>
+        </div>
+      ` : '';
+
+      // Barcode SVG
+      let barcodeSvg = '';
+      const bcEl = document.getElementById('receipt-barcode');
+      if (bcEl) {
+        barcodeSvg = bcEl.outerHTML;
+      }
+
+      const receiptDoc = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          <title>فاتورة ${order.orderNumber}</title>
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 0mm;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+              color: #000000 !important;
+              background: transparent !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              width: 72mm;
+              max-width: 72mm;
+              margin: 0 auto;
+              padding: 2mm 1mm 4mm 1mm;
+              font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+              font-size: 11px;
+              line-height: 1.25;
+              color: #000000;
+              background: #ffffff !important;
+            }
+            .dashed { border-bottom: 1.5px dashed #000; margin: 4px 0; }
+            .solid { border-bottom: 2px solid #000; margin: 4px 0; }
+            .type-banner {
+              border: 2px solid #000;
+              padding: 4px;
+              text-align: center;
+              font-size: 13px;
+              font-weight: 900;
+              margin: 4px 0;
+            }
+            table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+            th { border-bottom: 1.5px solid #000; font-size: 11px; font-weight: 900; padding: 3px 0; }
+            .flex-between { display: flex; justify-content: space-between; align-items: center; }
+          </style>
+        </head>
+        <body>
+          ${logoSection}
+          <div style="text-align: center;">
+            <div style="font-size: 18px; font-weight: 900; line-height: 1.1;">مطعم ضـجـة 🔥</div>
+            <div style="font-size: 12px; font-weight: 800; margin-top: 1px;">للمشويات والسندوتشات</div>
+            <div style="font-size: 10px; font-weight: 700;">إدارة: مصطفى أبو مليكة</div>
+            <div style="font-size: 9px; margin-top: 1px;">ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه</div>
+            <div style="font-size: 11px; font-weight: 900; font-family: monospace; margin-top: 2px;">📞 01210783175 - 01272022986</div>
+          </div>
+
+          <div class="type-banner">
+            ${isDelivery ? '🛵 طلب دليفري (توصيل للمنزل)' : '🥡 طلب تيك واي (استلام من الفرع)'}
+          </div>
+
+          <div class="dashed"></div>
+
+          <div style="font-size: 11px; font-weight: bold; line-height: 1.35;">
+            <div class="flex-between">
+              <span>رقم الفاتورة:</span>
+              <span style="font-size: 14px; font-weight: 900; font-family: monospace;">${order.orderNumber}</span>
+            </div>
+            <div class="flex-between">
+              <span>التاريخ:</span>
+              <span style="font-family: monospace; font-size: 10px;">${orderDate}</span>
+            </div>
+            <div class="flex-between">
+              <span>العميل:</span>
+              <span>${order.customerName || 'عميل نقدي'}</span>
+            </div>
+            <div class="flex-between">
+              <span>الهاتف:</span>
+              <span style="font-family: monospace;">${order.customerPhone || '-'}</span>
+            </div>
+          </div>
+
+          ${addressSection}
+          ${notesSection}
+
+          <div class="dashed"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: right; width: 44%;">الصنف</th>
+                <th style="text-align: center; width: 14%;">الكمية</th>
+                <th style="text-align: center; width: 20%;">السعر</th>
+                <th style="text-align: left; width: 22%;">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <div class="dashed"></div>
+
+          <div style="font-size: 12px; font-weight: bold; line-height: 1.4;">
+            <div class="flex-between">
+              <span>المجموع الفرعي:</span>
+              <span style="font-family: monospace;">${order.subtotal} ج.م</span>
+            </div>
+            ${deliveryFeeRow}
+            <div class="flex-between" style="border-top: 2px solid #000; padding-top: 4px; margin-top: 2px; font-size: 15px; font-weight: 900;">
+              <span>الإجمالي المطلوب:</span>
+              <span style="font-family: monospace; font-size: 16px;">${order.totalAmount} ج.م</span>
+            </div>
+          </div>
+
+          <div class="dashed"></div>
+
+          <div style="text-align: center; margin-top: 3px;">
+            <div style="display: flex; justify-content: center; margin: 3px 0;">
+              ${barcodeSvg}
+            </div>
+            <div style="font-size: 11px; font-weight: 900;">شكراً لاختياركم مطعم ضجة! 🔥</div>
+            <div style="font-size: 10px; font-weight: 700;">الأكل طعمه حكاية ❤️</div>
+            <div style="font-size: 8px; margin-top: 2px;">نظام كاشير مطعم ضجة الذكي</div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printThroughIsolatedIframe(receiptDoc);
+    }
+
+    function executeZReportThermalPrint() {
+      if (!activeClosureObj) {
+        window.print();
+        return;
+      }
+      const c = activeClosureObj;
+      const closeDate = new Date(c.closureDate).toLocaleDateString('ar-EG');
+      const closeTime = new Date(c.closedAt).toLocaleTimeString('ar-EG');
+      const openTime = c.openedAt ? new Date(c.openedAt).toLocaleTimeString('ar-EG') : '--';
+
+      const itemsRows = (c.itemsBreakdown || []).map(it => `
+        <tr>
+          <td style="text-align: right; font-weight: 700; padding: 2px 0;">${it.name}</td>
+          <td style="text-align: center; font-family: monospace; padding: 2px 0;">${it.quantity}</td>
+          <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2px 0;">${it.totalSales} ج.م</td>
+        </tr>
+      `).join('');
+
+      const notesHtml = c.notes ? `
+        <div style="border: 1px dashed #000; padding: 4px; margin: 4px 0; font-size: 10px;">
+          <strong>ملاحظات الإغلاق:</strong> ${c.notes}
+        </div>
+      ` : '';
+
+      const zDoc = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          <title>Z-Report - تقفيل وردية</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            * { box-sizing: border-box; margin: 0; padding: 0; color: #000 !important; background: transparent !important; }
+            body {
+              width: 72mm; max-width: 72mm; margin: 0 auto; padding: 2mm 1.5mm 4mm 1.5mm;
+              font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+              font-size: 11px; line-height: 1.25; background: #fff !important; color: #000 !important;
+            }
+            .dashed { border-bottom: 1.5px dashed #000; margin: 4px 0; }
+            .flex-between { display: flex; justify-content: space-between; align-items: center; }
+            table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+            th { border-bottom: 1.5px solid #000; font-size: 11px; font-weight: 900; padding: 3px 0; }
+          </style>
+        </head>
+        <body>
+          <div style="text-align: center; margin-bottom: 3px;">
+            <img src="/dajja_logo_thermal.png" style="width: 44mm; height: 44mm; object-fit: contain; margin: 0 auto; display: block;" />
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 17px; font-weight: 900;">مطعم ضـجـة 🔥</div>
+            <div style="font-size: 11px; font-weight: 800;">للمشويات والسندوتشات</div>
+            <div style="font-size: 13px; font-weight: 900; border: 2px solid #000; padding: 3px; margin: 4px 0;">
+              تقرير إغلاق اليومية (Z-REPORT)
+            </div>
+            <div style="font-size: 10px; font-weight: 700;">تاريخ الإغلاق: ${closeDate} - ${closeTime}</div>
+            <div style="font-size: 9px;">الوردية: من ${openTime} إلى ${closeTime}</div>
+          </div>
+
+          <div class="dashed"></div>
+
+          <div style="font-size: 12px; font-weight: bold; line-height: 1.5;">
+            <div class="flex-between" style="font-size: 15px; font-weight: 900; border-bottom: 1.5px solid #000; padding-bottom: 2px;">
+              <span>إجمالي المبيعات:</span>
+              <span style="font-family: monospace;">${c.totalSales} ج.م</span>
+            </div>
+            <div class="flex-between">
+              <span>إجمالي عدد الفواتير:</span>
+              <span style="font-family: monospace;">${c.orderCount} طلب</span>
+            </div>
+            <div class="flex-between">
+              <span>مبيعات الدليفري:</span>
+              <span style="font-family: monospace;">${c.deliverySales} ج.م (${c.deliveryCount} طلب)</span>
+            </div>
+            <div class="flex-between">
+              <span>مبيعات التيك واي:</span>
+              <span style="font-family: monospace;">${c.takeawaySales} ج.م (${c.takeawayCount} طلب)</span>
+            </div>
+            <div class="flex-between" style="font-size: 10px;">
+              <span>المسؤول:</span>
+              <span>${c.closedBy || 'الإدارة'}</span>
+            </div>
+          </div>
+
+          ${notesHtml}
+
+          <div class="dashed"></div>
+
+          <div style="font-size: 11px; font-weight: 900; margin-bottom: 2px;">تفاصيل الأصناف المباعة:</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: right; width: 50%;">الوجبة / الصنف</th>
+                <th style="text-align: center; width: 20%;">الكمية</th>
+                <th style="text-align: left; width: 30%;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <div class="dashed"></div>
+          <div style="text-align: center; font-size: 9px; margin-top: 3px;">
+            نظام مطعم ضجة لإدارة المطاعم والكاشير 🍔🔥
+          </div>
+        </body>
+        </html>
+      `;
+
+      printThroughIsolatedIframe(zDoc);
     }
 
     function closeReceiptModal() {
