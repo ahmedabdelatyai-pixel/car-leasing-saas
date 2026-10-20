@@ -2,9 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>مطعم ضجة 🔥 | اطلب أونلاين دليفري وتيك واي</title>
   <link rel="icon" type="image/jpeg" href="/dajja_logo.jpg">
+  <link rel="apple-touch-icon" href="/dajja_logo.jpg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="مطعم ضجة">
+  <meta name="description" content="تطبيق مطعم ضجة الرسمي للمشويات والسندوتشات - اطلب وجباتك المفضلة أونلاين دليفري وتيك واي وتتبع طلبك في ثوانٍ.">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -44,11 +52,19 @@
       </div>
     </div>
 
-    <!-- Track Order Action -->
-    <button onclick="openTrackModal()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-orange-400 flex items-center gap-1.5 transition-all">
-      <span>🛵</span>
-      <span>تتبع طلبك</span>
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- Install App Button (Visible on mobile/desktop PWA) -->
+      <button id="btn-install-app" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-xs font-black text-white shadow-lg glow-orange flex items-center gap-1.5 transition-all">
+        <span>📲</span>
+        <span class="hidden xs:inline sm:inline">تثبيت التطبيق</span>
+      </button>
+
+      <!-- Track Order Action -->
+      <button onclick="openTrackModal()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-orange-400 flex items-center gap-1.5 transition-all">
+        <span>🛵</span>
+        <span>تتبع طلبك</span>
+      </button>
+    </div>
   </header>
 
   <!-- HERO & ORDER TYPE SELECTOR -->
@@ -212,6 +228,47 @@
       <!-- Tracking Status Result Area -->
       <div id="track-result-area" class="space-y-4 hidden">
         <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTALL PWA MODAL (FOR IPHONE / ANDROID / MANUAL) -->
+  <div id="install-guide-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-8 h-8 rounded-full object-cover border border-orange-500/30">
+          <div>
+            <h3 class="text-xs font-black text-white">تثبيت تطبيق مطعم ضجة 📲</h3>
+            <p class="text-[10px] text-orange-400 font-bold">يعمل مثل التطبيقات الأصلية وبدون مساحة</p>
+          </div>
+        </div>
+        <button onclick="closeInstallGuideModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="text-xs space-y-3 text-slate-300">
+        <!-- Android Section -->
+        <div id="android-guide-box" class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-[11px]">
+          <p class="font-bold text-emerald-400 flex items-center gap-1.5">
+            <span>🤖</span> <span>لهواتف أندرويد (Samsung / Xiaomi / وغيرها):</span>
+          </p>
+          <p class="text-slate-300 text-[10px]">اضغط على الزر أدناه لتثبيت التطبيق مباشرة على هاتفك وإضافته للشاشة الرئيسية:</p>
+          <button id="btn-modal-install-android" onclick="triggerAndroidInstall()" class="w-full h-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+            <span>📲 تثبيت التطبيق الآن</span>
+          </button>
+        </div>
+
+        <!-- iOS Safari Section -->
+        <div id="ios-guide-box" class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-[11px]">
+          <p class="font-bold text-orange-400 flex items-center gap-1.5">
+            <span>🍏</span> <span>لهواتف آيفون (iPhone / Safari):</span>
+          </p>
+          <ol class="list-decimal list-inside space-y-1.5 text-slate-300 text-[10px]">
+            <li>اضغط على زر المشاركة <span class="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold font-mono">⎋</span> أسفل متصفح Safari.</li>
+            <li>مرر القائمة للأسفل واختر <span class="text-white font-bold">"إضافة إلى الشاشة الرئيسية" (Add to Home Screen) ➕</span>.</li>
+            <li>اضغط <span class="text-orange-400 font-bold">"إضافة" (Add)</span> في الزاوية، وسيفتح معك كتطبيق كامل بدون متصفح!</li>
+          </ol>
+        </div>
       </div>
     </div>
   </div>
@@ -658,6 +715,89 @@
       `;
     }
 
+    // ----------------------------------------------------
+    // PWA & Mobile App Installation Handling
+    // ----------------------------------------------------
+    let deferredPrompt = null;
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          reg => console.log('Dajja SW registered:', reg.scope),
+          err => console.log('SW registration failed:', err)
+        );
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('btn-install-app');
+      if (installBtn && !isInStandalone) {
+        installBtn.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installBtn = document.getElementById('btn-install-app');
+      if (installBtn) installBtn.classList.add('hidden');
+      showQuickToast('تم تثبيت تطبيق مطعم ضجة بنجاح! 🎉');
+    });
+
+    function promptInstallPwa() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showQuickToast('جاري تثبيت التطبيق... 📲');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        openInstallGuideModal();
+      }
+    }
+
+    function triggerAndroidInstall() {
+      if (deferredPrompt) {
+        closeInstallGuideModal();
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+      } else {
+        alert('لتثبيت التطبيق على أندرويد:\n1. اضغط على النقاط الثلاث (⋮) أعلى المتصفح.\n2. اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
+      }
+    }
+
+    function openInstallGuideModal() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        // Customize guide based on device
+        const iosBox = document.getElementById('ios-guide-box');
+        const androidBox = document.getElementById('android-guide-box');
+        if (isIos) {
+          if (androidBox) androidBox.classList.add('hidden');
+          if (iosBox) iosBox.classList.remove('hidden');
+        } else {
+          if (androidBox) androidBox.classList.remove('hidden');
+          if (iosBox) iosBox.classList.add('hidden');
+        }
+      }
+    }
+
+    function closeInstallGuideModal() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
     // Modal controls
     function openCartModal() { document.getElementById('cart-modal').classList.remove('hidden'); document.getElementById('cart-modal').classList.add('flex'); }
     function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); document.getElementById('cart-modal').classList.remove('flex'); }
@@ -670,6 +810,12 @@
       toast.innerText = msg;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 2000);
+    }
+
+    // Hide install button if already in standalone app mode
+    if (isInStandalone) {
+      const btn = document.getElementById('btn-install-app');
+      if (btn) btn.classList.add('hidden');
     }
 
     // Run on load

@@ -1,24 +1,42 @@
 {
-  "name": "منصة تأجير السيارات الذكية",
-  "short_name": "تأجير السيارات",
-  "description": "منصة سحابية متطورة لإدارة وتأجير السيارات بالذكاء الاصطناعي",
-  "start_url": "/",
+  "name": "مطعم ضجة للمشويات والسندوتشات",
+  "short_name": "مطعم ضجة",
+  "description": "اطلب أشهى المشويات والسندوتشات والحواوشي أونلاين وتوصيل دليفري سريع من مطعم ضجة",
+  "start_url": "/order.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#050811",
-  "theme_color": "#06b6d4",
+  "background_color": "#0b0f19",
+  "theme_color": "#ea580c",
   "orientation": "portrait-primary",
+  "categories": ["food", "shopping", "lifestyle"],
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/dajja_logo.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "/dajja_logo.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "منيو وطلبات ضجة",
+      "short_name": "منيو ضجة",
+      "description": "تصفح المنيو واطلب أونلاين دليفري أو تيك واي",
+      "url": "/order.html",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "لوحة تحكم الكاشير",
+      "short_name": "كاشير ضجة",
+      "description": "لوحة إدارة الطلبات والمبيعات والتقارير",
+      "url": "/dajja_dashboard.html",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
     }
   ]
 }

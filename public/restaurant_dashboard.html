@@ -2,9 +2,16 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>لوحة تحكم مطعم ضجة 🔥 | الكاشير، إدارة المنيو والتقارير</title>
   <link rel="icon" type="image/jpeg" href="/dajja_logo.jpg">
+  <link rel="apple-touch-icon" href="/dajja_logo.jpg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="كاشير ضجة">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -73,6 +80,10 @@
           <span id="header-user-email" class="text-[9px] text-slate-400 block font-mono">admin@dajja.com</span>
         </div>
       </div>
+      <button id="btn-install-dash" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
+        <span>📲</span>
+        <span class="hidden md:inline">تثبيت كـ تطبيق</span>
+      </button>
       <a href="order.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/20 text-orange-400 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5">
         <span>🌐</span>
         <span class="hidden sm:inline">صفحة طلب الزبائن</span>
@@ -1163,6 +1174,45 @@
         <button onclick="closeClosureDetailsModal()" class="flex-1 h-9 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
           إغلاق
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTALL DASHBOARD PWA MODAL -->
+  <div id="install-guide-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-8 h-8 rounded-full object-cover border border-orange-500/30">
+          <div>
+            <h3 class="text-xs font-black text-white">تثبيت تطبيق كاشير ضجة 📲</h3>
+            <p class="text-[10px] text-orange-400 font-bold">يعمل كتطبيق مستقل بملء الشاشة على الهاتف والتابلت</p>
+          </div>
+        </div>
+        <button onclick="closeInstallGuideModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="text-xs space-y-3 text-slate-300">
+        <div id="android-guide-box" class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-[11px]">
+          <p class="font-bold text-emerald-400 flex items-center gap-1.5">
+            <span>🤖</span> <span>لهواتف وأجهزة أندرويد اللوحية:</span>
+          </p>
+          <p class="text-slate-300 text-[10px]">اضغط على الزر لتثبيت التطبيق على جهازك ليفتح بملء الشاشة بدون شريط المتصفح:</p>
+          <button id="btn-modal-install-android" onclick="triggerAndroidInstall()" class="w-full h-10 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+            <span>📲 تثبيت التطبيق الآن</span>
+          </button>
+        </div>
+
+        <div id="ios-guide-box" class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-[11px]">
+          <p class="font-bold text-orange-400 flex items-center gap-1.5">
+            <span>🍏</span> <span>لأجهزة آبل (iPad / iPhone):</span>
+          </p>
+          <ol class="list-decimal list-inside space-y-1.5 text-slate-300 text-[10px]">
+            <li>اضغط زر المشاركة <span class="bg-white/10 px-1.5 py-0.5 rounded text-white font-bold font-mono">⎋</span> في متصفح Safari.</li>
+            <li>اختر <span class="text-white font-bold">"إضافة إلى الشاشة الرئيسية" (Add to Home Screen) ➕</span>.</li>
+            <li>اضغط <span class="text-orange-400 font-bold">"إضافة" (Add)</span> وسيفتح كتطبيق كاشير كامل!</li>
+          </ol>
+        </div>
       </div>
     </div>
   </div>
@@ -2590,6 +2640,93 @@
     function logoutSession() {
       localStorage.clear();
       window.location.href = 'index.html';
+    }
+
+    // ----------------------------------------------------
+    // PWA & Mobile App Installation Handling (Cashier App)
+    // ----------------------------------------------------
+    let deferredPrompt = null;
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          reg => console.log('Cashier SW registered:', reg.scope),
+          err => console.log('SW registration failed:', err)
+        );
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('btn-install-dash');
+      if (installBtn && !isInStandalone) {
+        installBtn.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installBtn = document.getElementById('btn-install-dash');
+      if (installBtn) installBtn.classList.add('hidden');
+      alert('تم تثبيت تطبيق كاشير ضجة بنجاح على جهازك! 🎉');
+    });
+
+    function promptInstallPwa() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('Cashier app installation accepted');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        openInstallGuideModal();
+      }
+    }
+
+    function triggerAndroidInstall() {
+      if (deferredPrompt) {
+        closeInstallGuideModal();
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+      } else {
+        alert('لتثبيت التطبيق على أندرويد:\n1. اضغط على النقاط الثلاث (⋮) أعلى المتصفح.\n2. اختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".');
+      }
+    }
+
+    function openInstallGuideModal() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        const iosBox = document.getElementById('ios-guide-box');
+        const androidBox = document.getElementById('android-guide-box');
+        if (isIos) {
+          if (androidBox) androidBox.classList.add('hidden');
+          if (iosBox) iosBox.classList.remove('hidden');
+        } else {
+          if (androidBox) androidBox.classList.remove('hidden');
+          if (iosBox) iosBox.classList.add('hidden');
+        }
+      }
+    }
+
+    function closeInstallGuideModal() {
+      const modal = document.getElementById('install-guide-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    if (isInStandalone) {
+      const btn = document.getElementById('btn-install-dash');
+      if (btn) btn.classList.add('hidden');
     }
 
     // Initial boot
