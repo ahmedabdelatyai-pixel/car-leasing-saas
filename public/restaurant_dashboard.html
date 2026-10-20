@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>لوحة تحكم مطعم ضجة 🔥 | إدارة الطلبات والمنيو والتقارير</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-receipt-modal, #print-receipt-modal * {
+        visibility: visible;
+      }
+      #print-receipt-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0b0f19]">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-[#111827] border-b border-white/10 px-6 py-3.5 flex justify-between items-center sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-xl shadow-lg font-black">
+        🔥
+      </div>
+      <div>
+        <h1 class="text-sm font-black text-white flex items-center gap-2">
+          <span>لوحة إدارة مطعم ضجة</span>
+          <span class="text-[9px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-mono">KITCHEN LIVE</span>
+        </h1>
+        <p class="text-[10px] text-slate-400">نظام إدارة طلبات التيك واي والدليفري والتقارير</p>
+      </div>
+    </div>
+
+    <!-- Actions & Sound alert -->
+    <div class="flex items-center gap-2">
+      <a href="order.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/20 text-orange-400 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5">
+        <span>🌐</span>
+        <span>بوابة الزبائن للطلب</span>
+      </a>
+      <button onclick="logoutSession()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 text-slate-400 hover:text-rose-400 text-xs font-bold transition-all">
+        خروج 🚪
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <div class="bg-[#111827]/70 border-b border-white/5 px-6 flex gap-2 overflow-x-auto custom-scrollbar">
+    <button onclick="switchTab('orders')" id="tab-btn-orders" class="nav-tab px-4 py-3 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-2 transition-all">
+      <span>📋</span> الطلبات الحية (<span id="count-active-orders">0</span>)
+    </button>
+    <button onclick="switchTab('menu')" id="tab-btn-menu" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+      <span>🍔</span> قائمة الطعام (المنيو)
+    </button>
+    <button onclick="switchTab('captains')" id="tab-btn-captains" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+      <span>🛵</span> كباتن الدليفري
+    </button>
+    <button onclick="switchTab('reports')" id="tab-btn-reports" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+      <span>📊</span> التقارير والأرباح
+    </button>
+    <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+      <span>⚙️</span> إعدادات المطعم
+    </button>
+  </div>
+
+  <!-- MAIN VIEWPORT PANES -->
+  <main class="flex-1 p-6 overflow-y-auto custom-scrollbar">
+
+    <!-- ==============================================
+         TAB 1: LIVE ORDERS PANE
+         ============================================== -->
+    <section id="pane-orders" class="space-y-4">
+      <div class="flex justify-between items-center">
+        <!-- Status filter buttons -->
+        <div class="flex gap-1.5 bg-black/30 p-1 rounded-xl border border-white/5 text-xs">
+          <button onclick="filterOrders('ALL')" class="order-filter-btn active px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white">الكل</button>
+          <button onclick="filterOrders('PENDING')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">جديد 🕒</button>
+          <button onclick="filterOrders('PREPARING')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">في المطبخ 🍳</button>
+          <button onclick="filterOrders('ON_THE_WAY')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">مع الكابتن 🛵</button>
+          <button onclick="filterOrders('DELIVERED')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">مكتمل ✅</button>
+        </div>
+
+        <button onclick="loadLiveOrders()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition-all">
+          <span>🔄</span>
+          <span>تحديث</span>
+        </button>
+      </div>
+
+      <!-- Orders Grid -->
+      <div id="orders-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <p class="text-xs text-slate-500 col-span-full text-center py-12">جاري سحب الطلبات الحية...</p>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 2: MENU ITEMS PANE
+         ============================================== -->
+    <section id="pane-menu" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-sm font-black text-white">🍔 إدارة قائمة الطعام وأصناف ضجة</h2>
+          <p class="text-[11px] text-slate-400">تعديل الأسعار، إضافة وجبات، والتحكم في توفر الأصناف</p>
+        </div>
+        <button onclick="openAddMenuItemModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+          <span>+</span>
+          <span>إضافة وجبة للمنيو</span>
+        </button>
+      </div>
+
+      <div id="dashboard-menu-container" class="space-y-6">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 3: DELIVERY CAPTAINS PANE
+         ============================================== -->
+    <section id="pane-captains" class="space-y-4 hidden">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-sm font-black text-white">🛵 أسطول كباتن التوصيل</h2>
+          <p class="text-[11px] text-slate-400">متابعة الكباتن وإسناد طلبات الدليفري لهم</p>
+        </div>
+        <button onclick="openAddCaptainModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+          <span>+</span>
+          <span>تسجيل كابتن جديد</span>
+        </button>
+      </div>
+
+      <div id="captains-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 4: REPORTS & ANALYTICS PANE
+         ============================================== -->
+    <section id="pane-reports" class="space-y-6 hidden">
+      <div>
+        <h2 class="text-sm font-black text-white">📊 تقارير المبيعات والأداء المالي لمطعم ضجة</h2>
+        <p class="text-[11px] text-slate-400">تحليل المبيعات، إيرادات التيك واي مقابل الدليفري، والأصناف الأكثر طلباً</p>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-bold">إجمالي الإيرادات 💰</span>
+          <span class="text-xl font-black text-orange-400 font-mono" id="rep-total-revenue">0 ج.م</span>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-bold">إجمالي الطلبات 📦</span>
+          <span class="text-xl font-black text-white font-mono" id="rep-total-orders">0</span>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-bold">مبيعات الدليفري 🛵</span>
+          <span class="text-xl font-black text-emerald-400 font-mono" id="rep-delivery-rev">0 ج.م</span>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+          <span class="text-[10px] text-slate-400 block font-bold">مبيعات التيك واي 🥡</span>
+          <span class="text-xl font-black text-cyan-400 font-mono" id="rep-takeaway-rev">0 ج.م</span>
+        </div>
+      </div>
+
+      <!-- Best Sellers & Breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Best Sellers Table -->
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-3">
+          <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
+            <span>🔥</span> الأصناف الأكثر مبيعاً (Top Sellers)
+          </h3>
+          <div id="top-sellers-container" class="space-y-2">
+            <!-- populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Takeaway vs Delivery Ratio Card -->
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-4">
+          <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
+            <span>⚖️</span> توزيع المبيعات (دليفري مقابل تيك واي)
+          </h3>
+          
+          <div class="space-y-3 pt-2">
+            <div>
+              <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                <span>طلبات الدليفري 🛵</span>
+                <span id="rep-delivery-pct" class="text-emerald-400 font-mono">0%</span>
+              </div>
+              <div class="h-2 bg-black/40 rounded-full overflow-hidden">
+                <div id="rep-delivery-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                <span>طلبات التيك واي 🥡</span>
+                <span id="rep-takeaway-pct" class="text-cyan-400 font-mono">0%</span>
+              </div>
+              <div class="h-2 bg-black/40 rounded-full overflow-hidden">
+                <div id="rep-takeaway-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 5: RESTAURANT SETTINGS PANE
+         ============================================== -->
+    <section id="pane-settings" class="max-w-xl mx-auto space-y-4 hidden">
+      <div class="bg-[#111827] border border-white/5 rounded-2xl p-6 space-y-4">
+        <h2 class="text-sm font-black text-white border-b border-white/5 pb-3">⚙️ إعدادات مطعم ضجة</h2>
+        
+        <form onsubmit="submitRestaurantSettings(event)" class="space-y-3">
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">اسم المطعم</label>
+            <input type="text" id="set-name" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">الشعار اللفظي (Slogan)</label>
+            <input type="text" id="set-tagline" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للعملاء</label>
+              <input type="text" id="set-phone" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">تكلفة التوصيل (ج.م)</label>
+              <input type="number" id="set-delivery-fee" required class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-400 block font-semibold">عنوان الفرع الرئيسي</label>
+            <input type="text" id="set-address" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+          </div>
+
+          <div class="pt-3">
+            <button type="submit" class="w-full h-11 bg-orange-600 hover:bg-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all">
+              حفظ التعديلات 💾
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- ADD / EDIT MENU ITEM MODAL -->
+  <div id="menu-item-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <h3 class="text-sm font-black text-white border-b border-white/5 pb-2" id="modal-item-title">🍔 إضافة وجبة جديدة</h3>
+      <form onsubmit="submitMenuItem(event)" class="space-y-3">
+        <input type="hidden" id="item-id">
+        
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">القسم</label>
+          <select id="item-cat-id" required class="w-full h-10 px-3 rounded-xl text-xs bg-black/40 border border-white/10 text-white focus:outline-none">
+            <!-- populated dynamically -->
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">اسم الوجبة</label>
+          <input type="text" id="item-name" required placeholder="مثال: برجر دبل تشيز" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">السعر (ج.م)</label>
+          <input type="number" id="item-price" required placeholder="120" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">الوصف والمكونات</label>
+          <textarea id="item-desc" rows="2" placeholder="المكونات والتفاصيل..." class="w-full p-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">بادج مميز (اختياري)</label>
+          <input type="text" id="item-badge" placeholder="مثال: الأكثر مبيعاً 🔥" class="w-full h-9 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رابط صورة الوجبة</label>
+          <input type="url" id="item-img" placeholder="https://..." class="w-full h-9 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 h-10 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl transition-all">حفظ 💾</button>
+          <button type="button" onclick="closeMenuItemModal()" class="flex-1 h-10 bg-white/5 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-all">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ASSIGN CAPTAIN MODAL -->
+  <div id="assign-captain-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <h3 class="text-sm font-black text-white border-b border-white/5 pb-2">🛵 إسناد الطلب لكابتن دليفري</h3>
+      <input type="hidden" id="assign-order-id">
+      
+      <div class="space-y-1">
+        <label class="text-[10px] text-slate-400 block font-semibold">اختر كابتن التوصيل</label>
+        <select id="assign-captain-select" class="w-full h-10 px-3 rounded-xl text-xs bg-black/40 border border-white/10 text-white focus:outline-none">
+          <!-- populated dynamically -->
+        </select>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="confirmAssignCaptain()" class="flex-1 h-10 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all">إسناد وتوصيل 🚀</button>
+        <button onclick="closeAssignCaptainModal()" class="flex-1 h-10 bg-white/5 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-all">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD CAPTAIN MODAL -->
+  <div id="add-captain-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <h3 class="text-sm font-black text-white border-b border-white/5 pb-2">🛵 تسجيل كابتن توصيل جديد</h3>
+      <form onsubmit="submitNewCaptain(event)" class="space-y-3">
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">اسم الكابتن</label>
+          <input type="text" id="cap-name" required placeholder="مثال: محمود علي" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للتواصل</label>
+          <input type="tel" id="cap-phone" required placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-mono">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">وسيلة التوصيل</label>
+          <input type="text" id="cap-vehicle" value="موتوسيكل" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 h-10 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl transition-all">تسجيل ✅</button>
+          <button type="button" onclick="closeAddCaptainModal()" class="flex-1 h-10 bg-white/5 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-all">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PRINT RECEIPT MODAL -->
+  <div id="print-receipt-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-white text-black p-6 rounded-2xl w-80 space-y-3 font-mono text-xs shadow-2xl">
+      <div class="text-center border-b pb-2">
+        <h2 class="text-base font-black">مطعم ضجة 🔥</h2>
+        <p class="text-[10px] text-gray-500">فاتورة طلب العميل</p>
+        <p class="text-[10px]" id="receipt-date"></p>
+      </div>
+      <div class="flex justify-between font-bold">
+        <span>رقم الطلب:</span>
+        <span id="receipt-number" class="text-sm"></span>
+      </div>
+      <div class="flex justify-between">
+        <span>العميل:</span>
+        <span id="receipt-cust"></span>
+      </div>
+      <div class="flex justify-between">
+        <span>الهاتف:</span>
+        <span id="receipt-phone"></span>
+      </div>
+      <div id="receipt-addr-row" class="text-[10px] border-b pb-1">
+        <span>العنوان: </span><span id="receipt-addr"></span>
+      </div>
+
+      <!-- Items List -->
+      <div id="receipt-items" class="space-y-1 border-b py-2 text-[11px]"></div>
+
+      <div class="space-y-1 pt-1 font-bold">
+        <div class="flex justify-between">
+          <span>المجموع:</span>
+          <span id="receipt-subtotal"></span>
+        </div>
+        <div class="flex justify-between" id="receipt-fee-row">
+          <span>التوصيل:</span>
+          <span id="receipt-fee"></span>
+        </div>
+        <div class="flex justify-between text-sm font-black border-t pt-1">
+          <span>الإجمالي:</span>
+          <span id="receipt-total"></span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t no-print">
+        <button onclick="window.print()" class="flex-1 h-9 bg-black text-white text-xs font-bold rounded-lg">طباعة 🖨️</button>
+        <button onclick="closeReceiptModal()" class="flex-1 h-9 bg-gray-200 text-gray-800 text-xs font-bold rounded-lg">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    const token = localStorage.getItem('auth_token') || 'mock_token_key';
+    let allOrders = [];
+    let currentFilter = 'ALL';
+    let currentRestaurant = null;
+    let allCaptains = [];
+
+    // Helper API with auth
+    async function apiFetch(endpoint, options = {}) {
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      const res = await fetch(endpoint, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        // Redirection on unauthorized
+        localStorage.clear();
+        window.location.href = 'index.html';
+        throw new Error('Unauthorized');
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    // 1. Tab Switcher
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        b.className = "nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
+      });
+      ['orders', 'menu', 'captains', 'reports', 'settings'].forEach(p => {
+        document.getElementById(`pane-${p}`).classList.add('hidden');
+      });
+
+      document.getElementById(`tab-btn-${tab}`).className = "nav-tab px-4 py-3 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-2 transition-all";
+      document.getElementById(`pane-${tab}`).classList.remove('hidden');
+
+      if (tab === 'orders') loadLiveOrders();
+      if (tab === 'menu') loadMenuData();
+      if (tab === 'captains') loadCaptains();
+      if (tab === 'reports') loadReportsData();
+      if (tab === 'settings') loadSettingsData();
+    }
+
+    // 2. Orders Management
+    async function loadLiveOrders() {
+      try {
+        const orders = await apiFetch('/api/v1/orders');
+        allOrders = orders;
+        
+        // Count active
+        const activeCount = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length;
+        document.getElementById('count-active-orders').innerText = activeCount;
+
+        renderOrdersList();
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+      }
+    }
+
+    function filterOrders(status) {
+      currentFilter = status;
+      document.querySelectorAll('.order-filter-btn').forEach(b => {
+        b.className = "order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white";
+      });
+      event.target.className = "order-filter-btn px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white";
+      renderOrdersList();
+    }
+
+    function renderOrdersList() {
+      const container = document.getElementById('orders-cards-container');
+      let filtered = allOrders;
+      if (currentFilter !== 'ALL') {
+        filtered = allOrders.filter(o => o.status === currentFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 col-span-full text-center py-12">لا توجد طلبات في هذا القسم حالياً.</p>';
+        return;
+      }
+
+      const statusMap = {
+        'PENDING': { label: 'طلب جديد 🕒', bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+        'PREPARING': { label: 'في المطبخ 🍳', bg: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+        'READY': { label: 'جاهز 🥡', bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
+        'ON_THE_WAY': { label: 'مع الكابتن 🛵', bg: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+        'DELIVERED': { label: 'تم التسليم ✅', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+        'CANCELLED': { label: 'ملغي ❌', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20' }
+      };
+
+      container.innerHTML = filtered.map(o => {
+        const badge = statusMap[o.status] || { label: o.status, bg: 'bg-slate-500/10 text-slate-400' };
+        const itemsSummary = o.items ? o.items.map(it => `${it.quantity}x ${it.name}`).join(' ، ') : '';
+
+        return `
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
+            <div class="flex justify-between items-start border-b border-white/5 pb-2">
+              <div>
+                <span class="text-base font-black text-white font-mono">${o.orderNumber}</span>
+                <span class="text-[10px] text-slate-400 block">${new Date(o.createdAt).toLocaleTimeString('ar-EG')}</span>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold border ${badge.bg}">${badge.label}</span>
+                <span class="text-[9px] text-slate-400 font-bold">${o.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}</span>
+              </div>
+            </div>
+
+            <div class="text-xs space-y-1 text-slate-300">
+              <div class="font-bold text-white flex justify-between">
+                <span>👤 ${o.customerName}</span>
+                <a href="tel:${o.customerPhone}" class="text-orange-400 font-mono text-[11px] underline">${o.customerPhone}</a>
+              </div>
+              ${o.deliveryAddress ? `<p class="text-[11px] text-slate-400">📍 ${o.deliveryAddress}</p>` : ''}
+              ${o.notes ? `<p class="text-[10px] text-amber-400 bg-amber-500/5 p-1.5 rounded-lg border border-amber-500/10">ملاحظة: ${o.notes}</p>` : ''}
+              <div class="text-[11px] text-slate-200 bg-black/30 p-2 rounded-xl mt-1">
+                ${itemsSummary}
+              </div>
+              <div class="flex justify-between items-center pt-2 font-black">
+                <span>الإجمالي:</span>
+                <span class="text-orange-400 text-sm font-mono">${o.totalAmount} ج.م</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-2 border-t border-white/5 flex gap-1.5 flex-wrap">
+              ${o.status === 'PENDING' ? `
+                <button onclick="updateOrderStatus('${o.id}', 'PREPARING')" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black transition-all">بدء التحضير 🍳</button>
+              ` : ''}
+
+              ${o.status === 'PREPARING' ? (o.orderType === 'DELIVERY' ? `
+                <button onclick="openAssignCaptainModal('${o.id}')" class="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-black transition-all">إسناد لكابتن 🛵</button>
+              ` : `
+                <button onclick="updateOrderStatus('${o.id}', 'DELIVERED')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black transition-all">تسليم تيك واي ✅</button>
+              `) : ''}
+
+              ${o.status === 'ON_THE_WAY' ? `
+                <button onclick="updateOrderStatus('${o.id}', 'DELIVERED')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black transition-all">تم التوصيل ✅</button>
+              ` : ''}
+
+              <button onclick="printOrderReceipt('${o.id}')" class="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-[10px] font-bold transition-all">بون 🖨️</button>
+              ${o.status !== 'DELIVERED' ? `
+                <button onclick="cancelOrder('${o.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-[10px] font-bold transition-all">إلغاء ✕</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateOrderStatus(orderId, status) {
+      try {
+        await apiFetch(`/api/v1/orders/${orderId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status })
+        });
+        loadLiveOrders();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function cancelOrder(orderId) {
+      if (!confirm('هل تريد إلغاء هذا الطلب؟')) return;
+      try {
+        await apiFetch(`/api/v1/orders/${orderId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: 'CANCELLED' })
+        });
+        loadLiveOrders();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 3. Captains Modal & Assignment
+    function openAssignCaptainModal(orderId) {
+      document.getElementById('assign-order-id').value = orderId;
+      const select = document.getElementById('assign-captain-select');
+      select.innerHTML = allCaptains.map(c => `<option value="${c.id}">${c.name} (${c.vehicleType || 'موتوسيكل'})</option>`).join('');
+      document.getElementById('assign-captain-modal').classList.remove('hidden');
+      document.getElementById('assign-captain-modal').classList.add('flex');
+    }
+    function closeAssignCaptainModal() {
+      document.getElementById('assign-captain-modal').classList.add('hidden');
+      document.getElementById('assign-captain-modal').classList.remove('flex');
+    }
+
+    async function confirmAssignCaptain() {
+      const orderId = document.getElementById('assign-order-id').value;
+      const captainId = document.getElementById('assign-captain-select').value;
+      try {
+        await apiFetch(`/api/v1/orders/${orderId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            status: 'ON_THE_WAY',
+            captainId
+          })
+        });
+        closeAssignCaptainModal();
+        loadLiveOrders();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 4. Menu Management
+    async function loadMenuData() {
+      try {
+        const res = await apiFetch('/api/v1/restaurant/menu');
+        currentRestaurant = res;
+        renderDashboardMenu();
+      } catch (err) {
+        console.error('Menu load error:', err);
+      }
+    }
+
+    function renderDashboardMenu() {
+      const container = document.getElementById('dashboard-menu-container');
+      if (!currentRestaurant || !currentRestaurant.categories) return;
+
+      container.innerHTML = currentRestaurant.categories.map(cat => `
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center border-b border-white/5 pb-2">
+            <h3 class="text-sm font-black text-white flex items-center gap-2">
+              <span>${cat.icon || '🍔'}</span> ${cat.name}
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">${cat.items?.length || 0} أصناف</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${(cat.items || []).map(item => `
+              <div class="bg-black/30 border border-white/5 rounded-xl p-3 flex gap-3 justify-between">
+                <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80'}" class="w-16 h-16 rounded-xl object-cover shrink-0">
+                <div class="flex-1 flex flex-col justify-between">
+                  <div>
+                    <h5 class="text-xs font-black text-white">${item.name}</h5>
+                    <span class="text-xs font-bold text-orange-400 font-mono">${item.price} ج.م</span>
+                  </div>
+                  <div class="flex gap-2 text-[10px] mt-2">
+                    <button onclick="editMenuItem('${item.id}')" class="text-cyan-400 font-bold hover:underline">تعديل 📝</button>
+                    <button onclick="deleteMenuItem('${item.id}')" class="text-rose-400 font-bold hover:underline">حذف 🗑️</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddMenuItemModal() {
+      document.getElementById('item-id').value = '';
+      document.getElementById('modal-item-title').innerText = '🍔 إضافة وجبة جديدة للمنيو';
+      document.getElementById('item-name').value = '';
+      document.getElementById('item-price').value = '';
+      document.getElementById('item-desc').value = '';
+      document.getElementById('item-badge').value = '';
+      document.getElementById('item-img').value = '';
+
+      const catSelect = document.getElementById('item-cat-id');
+      catSelect.innerHTML = (currentRestaurant?.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+      document.getElementById('menu-item-modal').classList.remove('hidden');
+      document.getElementById('menu-item-modal').classList.add('flex');
+    }
+
+    function editMenuItem(id) {
+      let foundItem = null;
+      let foundCat = null;
+      for (const cat of (currentRestaurant?.categories || [])) {
+        const it = cat.items?.find(i => i.id === id);
+        if (it) { foundItem = it; foundCat = cat; break; }
+      }
+      if (!foundItem) return;
+
+      document.getElementById('item-id').value = foundItem.id;
+      document.getElementById('modal-item-title').innerText = '📝 تعديل وجبة بالمنيو';
+      document.getElementById('item-name').value = foundItem.name;
+      document.getElementById('item-price').value = foundItem.price;
+      document.getElementById('item-desc').value = foundItem.description || '';
+      document.getElementById('item-badge').value = foundItem.badge || '';
+      document.getElementById('item-img').value = foundItem.imageUrl || '';
+
+      const catSelect = document.getElementById('item-cat-id');
+      catSelect.innerHTML = (currentRestaurant?.categories || []).map(c => `<option value="${c.id}" ${c.id === foundCat.id ? 'selected' : ''}>${c.name}</option>`).join('');
+
+      document.getElementById('menu-item-modal').classList.remove('hidden');
+      document.getElementById('menu-item-modal').classList.add('flex');
+    }
+
+    function closeMenuItemModal() {
+      document.getElementById('menu-item-modal').classList.add('hidden');
+      document.getElementById('menu-item-modal').classList.remove('flex');
+    }
+
+    async function submitMenuItem(e) {
+      e.preventDefault();
+      const id = document.getElementById('item-id').value;
+      const categoryId = document.getElementById('item-cat-id').value;
+      const name = document.getElementById('item-name').value.trim();
+      const price = Number(document.getElementById('item-price').value);
+      const description = document.getElementById('item-desc').value.trim();
+      const badge = document.getElementById('item-badge').value.trim();
+      const imageUrl = document.getElementById('item-img').value.trim();
+
+      try {
+        if (id) {
+          await apiFetch(`/api/v1/restaurant/menu-items/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ categoryId, name, price, description, badge, imageUrl })
+          });
+        } else {
+          await apiFetch('/api/v1/restaurant/menu-items', {
+            method: 'POST',
+            body: JSON.stringify({ categoryId, name, price, description, badge, imageUrl })
+          });
+        }
+        closeMenuItemModal();
+        loadMenuData();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteMenuItem(id) {
+      if (!confirm('هل تريد حذف هذه الوجبة نهائياً من المنيو؟')) return;
+      try {
+        await apiFetch(`/api/v1/restaurant/menu-items/${id}`, { method: 'DELETE' });
+        loadMenuData();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 5. Captains Management
+    async function loadCaptains() {
+      try {
+        const caps = await apiFetch('/api/v1/captains');
+        allCaptains = caps;
+        renderCaptainsList();
+      } catch (err) {
+        console.error('Failed to load captains:', err);
+      }
+    }
+
+    function renderCaptainsList() {
+      const container = document.getElementById('captains-list-container');
+      if (allCaptains.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 col-span-full text-center py-8">لا يوجد كباتن مسجلين حالياً.</p>';
+        return;
+      }
+
+      container.innerHTML = allCaptains.map(c => `
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <h4 class="text-xs font-black text-white">${c.name}</h4>
+              <span class="text-[10px] text-slate-400 font-mono">${c.phone}</span>
+            </div>
+            <span class="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-md font-bold">${c.vehicleType || 'موتوسيكل'}</span>
+          </div>
+          <div class="flex justify-between items-center text-[11px] pt-2 border-t border-white/5">
+            <span class="text-slate-400">طلبات نشطة: <strong class="text-white">${c.orders?.length || 0}</strong></span>
+            <a href="tel:${c.phone}" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-slate-200 rounded-lg font-bold">اتصال 📞</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddCaptainModal() {
+      document.getElementById('add-captain-modal').classList.remove('hidden');
+      document.getElementById('add-captain-modal').classList.add('flex');
+    }
+    function closeAddCaptainModal() {
+      document.getElementById('add-captain-modal').classList.add('hidden');
+      document.getElementById('add-captain-modal').classList.remove('flex');
+    }
+
+    async function submitNewCaptain(e) {
+      e.preventDefault();
+      const name = document.getElementById('cap-name').value.trim();
+      const phone = document.getElementById('cap-phone').value.trim();
+      const vehicleType = document.getElementById('cap-vehicle').value.trim();
+
+      try {
+        await apiFetch('/api/v1/captains', {
+          method: 'POST',
+          body: JSON.stringify({ name, phone, vehicleType })
+        });
+        closeAddCaptainModal();
+        loadCaptains();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 6. Reports & Analytics
+    async function loadReportsData() {
+      try {
+        const rep = await apiFetch('/api/v1/reports/sales');
+
+        document.getElementById('rep-total-revenue').innerText = `${rep.totalRevenue} ج.م`;
+        document.getElementById('rep-total-orders').innerText = rep.totalOrders;
+        document.getElementById('rep-delivery-rev').innerText = `${rep.deliveryRevenue} ج.م`;
+        document.getElementById('rep-takeaway-rev').innerText = `${rep.takeawayRevenue} ج.م`;
+
+        const totalOrders = rep.totalOrders || 1;
+        const delivPct = Math.round((rep.deliveryOrdersCount / totalOrders) * 100);
+        const takePct = Math.round((rep.takeawayOrdersCount / totalOrders) * 100);
+
+        document.getElementById('rep-delivery-pct').innerText = `${delivPct}% (${rep.deliveryOrdersCount} طلب)`;
+        document.getElementById('rep-delivery-bar').style.width = `${delivPct}%`;
+
+        document.getElementById('rep-takeaway-pct').innerText = `${takePct}% (${rep.takeawayOrdersCount} طلب)`;
+        document.getElementById('rep-takeaway-bar').style.width = `${takePct}%`;
+
+        // Render Top Sellers
+        const topContainer = document.getElementById('top-sellers-container');
+        if (!rep.topSellingItems || rep.topSellingItems.length === 0) {
+          topContainer.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">لا توجد مبيعات مسجلة حتى الآن.</p>';
+          return;
+        }
+
+        topContainer.innerHTML = rep.topSellingItems.map((it, idx) => `
+          <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-orange-600/20 text-orange-400 font-mono font-bold flex items-center justify-center text-[10px]">${idx + 1}</span>
+              <span class="font-bold text-white">${it.name}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-300 font-bold">${it.quantity} وجبة</span>
+              <span class="text-[10px] text-orange-400 font-mono block">${it.revenue} ج.م</span>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Reports error:', err);
+      }
+    }
+
+    // 7. Restaurant Settings
+    async function loadSettingsData() {
+      try {
+        const res = await apiFetch('/api/v1/restaurant/menu');
+        document.getElementById('set-name').value = res.name || 'مطعم ضجة';
+        document.getElementById('set-tagline').value = res.tagline || '';
+        document.getElementById('set-phone').value = res.phone || '';
+        document.getElementById('set-address').value = res.address || '';
+        document.getElementById('set-delivery-fee').value = res.deliveryFee || 15;
+      } catch (err) {
+        console.error('Settings error:', err);
+      }
+    }
+
+    async function submitRestaurantSettings(e) {
+      e.preventDefault();
+      const name = document.getElementById('set-name').value.trim();
+      const tagline = document.getElementById('set-tagline').value.trim();
+      const phone = document.getElementById('set-phone').value.trim();
+      const address = document.getElementById('set-address').value.trim();
+      const deliveryFee = Number(document.getElementById('set-delivery-fee').value);
+
+      try {
+        await apiFetch('/api/v1/restaurant/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ name, tagline, phone, address, deliveryFee })
+        });
+        alert('تم حفظ إعدادات المطعم بنجاح! 💾');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // 8. Print Receipt Helper
+    function printOrderReceipt(orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      document.getElementById('receipt-date').innerText = new Date(order.createdAt).toLocaleString('ar-EG');
+      document.getElementById('receipt-number').innerText = order.orderNumber;
+      document.getElementById('receipt-cust').innerText = order.customerName;
+      document.getElementById('receipt-phone').innerText = order.customerPhone;
+
+      const addrRow = document.getElementById('receipt-addr-row');
+      if (order.deliveryAddress) {
+        addrRow.style.display = 'block';
+        document.getElementById('receipt-addr').innerText = order.deliveryAddress;
+      } else {
+        addrRow.style.display = 'none';
+      }
+
+      document.getElementById('receipt-items').innerHTML = (order.items || []).map(it => `
+        <div class="flex justify-between">
+          <span>${it.quantity}x ${it.name}</span>
+          <span>${it.totalPrice} ج.م</span>
+        </div>
+      `).join('');
+
+      document.getElementById('receipt-subtotal').innerText = `${order.subtotal} ج.م`;
+      const feeRow = document.getElementById('receipt-fee-row');
+      if (order.orderType === 'DELIVERY') {
+        feeRow.style.display = 'flex';
+        document.getElementById('receipt-fee').innerText = `${order.deliveryFee} ج.م`;
+      } else {
+        feeRow.style.display = 'none';
+      }
+
+      document.getElementById('receipt-total').innerText = `${order.totalAmount} ج.م`;
+
+      document.getElementById('print-receipt-modal').classList.remove('hidden');
+      document.getElementById('print-receipt-modal').classList.add('flex');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('print-receipt-modal').classList.add('hidden');
+      document.getElementById('print-receipt-modal').classList.remove('flex');
+    }
+
+    function logoutSession() {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    // Initial boot
+    loadLiveOrders();
+    loadCaptains();
+    loadMenuData();
+
+    // Auto-refresh live orders every 10 seconds
+    setInterval(loadLiveOrders, 10000);
+  </script>
+</body>
+</html>

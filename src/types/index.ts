@@ -4,14 +4,14 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: Role;
-  galleryId: string | null;
+  restaurantId: string | null;
 }
 
 declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
-      galleryId?: string; // Populated for tenant/gallery scoped requests
+      restaurantId?: string;
     }
   }
 }

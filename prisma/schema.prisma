@@ -10,235 +10,163 @@ generator client {
 
 enum Role {
   SUPER_ADMIN
-  GALLERY_OWNER
-  TENANT
+  RESTAURANT_ADMIN
+  CASHIER
+  KITCHEN
 }
 
-enum ContractStatus {
-  PENDING
-  ACTIVE
-  TERMINATED
-  EXPIRED
-}
-
-enum InspectionType {
+enum OrderType {
+  TAKEAWAY
   DELIVERY
-  RETURN
 }
 
-enum OdometerLogType {
-  MONTH_START
-  MONTH_END
-  OIL_CHANGE
-  FILTER_CHANGE
-}
-
-enum AlertType {
-  OIL_CHANGE
-  FILTER_CHANGE
-}
-
-enum AlertStatus {
+enum OrderStatus {
   PENDING
-  RESOLVED
+  PREPARING
+  READY
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
 }
 
-model Gallery {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(255)
-  logoUrl   String?  @map("logo_url") @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+model Restaurant {
+  id              String      @id @default(uuid()) @db.Uuid
+  name            String      @default("مطعم ضجة") @db.VarChar(255)
+  tagline         String?     @default("طعم يعمل ضجة! 🔥") @db.VarChar(255)
+  logoUrl         String?     @map("logo_url") @db.Text
+  phone           String?     @default("01000000000") @db.VarChar(50)
+  address         String?     @default("القاهرة - مصر") @db.VarChar(255)
+  deliveryFee     Decimal     @default(15.00) @map("delivery_fee") @db.Decimal(10, 2)
+  isOpen          Boolean     @default(true) @map("is_open")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   // Relations
   users           User[]
-  cars            Car[]
-  tenantProfiles  TenantProfile[]
-  contracts       Contract[]
-  odometerLogs    OdometerLog[]
-  inspections     CarInspection[]
-  alerts          MaintenanceAlert[]
-  maintenanceRequests MaintenanceRequest[]
+  categories      Category[]
+  menuItems       MenuItem[]
+  orders          Order[]
+  captains        Captain[]
 
-  @@map("galleries")
+  @@map("restaurants")
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  role         Role
-  galleryId    String?  @map("gallery_id") @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String      @id @default(uuid()) @db.Uuid
+  email        String      @unique @db.VarChar(255)
+  passwordHash String      @map("password_hash") @db.VarChar(255)
+  role         Role        @default(RESTAURANT_ADMIN)
+  restaurantId String?     @map("restaurant_id") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  // Relations
-  gallery       Gallery?       @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  tenantProfile TenantProfile?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-  @@index([galleryId])
+  @@index([restaurantId])
   @@map("users")
 }
 
-model Car {
-  id                   String   @id @default(uuid()) @db.Uuid
-  galleryId            String   @map("gallery_id") @db.Uuid
-  plateNumber          String   @unique @map("plate_number") @db.VarChar(50)
-  model                String   @db.VarChar(100)
-  year                 Int
-  color                String   @db.VarChar(50)
-  licenseStartDate     DateTime @map("license_start_date") @db.Date
-  licenseEndDate       DateTime @map("license_end_date") @db.Date
-  currentOdometer      Int      @map("current_odometer")
-  oilChangeInterval    Int      @map("oil_change_interval")
-  filterChangeInterval Int      @map("filter_change_interval")
-  imageUrl             String?  @map("image_url") @db.VarChar(2048) // Added car image URL
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+model Category {
+  id           String      @id @default(uuid()) @db.Uuid
+  restaurantId String      @map("restaurant_id") @db.Uuid
+  name         String      @db.VarChar(100)
+  icon         String?     @default("🍔") @db.VarChar(20)
+  sortOrder    Int         @default(0) @map("sort_order")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  // Relations
-  gallery      Gallery            @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  contracts    Contract[]
-  odometerLogs OdometerLog[]
-  alerts       MaintenanceAlert[]
-  maintenanceRequests MaintenanceRequest[]
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items        MenuItem[]
 
-  @@index([galleryId])
-  @@map("cars")
+  @@index([restaurantId])
+  @@map("categories")
 }
 
-model TenantProfile {
-  id                String   @id @default(uuid()) @db.Uuid
-  userId            String   @unique @map("user_id") @db.Uuid
-  galleryId         String   @map("gallery_id") @db.Uuid
-  fullName          String   @map("full_name") @db.VarChar(255)
-  nationalId        String   @default("") @map("national_id") @db.VarChar(50)
-  nationalIdUrl     String   @map("national_id_url") @db.VarChar(2048)
-  drivingLicenseUrl String   @map("driving_license_url") @db.VarChar(2048)
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+model MenuItem {
+  id           String      @id @default(uuid()) @db.Uuid
+  restaurantId String      @map("restaurant_id") @db.Uuid
+  categoryId   String      @map("category_id") @db.Uuid
+  name         String      @db.VarChar(150)
+  description  String?     @db.Text
+  price        Decimal     @db.Decimal(10, 2)
+  imageUrl     String?     @map("image_url") @db.Text
+  isAvailable  Boolean     @default(true) @map("is_available")
+  badge        String?     @db.VarChar(50)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  // Relations
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gallery   Gallery    @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  contracts Contract[]
-  maintenanceRequests MaintenanceRequest[]
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
 
-  @@index([galleryId])
-  @@map("tenant_profiles")
+  @@index([restaurantId])
+  @@index([categoryId])
+  @@map("menu_items")
 }
 
-model Contract {
-  id               String         @id @default(uuid()) @db.Uuid
-  galleryId        String         @map("gallery_id") @db.Uuid
-  carId            String         @map("car_id") @db.Uuid
-  tenantId         String         @map("tenant_id") @db.Uuid
-  rentalValue      Decimal        @map("rental_value") @db.Decimal(10, 2)
-  startDate        DateTime       @map("start_date") @db.Date
-  endDate          DateTime       @map("end_date") @db.Date
-  allowedMonthlyKm Int            @map("allowed_monthly_km")
-  status           ContractStatus @default(PENDING)
-  documentUrl      String?        @map("document_url") @db.VarChar(2048) // Added contract document URL
-  signature        String?        @db.Text
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
+model Captain {
+  id           String      @id @default(uuid()) @db.Uuid
+  restaurantId String      @map("restaurant_id") @db.Uuid
+  name         String      @db.VarChar(100)
+  phone        String      @db.VarChar(50)
+  vehicleType  String?     @default("موتوسيكل") @map("vehicle_type") @db.VarChar(50)
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  // Relations
-  gallery     Gallery         @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  car         Car             @relation(fields: [carId], references: [id], onDelete: Cascade)
-  tenant      TenantProfile   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  inspections CarInspection[]
-  odometerLogs OdometerLog[]
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders       Order[]
 
-  @@index([galleryId])
-  @@index([galleryId, carId])
-  @@index([galleryId, tenantId])
-  @@map("contracts")
+  @@index([restaurantId])
+  @@map("captains")
 }
 
-model CarInspection {
-  id              String         @id @default(uuid()) @db.Uuid
-  galleryId       String         @map("gallery_id") @db.Uuid
-  contractId      String         @map("contract_id") @db.Uuid
-  type            InspectionType
-  gasPercentage   Int            @map("gas_percentage")
-  odometerReading Int            @map("odometer_reading")
-  mediaUrls       String[]       @map("media_urls") @db.VarChar(2048)
-  notes           String?        @db.Text
-  createdAt       DateTime       @default(now()) @map("created_at")
+model Order {
+  id              String        @id @default(uuid()) @db.Uuid
+  orderNumber     String        @unique @map("order_number") @db.VarChar(50)
+  restaurantId    String        @map("restaurant_id") @db.Uuid
+  orderType       OrderType     @default(DELIVERY) @map("order_type")
+  customerName    String        @map("customer_name") @db.VarChar(150)
+  customerPhone   String        @map("customer_phone") @db.VarChar(50)
+  deliveryAddress String?       @map("delivery_address") @db.Text
+  notes           String?       @db.Text
+  subtotal        Decimal       @db.Decimal(10, 2)
+  deliveryFee     Decimal       @default(0.00) @map("delivery_fee") @db.Decimal(10, 2)
+  totalAmount     Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID) @map("payment_status")
+  captainId       String?       @map("captain_id") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  // Relations
-  gallery  Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  restaurant      Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  captain         Captain?      @relation(fields: [captainId], references: [id], onDelete: SetNull)
+  items           OrderItem[]
 
-  @@index([galleryId])
-  @@index([galleryId, contractId])
-  @@map("car_inspections")
+  @@index([restaurantId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("orders")
 }
 
-model OdometerLog {
-  id               String          @id @default(uuid()) @db.Uuid
-  galleryId        String          @map("gallery_id") @db.Uuid
-  contractId       String          @map("contract_id") @db.Uuid
-  carId            String          @map("car_id") @db.Uuid
-  type             OdometerLogType
-  odometerValue    Int             @map("odometer_value")
-  invoiceImageUrl  String?         @map("invoice_image_url") @db.VarChar(2048)
-  createdAt        DateTime        @default(now()) @map("created_at")
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @map("order_id") @db.Uuid
+  menuItemId String   @map("menu_item_id") @db.Uuid
+  name       String   @db.VarChar(150)
+  quantity   Int      @default(1)
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  totalPrice Decimal  @map("total_price") @db.Decimal(10, 2)
+  notes      String?  @db.VarChar(255)
 
-  // Relations
-  gallery  Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  car      Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
-  @@index([galleryId])
-  @@index([galleryId, carId])
-  @@index([galleryId, contractId])
-  @@map("odometer_logs")
-}
-
-model MaintenanceAlert {
-  id        String      @id @default(uuid()) @db.Uuid
-  galleryId String      @map("gallery_id") @db.Uuid
-  carId     String      @map("car_id") @db.Uuid
-  type      AlertType
-  status    AlertStatus @default(PENDING)
-  message   String      @db.Text
-  createdAt DateTime    @default(now()) @map("created_at")
-
-  // Relations
-  gallery Gallery @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  car     Car     @relation(fields: [carId], references: [id], onDelete: Cascade)
-
-  @@index([galleryId])
-  @@index([galleryId, carId])
-  @@map("maintenance_alerts")
-}
-
-enum MaintenanceRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  COMPLETED
-}
-
-model MaintenanceRequest {
-  id          String                   @id @default(uuid()) @db.Uuid
-  galleryId   String                   @map("gallery_id") @db.Uuid
-  carId       String                   @map("car_id") @db.Uuid
-  tenantId    String                   @map("tenant_id") @db.Uuid
-  issue       String                   @db.Text
-  status      MaintenanceRequestStatus @default(PENDING)
-  response    String?                  @db.Text
-  createdAt   DateTime                 @default(now()) @map("created_at")
-  updatedAt   DateTime                 @updatedAt @map("updated_at")
-
-  // Relations
-  gallery   Gallery       @relation(fields: [galleryId], references: [id], onDelete: Cascade)
-  car       Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
-  tenant    TenantProfile @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([galleryId])
-  @@index([tenantId])
-  @@map("maintenance_requests")
+  @@index([orderId])
+  @@map("order_items")
 }

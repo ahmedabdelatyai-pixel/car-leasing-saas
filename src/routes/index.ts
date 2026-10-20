@@ -1,94 +1,23 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
-import { CarController } from '../controllers/car.controller';
-import { TenantController } from '../controllers/tenant.controller';
-import { ContractController } from '../controllers/contract.controller';
-import { OdometerController } from '../controllers/odometer.controller';
-import { InspectionController } from '../controllers/inspection.controller';
-import { MaintenanceRequestController } from '../controllers/maintenance_request.controller';
-import { authenticateToken, authorizeRoles, enforceTenantIsolation } from '../middlewares/auth.middleware';
+import { RestaurantController } from '../controllers/restaurant.controller';
+import { OrderController } from '../controllers/order.controller';
+import { CaptainController } from '../controllers/captain.controller';
+import { ReportController } from '../controllers/report.controller';
+import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 import { Role } from '@prisma/client';
+import path from 'path';
+import fs from 'fs';
 
 const router = Router();
 
 // ==========================================
-// 1. PUBLIC AUTHENTICATION & GALLERY CREATION
+// 1. FILE UPLOAD LOGIC (Disk & Base64 Fallback)
 // ==========================================
-router.post('/auth/register', AuthController.register);
-router.post('/auth/login', AuthController.login);
-router.post('/auth/create-gallery', AuthController.createGallery); // Dedicated Gallery Creation Page API
-router.get('/auth/public-galleries', AuthController.getPublicGalleries);
-
-// Scoped SaaS route to retrieve all galleries (Super Admins only)
-router.get(
-  '/galleries',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN]),
-  AuthController.getGalleries
-);
-
-router.put(
-  '/galleries/:id',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN]),
-  AuthController.updateGallery
-);
-
-router.put(
-  '/gallery/me',
-  authenticateToken,
-  enforceTenantIsolation,
-  authorizeRoles([Role.GALLERY_OWNER]),
-  AuthController.updateMyGallery
-);
-
-router.delete(
-  '/galleries/:id',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN]),
-  AuthController.deleteGallery
-);
-
-// ==========================================
-// 1.5. FILE UPLOAD ENDPOINTS (Serverless Safe with Supabase Cloud + Local Fallback)
-// ==========================================
-import fs from 'fs';
-import path from 'path';
-
 async function handleFileUpload(file: Express.Multer.File): Promise<string> {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_KEY;
-  const supabaseBucket = process.env.SUPABASE_BUCKET || 'media';
+  const cleanFilename = `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
-  const cleanFilename = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
-
-  if (supabaseUrl && supabaseKey && supabaseKey !== 'anon') {
-    try {
-      const cleanUrl = supabaseUrl.replace(/\/$/, '');
-      const uploadPath = `uploads/${cleanFilename}`;
-      
-      const response = await fetch(`${cleanUrl}/storage/v1/object/${supabaseBucket}/${uploadPath}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': file.mimetype
-        },
-        body: file.buffer
-      });
-
-      const resData = (await response.json()) as any;
-      if (response.ok) {
-        return `${cleanUrl}/storage/v1/object/public/${supabaseBucket}/${uploadPath}`;
-      } else {
-        console.warn('Supabase storage returned error, falling back:', resData);
-      }
-    } catch (err: any) {
-      console.error('[SUPABASE UPLOAD ERROR, FALLING BACK TO DISK]:', err);
-    }
-  }
-
-  // Local Storage Fallback
   try {
     const uploadDir = path.join(__dirname, '../../uploads');
     if (!fs.existsSync(uploadDir)) {
@@ -97,7 +26,6 @@ async function handleFileUpload(file: Express.Multer.File): Promise<string> {
     fs.writeFileSync(path.join(uploadDir, cleanFilename), file.buffer);
     return `/uploads/${cleanFilename}`;
   } catch (localWriteErr: any) {
-    console.warn('[LOCAL DISK WRITE FAILED (RO Filesystem), FALLING BACK TO BASE64 DATA URL]:', localWriteErr);
     // Base64 Data URL fallback for serverless environments (Vercel)
     const base64Content = file.buffer.toString('base64');
     return `data:${file.mimetype};base64,${base64Content}`;
@@ -110,10 +38,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   }
   try {
     const fileUrl = await handleFileUpload(req.file);
-    return res.json({
-      message: 'File uploaded successfully',
-      url: fileUrl
-    });
+    return res.json({ message: 'File uploaded successfully', url: fileUrl });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'File upload failed' });
   }
@@ -127,198 +52,124 @@ router.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
     const files = req.files as Express.Multer.File[];
     const uploadPromises = files.map(file => handleFileUpload(file));
     const urls = await Promise.all(uploadPromises);
-    return res.json({
-      message: 'Files uploaded successfully',
-      urls
-    });
+    return res.json({ message: 'Files uploaded successfully', urls });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Multiple files upload failed' });
   }
 });
 
+// ==========================================
+// 2. AUTHENTICATION & LOGIN
+// ==========================================
+router.post('/auth/login', AuthController.login);
+router.post('/auth/register', AuthController.register);
 
 // ==========================================
-// 2. CAR MANAGEMENT (CRUD - Scoped)
+// 3. RESTAURANT & MENU MANAGEMENT
 // ==========================================
-router.post(
-  '/cars',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  CarController.createCar
-);
-router.get(
-  '/cars',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  CarController.getCars
-);
-router.get(
-  '/cars/:id',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  CarController.getCarById
-);
+router.get('/restaurant/menu', RestaurantController.getPublicMenu);
+
 router.put(
-  '/cars/:id',
+  '/restaurant/settings',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  CarController.updateCar
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  RestaurantController.updateSettings
 );
+
+router.post(
+  '/restaurant/categories',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  RestaurantController.createCategory
+);
+
+router.post(
+  '/restaurant/menu-items',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  RestaurantController.createMenuItem
+);
+
+router.put(
+  '/restaurant/menu-items/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  RestaurantController.updateMenuItem
+);
+
 router.delete(
-  '/cars/:id',
+  '/restaurant/menu-items/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  CarController.deleteCar
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  RestaurantController.deleteMenuItem
 );
 
 // ==========================================
-// 3. TENANT / DRIVER MANAGEMENT (CRUD - Scoped)
+// 4. ORDERS & KITCHEN SYSTEM
 // ==========================================
-router.post(
-  '/drivers',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  TenantController.createTenant
-);
+router.post('/orders', OrderController.createOrder); // Public for customers to order
+router.get('/orders/track/:orderNumber', OrderController.trackOrder); // Public for customers to track
+
 router.get(
-  '/drivers',
+  '/orders',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  TenantController.getTenants
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER, Role.KITCHEN]),
+  OrderController.getOrders
 );
-router.get(
-  '/drivers/:id',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  TenantController.getTenantById
-);
+
 router.put(
-  '/drivers/:id',
+  '/orders/:id/status',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  TenantController.updateTenant
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER, Role.KITCHEN]),
+  OrderController.updateStatus
 );
+
 router.delete(
-  '/drivers/:id',
+  '/orders/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  TenantController.deleteTenant
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  OrderController.deleteOrder
 );
 
 // ==========================================
-// 4. CONTRACT MANAGEMENT (Scoped & Filtered)
+// 5. DELIVERY CAPTAINS FLEET
 // ==========================================
+router.get(
+  '/captains',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  CaptainController.getCaptains
+);
+
 router.post(
-  '/contracts',
+  '/captains',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  ContractController.createContract
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  CaptainController.createCaptain
 );
-router.get(
-  '/contracts',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER, Role.TENANT]),
-  enforceTenantIsolation,
-  ContractController.getContracts
-);
-router.get(
-  '/contracts/:id',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER, Role.TENANT]),
-  enforceTenantIsolation,
-  ContractController.getContractById
-);
+
 router.put(
-  '/contracts/:id',
+  '/captains/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  ContractController.updateContract
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  CaptainController.updateCaptain
 );
+
 router.delete(
-  '/contracts/:id',
+  '/captains/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  ContractController.deleteContract
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  CaptainController.deleteCaptain
 );
 
 // ==========================================
-// 5. ODOMETER LOGGING & WARNING SYSTEMS
+// 6. REPORTS & ANALYTICS
 // ==========================================
-router.post(
-  '/odometer/log',
-  authenticateToken,
-  authorizeRoles([Role.GALLERY_OWNER, Role.TENANT]),
-  enforceTenantIsolation,
-  OdometerController.logOdometer
-);
 router.get(
-  '/odometer/alerts',
+  '/reports/sales',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  OdometerController.getMaintenanceAlerts
-);
-router.post(
-  '/odometer/trigger-license-check',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  OdometerController.runLicenseExpirationCheck
-);
-
-// ==========================================
-// 6. CAR INSPECTION SYSTEM
-// ==========================================
-router.post(
-  '/inspections',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  InspectionController.logInspection
-);
-router.get(
-  '/inspections/compare/:contractId',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER, Role.TENANT]),
-  enforceTenantIsolation,
-  InspectionController.compareInspections
-);
-
-// ==========================================
-// 7. MAINTENANCE REQUEST SYSTEM
-// ==========================================
-router.post(
-  '/maintenance-requests',
-  authenticateToken,
-  authorizeRoles([Role.TENANT]),
-  MaintenanceRequestController.createRequest
-);
-router.get(
-  '/maintenance-requests',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER, Role.TENANT]),
-  enforceTenantIsolation,
-  MaintenanceRequestController.getRequests
-);
-router.put(
-  '/maintenance-requests/:id/respond',
-  authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.GALLERY_OWNER]),
-  enforceTenantIsolation,
-  MaintenanceRequestController.respondToRequest
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  ReportController.getSalesReport
 );
 
 export default router;

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مطعم ضجة 🔥 | اطلب أونلاين دليفري وتيك واي</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glow-orange {
+      box-shadow: 0 0 25px rgba(249, 115, 22, 0.35);
+    }
+    .glow-red {
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-28">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-[#0b0f19]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg glow-orange font-black">
+        🔥
+      </div>
+      <div>
+        <h1 id="rest-name" class="text-base font-black tracking-tight flex items-center gap-1.5 text-white">
+          مطعم ضجة
+          <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>
+        </h1>
+        <p id="rest-tagline" class="text-[11px] text-slate-400 line-clamp-1">طعم يعمل ضجة! 🔥 أسرع دليفري وتيك واي</p>
+      </div>
+    </div>
+
+    <!-- Track Order Action -->
+    <button onclick="openTrackModal()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-orange-400 flex items-center gap-1.5 transition-all">
+      <span>🛵</span>
+      <span>تتبع طلبك</span>
+    </button>
+  </header>
+
+  <!-- HERO & ORDER TYPE SELECTOR -->
+  <section class="p-4 space-y-4">
+    <!-- Switcher: Delivery vs Takeaway -->
+    <div class="bg-black/30 p-1 rounded-2xl border border-white/10 flex gap-1">
+      <button onclick="setOrderType('DELIVERY')" id="btn-delivery" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md">
+        <span>🛵 دليفري (توصيل للمنزل)</span>
+      </button>
+      <button onclick="setOrderType('TAKEAWAY')" id="btn-takeaway" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white">
+        <span>🥡 تيك واي (استلام من الفرع)</span>
+      </button>
+    </div>
+
+    <!-- Delivery Fee & Time Info Banner -->
+    <div class="bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
+      <div class="flex items-center gap-2 text-slate-300">
+        <span class="text-lg">⏱️</span>
+        <span>وقت التوصيل: <strong class="text-orange-400 font-bold">30 - 45 دقيقة</strong></span>
+      </div>
+      <div class="text-slate-300">
+        <span id="delivery-fee-badge">خدمة التوصيل: <strong class="text-emerald-400 font-bold" id="rest-delivery-fee">15 ج.م</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORY PILLS BAR -->
+  <div class="sticky top-[69px] z-30 bg-[#0b0f19]/95 backdrop-blur-md py-2 px-4 border-b border-white/5 flex gap-2 overflow-x-auto custom-scrollbar" id="categories-bar">
+    <button onclick="filterCategory('ALL')" class="cat-pill active px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all bg-orange-600 text-white">
+      🔥 كل المنيو
+    </button>
+    <!-- Populated dynamically -->
+  </div>
+
+  <!-- MENU ITEMS GRID -->
+  <main class="flex-1 px-4 py-4 space-y-6">
+    <div id="menu-sections-container" class="space-y-6">
+      <div class="text-center py-12 text-slate-500 text-xs">
+        🔄 جاري تحميل أشهى وجبات مطعم ضجة...
+      </div>
+    </div>
+  </main>
+
+  <!-- STICKY BOTTOM CART BAR -->
+  <div id="sticky-cart-bar" class="fixed bottom-0 inset-x-0 p-4 z-40 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/95 to-transparent hidden">
+    <button onclick="openCartModal()" class="w-full h-14 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-sm rounded-2xl flex justify-between items-center px-6 shadow-2xl glow-orange active:scale-[0.99] transition-all">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-xl bg-black/30 flex items-center justify-center text-sm" id="cart-total-qty">0</span>
+        <span>عرض سلة الوجبات</span>
+      </div>
+      <span class="text-base font-black" id="cart-total-price">0 ج.م</span>
+    </button>
+  </div>
+
+  <!-- CART & CHECKOUT MODAL -->
+  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-end sm:items-center justify-center transition-all duration-300">
+    <div class="bg-[#111827] border border-white/10 w-full sm:max-w-md max-h-[90vh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+      <!-- Header -->
+      <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b0f19]/60">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🛒</span>
+          <h3 class="text-sm font-black text-white">سلة طلبات مطعم ضجة</h3>
+        </div>
+        <button onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- Items List -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" id="cart-items-container">
+        <!-- populated dynamically -->
+      </div>
+
+      <!-- Customer Checkout Details Form -->
+      <form onsubmit="submitCustomerOrder(event)" class="p-4 border-t border-white/10 bg-[#0b0f19]/80 space-y-3">
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">اسم العميل بالكامل *</label>
+          <input type="text" id="cust-name" required placeholder="مثال: أحمد محمد" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للتواصل *</label>
+          <input type="tel" id="cust-phone" required placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
+        </div>
+
+        <div id="delivery-address-group" class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">عنوان التوصيل بالتفصيل (الشارع، العمارة، الشقة) *</label>
+          <input type="text" id="cust-address" placeholder="مثال: شارع الجمهورية - عمارة 15 - الدور الثالث" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">ملاحظات إضافية على الطلب</label>
+          <input type="text" id="cust-notes" placeholder="مثال: زيادة كاتشب، الاتصال عند الوصول" class="w-full h-9 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
+        </div>
+
+        <!-- Summary Totals -->
+        <div class="bg-black/40 rounded-xl p-3 border border-white/5 space-y-1 text-xs">
+          <div class="flex justify-between text-slate-400">
+            <span>مجموع الوجبات:</span>
+            <span id="summary-subtotal" class="font-bold text-slate-200">0 ج.م</span>
+          </div>
+          <div class="flex justify-between text-slate-400" id="summary-fee-row">
+            <span>رسوم التوصيل:</span>
+            <span id="summary-delivery-fee" class="font-bold text-orange-400">15 ج.م</span>
+          </div>
+          <div class="flex justify-between text-white font-black pt-1 border-t border-white/5 text-sm">
+            <span>الإجمالي النهائي للدفع:</span>
+            <span id="summary-total" class="text-orange-400 font-black">0 ج.م</span>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-submit-order" class="w-full h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-xl shadow-lg glow-orange flex items-center justify-center gap-2 transition-all">
+          <span>تأكيد وإرسال الطلب الآن 🚀</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TRACK ORDER MODAL -->
+  <div id="track-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="text-sm font-black text-white flex items-center gap-2">
+          <span>🛵</span> تتبع طلبك الحي
+        </h3>
+        <button onclick="closeTrackModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="flex gap-2">
+        <input type="text" id="track-order-input" placeholder="ادخل كود الطلب (مثل DJ-1042)" class="flex-1 h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono uppercase">
+        <button onclick="fetchOrderTracking()" class="px-4 h-10 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-xl transition-all">بحث</button>
+      </div>
+
+      <!-- Tracking Status Result Area -->
+      <div id="track-result-area" class="space-y-4 hidden">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    // Global State
+    let restaurantData = null;
+    let currentOrderType = 'DELIVERY'; // or 'TAKEAWAY'
+    let cart = []; // [{ id, name, price, quantity, imageUrl, notes }]
+    let activeFilter = 'ALL';
+
+    // 1. Initialize Menu and Restaurant Info
+    async function loadRestaurantMenu() {
+      try {
+        const res = await fetch('/api/v1/restaurant/menu');
+        const data = await res.json();
+        restaurantData = data;
+
+        document.getElementById('rest-name').innerHTML = `${data.name} <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>`;
+        if (data.tagline) document.getElementById('rest-tagline').innerText = data.tagline;
+        if (data.deliveryFee) document.getElementById('rest-delivery-fee').innerText = `${Number(data.deliveryFee)} ج.م`;
+
+        renderCategoriesPills();
+        renderMenuCards();
+
+        // Check if there is a tracking parameter in URL (?track=DJ-1042)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('track')) {
+          document.getElementById('track-order-input').value = params.get('track');
+          openTrackModal();
+          fetchOrderTracking();
+        }
+
+      } catch (err) {
+        console.error('Failed to load menu:', err);
+        document.getElementById('menu-sections-container').innerHTML = '<p class="text-center text-rose-400 text-xs py-8">فشل تحميل المنيو. تأكد من اتصال الإنترنت.</p>';
+      }
+    }
+
+    // 2. Render Category Pills
+    function renderCategoriesPills() {
+      const container = document.getElementById('categories-bar');
+      if (!restaurantData || !restaurantData.categories) return;
+
+      const pillsHtml = restaurantData.categories.map(cat => `
+        <button onclick="filterCategory('${cat.id}')" id="pill-${cat.id}" class="cat-pill px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all bg-white/5 hover:bg-white/10 text-slate-300">
+          ${cat.icon || '🍔'} ${cat.name}
+        </button>
+      `).join('');
+
+      container.innerHTML = `
+        <button onclick="filterCategory('ALL')" id="pill-ALL" class="cat-pill active px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all bg-orange-600 text-white">
+          🔥 كل المنيو
+        </button>
+        ${pillsHtml}
+      `;
+    }
+
+    function filterCategory(catId) {
+      activeFilter = catId;
+      document.querySelectorAll('.cat-pill').forEach(p => {
+        p.classList.remove('bg-orange-600', 'text-white');
+        p.classList.add('bg-white/5', 'text-slate-300');
+      });
+      const activeBtn = document.getElementById(`pill-${catId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white/5', 'text-slate-300');
+        activeBtn.classList.add('bg-orange-600', 'text-white');
+      }
+
+      renderMenuCards();
+    }
+
+    // 3. Render Menu Dishes
+    function renderMenuCards() {
+      const container = document.getElementById('menu-sections-container');
+      if (!restaurantData || !restaurantData.categories) return;
+
+      let filteredCategories = restaurantData.categories;
+      if (activeFilter !== 'ALL') {
+        filteredCategories = restaurantData.categories.filter(c => c.id === activeFilter);
+      }
+
+      container.innerHTML = filteredCategories.map(cat => {
+        if (!cat.items || cat.items.length === 0) return '';
+
+        const itemsHtml = cat.items.map(item => {
+          const badgeHtml = item.badge ? `<span class="absolute top-2 right-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md">${item.badge}</span>` : '';
+          const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
+
+          return `
+            <div class="bg-[#111827] border border-white/5 hover:border-orange-500/20 rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
+              <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-black/40">
+                <img src="${img}" alt="${item.name}" class="w-full h-full object-cover">
+                ${badgeHtml}
+              </div>
+              <div class="flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 class="text-xs font-black text-white leading-tight">${item.name}</h4>
+                  <p class="text-[10px] text-slate-400 line-clamp-2 mt-1">${item.description || ''}</p>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                  <span class="text-xs font-black text-orange-400 font-mono">${Number(item.price)} ج.م</span>
+                  <button onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
+                    <span>+ إضافة</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="space-y-3">
+            <h3 class="text-sm font-black text-slate-200 flex items-center gap-2 border-r-4 border-orange-500 pr-2">
+              <span>${cat.icon || '🍔'}</span> ${cat.name}
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 4. Cart Operations
+    function addToCart(id, name, price, imageUrl) {
+      const existing = cart.find(i => i.id === id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ id, name, price: Number(price), quantity: 1, imageUrl, notes: '' });
+      }
+      updateCartUI();
+
+      // Quick Toast
+      showQuickToast(`تم إضافة ${name} للسلة 🍔`);
+    }
+
+    function updateCartItemQty(id, change) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+
+      item.quantity += change;
+      if (item.quantity <= 0) {
+        cart = cart.filter(i => i.id !== id);
+      }
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalQty = cart.reduce((acc, it) => acc + it.quantity, 0);
+      const subtotal = cart.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+      const deliveryFee = currentOrderType === 'DELIVERY' ? Number(restaurantData?.deliveryFee || 15) : 0;
+      const total = subtotal + deliveryFee;
+
+      // Bottom bar
+      const bar = document.getElementById('sticky-cart-bar');
+      if (totalQty > 0) {
+        bar.classList.remove('hidden');
+        document.getElementById('cart-total-qty').innerText = totalQty;
+        document.getElementById('cart-total-price').innerText = `${total} ج.م`;
+      } else {
+        bar.classList.add('hidden');
+        closeCartModal();
+      }
+
+      // Inside Modal
+      document.getElementById('summary-subtotal').innerText = `${subtotal} ج.م`;
+      document.getElementById('summary-delivery-fee').innerText = `${deliveryFee} ج.م`;
+      document.getElementById('summary-total').innerText = `${total} ج.م`;
+
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="text-center text-xs text-slate-500 py-6">سلة الطلبات فارغة.</p>';
+        return;
+      }
+
+      container.innerHTML = cart.map(it => `
+        <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex justify-between items-center gap-3">
+          <img src="${it.imageUrl}" class="w-12 h-12 rounded-xl object-cover shrink-0">
+          <div class="flex-1">
+            <h5 class="text-xs font-black text-white">${it.name}</h5>
+            <span class="text-[11px] text-orange-400 font-bold font-mono">${it.price * it.quantity} ج.م</span>
+          </div>
+          <div class="flex items-center gap-2 bg-white/5 rounded-xl border border-white/10 px-2 py-1">
+            <button type="button" onclick="updateCartItemQty('${it.id}', -1)" class="w-6 h-6 rounded-lg bg-white/5 text-slate-300 font-bold flex items-center justify-center">-</button>
+            <span class="text-xs font-black text-white w-4 text-center">${it.quantity}</span>
+            <button type="button" onclick="updateCartItemQty('${it.id}', 1)" class="w-6 h-6 rounded-lg bg-orange-600 text-white font-bold flex items-center justify-center">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 5. Order Type Switcher
+    function setOrderType(type) {
+      currentOrderType = type;
+      const btnDelivery = document.getElementById('btn-delivery');
+      const btnTakeaway = document.getElementById('btn-takeaway');
+      const addrGroup = document.getElementById('delivery-address-group');
+      const custAddr = document.getElementById('cust-address');
+      const feeRow = document.getElementById('summary-fee-row');
+      const feeBadge = document.getElementById('delivery-fee-badge');
+
+      if (type === 'DELIVERY') {
+        btnDelivery.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
+        btnTakeaway.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
+        addrGroup.classList.remove('hidden');
+        custAddr.required = true;
+        if (feeRow) feeRow.classList.remove('hidden');
+        if (feeBadge) feeBadge.classList.remove('hidden');
+      } else {
+        btnTakeaway.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
+        btnDelivery.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
+        addrGroup.classList.add('hidden');
+        custAddr.required = false;
+        if (feeRow) feeRow.classList.add('hidden');
+        if (feeBadge) feeBadge.classList.add('hidden');
+      }
+      updateCartUI();
+    }
+
+    // 6. Submit Order
+    async function submitCustomerOrder(e) {
+      e.preventDefault();
+      if (cart.length === 0) return;
+
+      const customerName = document.getElementById('cust-name').value.trim();
+      const customerPhone = document.getElementById('cust-phone').value.trim();
+      const deliveryAddress = currentOrderType === 'DELIVERY' ? document.getElementById('cust-address').value.trim() : null;
+      const notes = document.getElementById('cust-notes').value.trim();
+
+      const btn = document.getElementById('btn-submit-order');
+      btn.disabled = true;
+      btn.innerHTML = '🔄 جاري تأكيد الطلب...';
+
+      try {
+        const payload = {
+          customerName,
+          customerPhone,
+          orderType: currentOrderType,
+          deliveryAddress,
+          notes,
+          items: cart.map(i => ({
+            menuItemId: i.id,
+            quantity: i.quantity
+          }))
+        };
+
+        const res = await fetch('/api/v1/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to submit order');
+
+        // Reset Cart
+        cart = [];
+        updateCartUI();
+        closeCartModal();
+
+        // Open Tracking with newly created order
+        document.getElementById('track-order-input').value = data.order.orderNumber;
+        openTrackModal();
+        displayTrackingResult(data.order);
+
+      } catch (err) {
+        alert(`عذراً: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'تأكيد وإرسال الطلب الآن 🚀';
+      }
+    }
+
+    // 7. Track Order Live
+    async function fetchOrderTracking() {
+      const code = document.getElementById('track-order-input').value.trim();
+      if (!code) return;
+
+      const resultArea = document.getElementById('track-result-area');
+      resultArea.classList.remove('hidden');
+      resultArea.innerHTML = '<p class="text-xs text-center text-slate-400 py-4">جاري الاستعلام عن كود الطلب...</p>';
+
+      try {
+        const res = await fetch(`/api/v1/orders/track/${encodeURIComponent(code)}`);
+        const order = await res.json();
+        if (!res.ok) throw new Error(order.error || 'Order not found');
+
+        displayTrackingResult(order);
+      } catch (err) {
+        resultArea.innerHTML = `<div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs text-center font-bold">${err.message}</div>`;
+      }
+    }
+
+    function displayTrackingResult(order) {
+      const resultArea = document.getElementById('track-result-area');
+      resultArea.classList.remove('hidden');
+
+      const statuses = [
+        { key: 'PENDING', label: 'تم الاستلام 🕒' },
+        { key: 'PREPARING', label: 'في المطبخ 🍳' },
+        { key: 'ON_THE_WAY', label: order.orderType === 'DELIVERY' ? 'في الطريق مع الكابتن 🛵' : 'جاهز للاستلام 🥡' },
+        { key: 'DELIVERED', label: 'تم التسليم بالهناء والشفاء ✅' }
+      ];
+
+      const statusMap = {
+        'PENDING': 0,
+        'PREPARING': 1,
+        'READY': 2,
+        'ON_THE_WAY': 2,
+        'DELIVERED': 3
+      };
+
+      const currentIdx = statusMap[order.status] !== undefined ? statusMap[order.status] : 0;
+
+      const stepperHtml = statuses.map((st, idx) => {
+        const isDone = idx <= currentIdx;
+        const isCurrent = idx === currentIdx;
+        const color = isDone ? 'text-orange-400 font-black' : 'text-slate-500';
+        const icon = isDone ? '🟢' : '⚪';
+
+        return `
+          <div class="flex items-center gap-3">
+            <span class="text-sm">${icon}</span>
+            <span class="text-xs ${color} ${isCurrent ? 'scale-105' : ''}">${st.label}</span>
+          </div>
+        `;
+      }).join('');
+
+      resultArea.innerHTML = `
+        <div class="bg-black/40 rounded-2xl p-4 border border-white/5 space-y-3">
+          <div class="flex justify-between items-center border-b border-white/5 pb-2">
+            <div>
+              <span class="text-[10px] text-slate-400 block">كود الطلب:</span>
+              <span class="text-sm font-black text-orange-400 font-mono tracking-wider">${order.orderNumber}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 block">نوع الطلب:</span>
+              <span class="text-xs font-bold text-white">${order.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}</span>
+            </div>
+          </div>
+
+          <!-- Stepper -->
+          <div class="space-y-2.5 py-1">
+            ${stepperHtml}
+          </div>
+
+          <!-- Details -->
+          <div class="border-t border-white/5 pt-2 text-xs space-y-1 text-slate-300">
+            <div class="flex justify-between">
+              <span>الإجمالي:</span>
+              <span class="font-black text-orange-400 font-mono">${order.totalAmount} ج.م</span>
+            </div>
+            ${order.captain ? `
+              <div class="p-2 bg-white/5 rounded-xl border border-white/5 mt-2 flex justify-between items-center">
+                <div>
+                  <span class="text-[9px] text-slate-400 block">كابتن التوصيل:</span>
+                  <span class="text-xs font-bold text-white">${order.captain.name} (${order.captain.phone})</span>
+                </div>
+                <a href="tel:${order.captain.phone}" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold">اتصال 📞</a>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal controls
+    function openCartModal() { document.getElementById('cart-modal').classList.remove('hidden'); document.getElementById('cart-modal').classList.add('flex'); }
+    function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); document.getElementById('cart-modal').classList.remove('flex'); }
+    function openTrackModal() { document.getElementById('track-modal').classList.remove('hidden'); document.getElementById('track-modal').classList.add('flex'); }
+    function closeTrackModal() { document.getElementById('track-modal').classList.add('hidden'); document.getElementById('track-modal').classList.remove('flex'); }
+
+    function showQuickToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-orange-600 text-white text-xs font-black px-4 py-2 rounded-2xl shadow-2xl glow-orange animate-bounce';
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    // Run on load
+    loadRestaurantMenu();
+  </script>
+</body>
+</html>
