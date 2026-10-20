@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>مطعم ضجة 🔥 | اطلب أونلاين دليفري وتيك واي</title>
+  <link rel="icon" type="image/jpeg" href="/dajja_logo.jpg">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -29,17 +30,17 @@
 <body class="min-h-screen flex flex-col pb-28">
 
   <!-- TOP HEADER -->
-  <header class="sticky top-0 z-40 bg-[#0b0f19]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex justify-between items-center">
+  <header class="sticky top-0 z-40 bg-[#0b0f19]/90 backdrop-blur-xl border-b border-white/10 px-4 py-2.5 flex justify-between items-center">
     <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg glow-orange font-black">
-        🔥
+      <div class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-orange-500/50 shadow-xl glow-orange shrink-0 bg-black">
+        <img id="rest-logo-img" src="/dajja_logo.jpg" alt="مطعم ضجة" class="w-full h-full object-cover">
       </div>
       <div>
         <h1 id="rest-name" class="text-base font-black tracking-tight flex items-center gap-1.5 text-white">
           مطعم ضجة
           <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">مفتوح الآن 🟢</span>
         </h1>
-        <p id="rest-tagline" class="text-[11px] text-slate-400 line-clamp-1">طعم يعمل ضجة! 🔥 أسرع دليفري وتيك واي</p>
+        <p id="rest-tagline" class="text-[11px] text-orange-400 font-bold line-clamp-1">للمشويات والسندوتشات 🔥</p>
       </div>
     </div>
 
@@ -127,8 +128,8 @@
     <div class="bg-[#111827] border border-white/10 w-full sm:max-w-md max-h-[90vh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
       <!-- Header -->
       <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b0f19]/60">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">🛒</span>
+        <div class="flex items-center gap-2.5">
+          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-7 h-7 rounded-full object-cover border border-orange-500/30">
           <h3 class="text-sm font-black text-white">سلة طلبات مطعم ضجة</h3>
         </div>
         <div class="flex items-center gap-2">
@@ -194,9 +195,12 @@
   <div id="track-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
     <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
-        <h3 class="text-sm font-black text-white flex items-center gap-2">
-          <span>🛵</span> تتبع طلبك الحي
-        </h3>
+        <div class="flex items-center gap-2.5">
+          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-8 h-8 rounded-full object-cover border border-orange-500/30">
+          <h3 class="text-sm font-black text-white flex items-center gap-2">
+            <span>🛵</span> تتبع طلبك الحي
+          </h3>
+        </div>
         <button onclick="closeTrackModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
       </div>
 
@@ -234,6 +238,10 @@
 
         document.getElementById('rest-name').innerHTML = `${data.name} ${statusBadge}`;
         if (data.tagline) document.getElementById('rest-tagline').innerText = data.tagline;
+        if (data.logoUrl) {
+          const logoEl = document.getElementById('rest-logo-img');
+          if (logoEl) logoEl.src = data.logoUrl;
+        }
         if (data.deliveryFee) document.getElementById('rest-delivery-fee').innerText = `${Number(data.deliveryFee)} ج.م`;
         if (data.address) document.getElementById('rest-address').innerText = data.address;
         if (data.estimatedTime) document.getElementById('rest-time-badge').innerText = data.estimatedTime;
