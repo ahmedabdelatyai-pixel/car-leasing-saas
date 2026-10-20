@@ -12,7 +12,7 @@ export class OrderController {
   }
 
   /**
-   * Customer submits an order (Takeaway or Delivery).
+   * Customer or Cashier submits an order (Takeaway or Delivery).
    */
   static async createOrder(req: Request, res: Response) {
     try {
@@ -22,11 +22,16 @@ export class OrderController {
         orderType,
         deliveryAddress,
         notes,
-        items
+        items,
+        status,
+        captainId,
+        paymentStatus,
+        customDeliveryFee,
+        discount
       } = req.body;
 
-      if (!customerName || !customerPhone || !items || !Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: 'Missing required fields: customerName, customerPhone, and items list.' });
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'Missing required items list.' });
       }
 
       // 1. Get restaurant for delivery fee and validation
@@ -34,6 +39,10 @@ export class OrderController {
       if (!restaurant) {
         return res.status(500).json({ error: 'Restaurant configuration not found.' });
       }
+
+      // Default name/phone for fast walk-in cashier orders
+      const resolvedCustomerName = customerName?.trim() || (orderType === 'DELIVERY' ? 'عميل دليفري' : 'عميل تيك واي');
+      const resolvedCustomerPhone = customerPhone?.trim() || '01000000000';
 
       // 2. Fetch all menu items referenced in the order
       const itemIds = items.map((it: any) => it.menuItemId);
@@ -70,9 +79,21 @@ export class OrderController {
       }
 
       const isDelivery = (orderType === 'DELIVERY' || orderType === OrderType.DELIVERY);
-      const deliveryFee = isDelivery ? Number(restaurant.deliveryFee) : 0;
-      const totalAmount = subtotal + deliveryFee;
+      const deliveryFee = isDelivery 
+        ? (customDeliveryFee !== undefined ? Number(customDeliveryFee) : Number(restaurant.deliveryFee))
+        : 0;
+      
+      const discountAmount = Number(discount) || 0;
+      const totalAmount = Math.max(0, subtotal + deliveryFee - discountAmount);
       const orderNumber = OrderController.generateOrderNumber();
+
+      // Determine initial status
+      let initialStatus: OrderStatus = OrderStatus.PENDING;
+      if (status && Object.values(OrderStatus).includes(status)) {
+        initialStatus = status;
+      } else if (captainId && isDelivery) {
+        initialStatus = OrderStatus.ON_THE_WAY;
+      }
 
       // 3. Create the order inside transaction
       const newOrder = await prisma.order.create({
@@ -80,20 +101,23 @@ export class OrderController {
           orderNumber,
           restaurantId: restaurant.id,
           orderType: isDelivery ? OrderType.DELIVERY : OrderType.TAKEAWAY,
-          customerName,
-          customerPhone,
-          deliveryAddress: isDelivery ? deliveryAddress : null,
+          customerName: resolvedCustomerName,
+          customerPhone: resolvedCustomerPhone,
+          deliveryAddress: isDelivery ? (deliveryAddress || null) : null,
+          captainId: (isDelivery && captainId) ? captainId : null,
           notes: notes || null,
           subtotal,
           deliveryFee,
           totalAmount,
-          status: OrderStatus.PENDING,
+          status: initialStatus,
+          paymentStatus: paymentStatus === 'PAID' ? 'PAID' : 'UNPAID',
           items: {
             create: orderItemsData
           }
         },
         include: {
-          items: true
+          items: true,
+          captain: true
         }
       });
 

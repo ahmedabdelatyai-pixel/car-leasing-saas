@@ -3,17 +3,25 @@ import prisma from '../utils/prisma';
 
 export class ReportController {
   /**
-   * Generates comprehensive restaurant sales & analytics report.
+   * Generates comprehensive restaurant sales & item analytics report.
    */
   static async getSalesReport(req: Request, res: Response) {
     try {
-      // 1. Fetch completed/delivered and all orders
+      // 1. Fetch completed/active orders (excluding cancelled)
       const orders = await prisma.order.findMany({
         where: {
           status: { not: 'CANCELLED' }
         },
         include: {
-          items: true
+          items: {
+            include: {
+              menuItem: {
+                include: {
+                  category: true
+                }
+              }
+            }
+          }
         },
         orderBy: { createdAt: 'desc' }
       });
@@ -25,7 +33,15 @@ export class ReportController {
       let deliveryOrdersCount = 0;
       let takeawayOrdersCount = 0;
 
-      const itemSalesMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+      const itemSalesMap = new Map<string, { 
+        id: string; 
+        name: string; 
+        categoryName: string;
+        unitPrice: number;
+        quantity: number; 
+        revenue: number;
+        ordersCount: number;
+      }>();
       const dailySalesMap = new Map<string, number>();
 
       for (const order of orders) {
@@ -44,20 +60,37 @@ export class ReportController {
         const dateKey = order.createdAt.toISOString().split('T')[0];
         dailySalesMap.set(dateKey, (dailySalesMap.get(dateKey) || 0) + orderTotal);
 
-        // Best sellers calculation
+        // Best sellers & item sales calculation
         for (const item of order.items) {
-          const key = item.menuItemId;
-          const current = itemSalesMap.get(key) || { name: item.name, quantity: 0, revenue: 0 };
+          const key = item.menuItemId || item.name;
+          const catName = item.menuItem?.category?.name || 'وجبات عامة';
+          const current = itemSalesMap.get(key) || { 
+            id: key, 
+            name: item.name, 
+            categoryName: catName,
+            unitPrice: Number(item.unitPrice),
+            quantity: 0, 
+            revenue: 0,
+            ordersCount: 0 
+          };
           current.quantity += item.quantity;
           current.revenue += Number(item.totalPrice);
+          current.ordersCount += 1;
           itemSalesMap.set(key, current);
         }
       }
 
-      // 3. Format Best Sellers (Sorted descending by quantity)
-      const topSellingItems = Array.from(itemSalesMap.values())
-        .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 7);
+      // 3. Format full item sales report with percentage of total sales
+      const itemsReport = Array.from(itemSalesMap.values())
+        .map(item => ({
+          ...item,
+          revenue: Math.round(item.revenue * 100) / 100,
+          percentageOfSales: totalRevenue > 0 ? Math.round((item.revenue / totalRevenue) * 1000) / 10 : 0
+        }))
+        .sort((a, b) => b.quantity - a.quantity);
+
+      // Quick Top Sellers
+      const topSellingItems = itemsReport.slice(0, 5);
 
       // 4. Format Daily Sales trend for charts
       const dailyTrend = Array.from(dailySalesMap.entries())
@@ -73,6 +106,7 @@ export class ReportController {
         takeawayRevenue: Math.round(takeawayRevenue * 100) / 100,
         averageOrderValue: orders.length > 0 ? Math.round((totalRevenue / orders.length) * 100) / 100 : 0,
         topSellingItems,
+        itemsReport,
         dailyTrend
       });
     } catch (err: any) {
