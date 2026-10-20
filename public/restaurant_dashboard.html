@@ -62,11 +62,19 @@
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="flex items-center gap-2">
+    <!-- Quick Actions & User Profile -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div onclick="switchTab('settings')" title="تعديل بيانات الحساب" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 cursor-pointer transition-all">
+        <div class="w-7 h-7 rounded-lg bg-orange-600/20 text-orange-400 flex items-center justify-center text-xs font-bold font-mono">👤</div>
+        <div class="text-right">
+          <span id="header-user-name" class="text-xs font-bold text-white block leading-tight">مدير مطعم ضجة</span>
+          <span id="header-user-email" class="text-[9px] text-slate-400 block font-mono">admin@dajja.com</span>
+        </div>
+      </div>
       <a href="order.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/20 text-orange-400 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5">
         <span>🌐</span>
-        <span>صفحة طلب الزبائن</span>
+        <span class="hidden sm:inline">صفحة طلب الزبائن</span>
+        <span class="sm:hidden">الزبائن</span>
       </a>
       <button onclick="logoutSession()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 text-slate-400 hover:text-rose-400 text-xs font-bold transition-all">
         خروج 🚪
@@ -290,110 +298,241 @@
          TAB 4: REPORTS & ITEM SALES ANALYTICS
          ============================================== -->
     <section id="pane-reports" class="space-y-6 hidden">
+      <!-- Reports Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="text-sm font-black text-white flex items-center gap-2">
             <span>📊</span> تقارير مبيعات الأصناف والأداء المالي لمطعم ضجة
           </h2>
-          <p class="text-[11px] text-slate-400">تحليل مبيعات كل وجبة، أكثر الأصناف طلباً، وإجمالي الإيرادات</p>
+          <p class="text-[11px] text-slate-400">تحليل مبيعات كل وجبة، أكثر الأصناف طلباً، إغلاق اليومية وأرشيف الأيام السابقة</p>
         </div>
-        <button onclick="window.print()" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
-          <span>🖨️</span>
-          <span>طباعة تقرير المبيعات</span>
-        </button>
-      </div>
-
-      <!-- KPI Summary Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-bold">إجمالي الإيرادات 💰</span>
-          <span class="text-xl font-black text-orange-400 font-mono" id="rep-total-revenue">0 ج.م</span>
-        </div>
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-bold">إجمالي الطلبات 📦</span>
-          <span class="text-xl font-black text-white font-mono" id="rep-total-orders">0</span>
-        </div>
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-bold">مبيعات الدليفري 🛵</span>
-          <span class="text-xl font-black text-emerald-400 font-mono" id="rep-delivery-rev">0 ج.م</span>
-        </div>
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
-          <span class="text-[10px] text-slate-400 block font-bold">مبيعات التيك واي 🥡</span>
-          <span class="text-xl font-black text-cyan-400 font-mono" id="rep-takeaway-rev">0 ج.م</span>
+        <div class="flex items-center gap-2">
+          <button onclick="openCloseDayModal()" class="px-3.5 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+            <span>🔒</span>
+            <span>غلق اليوم المالي (تقفيل الوردية)</span>
+          </button>
+          <button onclick="window.print()" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
+            <span>🖨️</span>
+            <span>طباعة التقرير</span>
+          </button>
         </div>
       </div>
 
-      <!-- DETAILED ITEM SALES REPORT TABLE -->
-      <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
-          <div>
-            <h3 class="text-xs font-black text-white flex items-center gap-2">
-              <span>🍔</span> تقرير مبيعات الأصناف (Item Sales Report)
+      <!-- FILTER & DATE PRESET CONTROLS -->
+      <div class="bg-[#111827] border border-white/10 rounded-2xl p-4 space-y-3 shadow-lg">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <!-- Quick Preset Buttons -->
+          <div class="flex flex-wrap gap-1.5" id="reports-presets-container">
+            <button type="button" onclick="setReportDatePreset('current')" id="preset-btn-current" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white border border-orange-500 shadow-md transition-all">اليوم الحالي المفتوح ⚡</button>
+            <button type="button" onclick="setReportDatePreset('today')" id="preset-btn-today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all">اليوم 📅</button>
+            <button type="button" onclick="setReportDatePreset('yesterday')" id="preset-btn-yesterday" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all">أمس</button>
+            <button type="button" onclick="setReportDatePreset('7days')" id="preset-btn-7days" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all">آخر 7 أيام</button>
+            <button type="button" onclick="setReportDatePreset('this_month')" id="preset-btn-this_month" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all">هذا الشهر 🗓️</button>
+            <button type="button" onclick="setReportDatePreset('last_month')" id="preset-btn-last_month" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all">الشهر السابق</button>
+          </div>
+
+          <!-- Sub-Tab Switcher -->
+          <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
+            <button type="button" onclick="switchReportsSubTab('summary')" id="rep-subtab-btn-summary" class="px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all">
+              📈 تقرير الفترة والأصناف
+            </button>
+            <button type="button" onclick="switchReportsSubTab('archive')" id="rep-subtab-btn-archive" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+              🔒 أرشيف الأيام المقفولة
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Date Range Inputs -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-white/5">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 font-bold shrink-0">من تاريخ:</span>
+            <input type="date" id="rep-from-date" class="h-9 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-orange-500 font-mono">
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 font-bold shrink-0">إلى تاريخ:</span>
+            <input type="date" id="rep-to-date" class="h-9 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none focus:border-orange-500 font-mono">
+          </div>
+          <button type="button" onclick="applyPeriodFilter()" class="h-9 px-5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5">
+            <span>🔍</span>
+            <span>تطبيق الفلتر</span>
+          </button>
+          <span id="rep-period-title" class="text-xs text-orange-400 font-bold sm:mr-auto flex items-center gap-1">
+            <span>⏱️</span> <span id="rep-period-text">اليوم الحالي المفتوح</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           SUBVIEW 1: PERIOD & ITEMS REPORT
+           ============================================== -->
+      <div id="rep-subview-summary" class="space-y-6">
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">إجمالي الإيرادات 💰</span>
+            <span class="text-lg sm:text-xl font-black text-orange-400 font-mono" id="rep-total-revenue">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">إجمالي الطلبات 📦</span>
+            <span class="text-lg sm:text-xl font-black text-white font-mono" id="rep-total-orders">0</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">متوسط الفاتورة 🏷️</span>
+            <span class="text-lg sm:text-xl font-black text-amber-300 font-mono" id="rep-avg-order">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">مبيعات الدليفري 🛵</span>
+            <span class="text-lg sm:text-xl font-black text-emerald-400 font-mono" id="rep-delivery-rev">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">مبيعات التيك واي 🥡</span>
+            <span class="text-lg sm:text-xl font-black text-cyan-400 font-mono" id="rep-takeaway-rev">0 ج.م</span>
+          </div>
+        </div>
+
+        <!-- DETAILED ITEM SALES REPORT TABLE -->
+        <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
+            <div>
+              <h3 class="text-xs font-black text-white flex items-center gap-2">
+                <span>🍔</span> تقرير مبيعات الأصناف (Item Sales Report)
+              </h3>
+              <p class="text-[10px] text-slate-400">إجمالي الكمية المباعة والمبالغ المحصلة لكل وجبة خلال هذه الفترة</p>
+            </div>
+            <div class="w-full sm:w-64">
+              <input type="text" id="rep-items-search" oninput="filterReportTable()" placeholder="تصفية حسب اسم الوجبة... 🔍" class="w-full h-8 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+                  <th class="py-2.5 px-3">اسم الوجبة</th>
+                  <th class="py-2.5 px-3">القسم</th>
+                  <th class="py-2.5 px-3">سعر الصنف</th>
+                  <th class="py-2.5 px-3 text-center">الكمية المباعة</th>
+                  <th class="py-2.5 px-3 text-left">إجمالي الإيراد</th>
+                  <th class="py-2.5 px-3 text-center">نسبة المساهمة</th>
+                </tr>
+              </thead>
+              <tbody id="items-sales-table-body" class="divide-y divide-white/5">
+                <!-- populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Best Sellers & Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Best Sellers Quick Cards -->
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-3">
+            <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
+              <span>🔥</span> الأصناف الأكثر طلباً في الفترة (Top Sellers)
             </h3>
-            <p class="text-[10px] text-slate-400">إجمالي الكمية المباعة والمبالغ المحصلة لكل وجبة في المنيو</p>
+            <div id="top-sellers-container" class="space-y-2">
+              <!-- populated dynamically -->
+            </div>
           </div>
-          <div class="w-full sm:w-64">
-            <input type="text" id="rep-items-search" oninput="filterReportTable()" placeholder="تصفية حسب اسم الوجبة... 🔍" class="w-full h-8 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none">
+
+          <!-- Takeaway vs Delivery Ratio Card -->
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-4">
+            <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
+              <span>⚖️</span> توزيع المبيعات (دليفري مقابل تيك واي)
+            </h3>
+            
+            <div class="space-y-3 pt-2">
+              <div>
+                <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                  <span>طلبات الدليفري 🛵</span>
+                  <span id="rep-delivery-pct" class="text-emerald-400 font-mono">0%</span>
+                </div>
+                <div class="h-2 bg-black/40 rounded-full overflow-hidden">
+                  <div id="rep-delivery-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                  <span>طلبات التيك واي 🥡</span>
+                  <span id="rep-takeaway-pct" class="text-cyan-400 font-mono">0%</span>
+                </div>
+                <div class="h-2 bg-black/40 rounded-full overflow-hidden">
+                  <div id="rep-takeaway-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-right text-xs">
-            <thead>
-              <tr class="text-slate-400 border-b border-white/10 text-[11px]">
-                <th class="py-2.5 px-3">اسم الوجبة</th>
-                <th class="py-2.5 px-3">القسم</th>
-                <th class="py-2.5 px-3">سعر الصنف</th>
-                <th class="py-2.5 px-3 text-center">الكمية المباعة</th>
-                <th class="py-2.5 px-3 text-left">إجمالي الإيراد</th>
-                <th class="py-2.5 px-3 text-center">نسبة المساهمة</th>
-              </tr>
-            </thead>
-            <tbody id="items-sales-table-body" class="divide-y divide-white/5">
-              <!-- populated dynamically -->
-            </tbody>
-          </table>
+        <!-- PERIOD ORDERS LIST TABLE -->
+        <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
+          <div class="flex justify-between items-center border-b border-white/5 pb-3">
+            <div>
+              <h3 class="text-xs font-black text-white flex items-center gap-2">
+                <span>🧾</span> سجل فواتير وطلبات الفترة
+              </h3>
+              <p class="text-[10px] text-slate-400">قائمة بكل الطلبات المسجلة خلال الفترة المحددة مع إمكانية طباعة أي بون</p>
+            </div>
+            <span id="period-orders-badge" class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-white/5 text-slate-300">0 فاتورة</span>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+                  <th class="py-2 px-3">رقم الطلب</th>
+                  <th class="py-2 px-3">العميل والهاتف</th>
+                  <th class="py-2 px-3">نوع الطلب</th>
+                  <th class="py-2 px-3">التاريخ والوقت</th>
+                  <th class="py-2 px-3">الحالة</th>
+                  <th class="py-2 px-3">الإجمالي</th>
+                  <th class="py-2 px-3 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="period-orders-table-body" class="divide-y divide-white/5">
+                <!-- populated dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Best Sellers & Breakdown -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Best Sellers Quick Cards -->
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-3">
-          <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
-            <span>🔥</span> الأصناف الخمسة الأكثر طلباً (Top 5 Sellers)
-          </h3>
-          <div id="top-sellers-container" class="space-y-2">
-            <!-- populated dynamically -->
+      <!-- ==============================================
+           SUBVIEW 2: DAILY CLOSURES ARCHIVE
+           ============================================== -->
+      <div id="rep-subview-archive" class="space-y-4 hidden">
+        <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
+            <div>
+              <h3 class="text-xs font-black text-white flex items-center gap-2">
+                <span>🔒</span> أرشيف الأيام السابقة المغلقة (Daily Closures History)
+              </h3>
+              <p class="text-[10px] text-slate-400">سجل كل الأيام المقفولة سابقة مع إمكانية استعراض تفاصيل أي يوم وطباعة بون الـ Z-Report</p>
+            </div>
+            <button onclick="loadDailyClosuresArchive()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+              <span>🔄</span> تحديث الأرشيف
+            </button>
           </div>
-        </div>
 
-        <!-- Takeaway vs Delivery Ratio Card -->
-        <div class="bg-[#111827] border border-white/5 rounded-2xl p-5 space-y-4">
-          <h3 class="text-xs font-black text-white flex items-center gap-2 border-b border-white/5 pb-2">
-            <span>⚖️</span> توزيع المبيعات (دليفري مقابل تيك واي)
-          </h3>
-          
-          <div class="space-y-3 pt-2">
-            <div>
-              <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
-                <span>طلبات الدليفري 🛵</span>
-                <span id="rep-delivery-pct" class="text-emerald-400 font-mono">0%</span>
-              </div>
-              <div class="h-2 bg-black/40 rounded-full overflow-hidden">
-                <div id="rep-delivery-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%;"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-xs text-slate-300 font-bold mb-1">
-                <span>طلبات التيك واي 🥡</span>
-                <span id="rep-takeaway-pct" class="text-cyan-400 font-mono">0%</span>
-              </div>
-              <div class="h-2 bg-black/40 rounded-full overflow-hidden">
-                <div id="rep-takeaway-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%;"></div>
-              </div>
-            </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+                  <th class="py-2.5 px-3">تاريخ الإغلاق</th>
+                  <th class="py-2.5 px-3">وقت الوردية</th>
+                  <th class="py-2.5 px-3 text-center">الطلبات</th>
+                  <th class="py-2.5 px-3">إجمالي المبيعات</th>
+                  <th class="py-2.5 px-3">دليفري</th>
+                  <th class="py-2.5 px-3">تيك واي</th>
+                  <th class="py-2.5 px-3">أغلق بواسطة</th>
+                  <th class="py-2.5 px-3 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="daily-closures-table-body" class="divide-y divide-white/5">
+                <!-- populated dynamically -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -593,7 +732,85 @@
         </form>
       </div>
 
-      <!-- 3. SECURITY & PASSWORD CHANGE (تغيير كلمة المرور) -->
+      <!-- 3. USER PROFILE & USERNAME CARD (تعديل بيانات الحساب واسم المستخدم) -->
+      <div class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
+        <div class="border-b border-white/5 pb-3 flex justify-between items-center">
+          <div>
+            <h3 class="text-xs font-black text-white flex items-center gap-2">
+              <span>👤</span> تعديل بيانات الحساب واسم المستخدم
+            </h3>
+            <p class="text-[10px] text-slate-400">تعديل الاسم الكامل الظاهر واسم الدخول / البريد الإلكتروني</p>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            حساب الإدارة
+          </span>
+        </div>
+
+        <form onsubmit="submitUpdateProfile(event)" class="space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">اسم المستخدم / المدير (الاسم الظاهر)</label>
+              <input type="text" id="profile-fullname" required placeholder="مثال: أحمد عبد العاطي" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">اسم الدخول / البريد الإلكتروني</label>
+              <input type="email" id="profile-email" required placeholder="admin@dajja.com" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="btn-save-profile" class="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+              <span>💾</span>
+              <span>حفظ بيانات الحساب واسم المستخدم</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 4. END OF DAY / SHIFT CLOSURE CARD (غلق اليوم المالي) -->
+      <div class="bg-gradient-to-r from-red-950/30 via-rose-950/20 to-transparent border border-red-500/30 rounded-3xl p-6 space-y-4 shadow-xl">
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-2xl shadow-lg">
+              🔒
+            </div>
+            <div>
+              <h3 class="text-sm font-black text-white">غلق اليوم المالي وتقفيل الوردية</h3>
+              <p class="text-xs text-slate-300">يتم تصفير مبيعات اليوم الحالي، وأرشفة تقرير شامل ومستقل للأرباح والمبيعات</p>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+            Z-REPORT
+          </span>
+        </div>
+
+        <!-- Current Active Shift Live Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-black/40 p-3 rounded-2xl border border-white/5">
+          <div class="space-y-0.5">
+            <span class="text-[9px] text-slate-400 block font-bold">المبيعات الحالية:</span>
+            <span class="text-xs font-black text-orange-400 font-mono" id="shift-summary-sales">0 ج.م</span>
+          </div>
+          <div class="space-y-0.5">
+            <span class="text-[9px] text-slate-400 block font-bold">عدد الطلبات:</span>
+            <span class="text-xs font-black text-white font-mono" id="shift-summary-orders">0</span>
+          </div>
+          <div class="space-y-0.5">
+            <span class="text-[9px] text-slate-400 block font-bold">دليفري / تيك واي:</span>
+            <span class="text-xs font-bold text-slate-300 font-mono" id="shift-summary-types">0 دليفري / 0 تيك</span>
+          </div>
+          <div class="space-y-0.5">
+            <span class="text-[9px] text-slate-400 block font-bold">بدأت منذ:</span>
+            <span class="text-[10px] text-slate-400 font-mono block" id="shift-summary-opened">--</span>
+          </div>
+        </div>
+
+        <button type="button" onclick="openCloseDayModal()" class="w-full h-11 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+          <span>🔒</span>
+          <span>تنفيذ غلق اليوم المالي وتصفير الوردية الآن</span>
+        </button>
+      </div>
+
+      <!-- 5. SECURITY & PASSWORD CHANGE (تغيير كلمة المرور) -->
       <div class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
         <div class="border-b border-white/5 pb-3">
           <h3 class="text-xs font-black text-white flex items-center gap-2">
@@ -821,6 +1038,124 @@
     </div>
   </div>
 
+  <!-- CLOSE DAY CONFIRMATION MODAL -->
+  <div id="close-day-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-red-500/30 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center gap-3 border-b border-white/5 pb-3">
+        <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center text-xl font-bold">
+          🔒
+        </div>
+        <div>
+          <h3 class="text-sm font-black text-white">غلق اليوم المالي وتقفيل الوردية</h3>
+          <p class="text-[10px] text-slate-400">تأكيد إنهاء الوردية وتصفير عداد اليوم الحالي</p>
+        </div>
+      </div>
+
+      <div class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 font-bold">إجمالي مبيعات اليوم:</span>
+          <span class="text-orange-400 font-black font-mono text-sm" id="close-modal-sales">0 ج.م</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 font-bold">عدد الطلبات:</span>
+          <span class="text-white font-black font-mono" id="close-modal-orders">0 طلب</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 font-bold">توزيع الطلبات:</span>
+          <span class="text-slate-300 font-mono text-[11px]" id="close-modal-types">0 دليفري | 0 تيك واي</span>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] text-slate-400 block font-semibold">ملاحظات الإغلاق أو عهدة الدرج (اختياري)</label>
+        <textarea id="close-day-notes" rows="2" placeholder="أي ملاحظات حول الوردية أو تسليم النقدية..." class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none"></textarea>
+      </div>
+
+      <div class="text-[11px] text-amber-300/80 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 flex items-start gap-2">
+        <span>⚠️</span>
+        <span>بمجرد الضغط على تأكيد، ستتحول طلبات اليوم الحالي إلى الأرشيف وسيبدأ عداد مبيعات جديد نظيف.</span>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="confirmCloseDay()" id="btn-confirm-close-day" class="flex-1 h-10 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
+          <span>🔒</span>
+          <span>تأكيد الإغلاق والأرشفة</span>
+        </button>
+        <button type="button" onclick="closeCloseDayModal()" class="flex-1 h-10 bg-white/5 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOSURE DETAILS & PRINT Z-REPORT MODAL -->
+  <div id="closure-details-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-white text-black max-w-sm w-full p-6 rounded-3xl space-y-4 font-mono text-xs shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <!-- Thermal Receipt Header -->
+      <div class="text-center border-b pb-3 space-y-1">
+        <h2 class="text-lg font-black tracking-tight">مطعم ضجة 🔥</h2>
+        <p class="text-[11px] font-bold text-gray-700">تقرير إغلاق اليومية المالي (Z-REPORT)</p>
+        <p class="text-[10px] text-gray-500" id="z-report-date">تاريخ الإغلاق: --</p>
+        <p class="text-[9px] text-gray-500" id="z-report-duration">الوردية: --</p>
+      </div>
+
+      <!-- Financial Summary -->
+      <div class="space-y-1.5 border-b pb-3 text-xs">
+        <div class="flex justify-between font-black text-sm border-b pb-1">
+          <span>إجمالي المبيعات:</span>
+          <span id="z-report-total" class="text-base font-black">0 ج.م</span>
+        </div>
+        <div class="flex justify-between font-bold">
+          <span>إجمالي عدد الفواتير:</span>
+          <span id="z-report-orders-count">0</span>
+        </div>
+        <div class="flex justify-between">
+          <span>مبيعات الدليفري:</span>
+          <span id="z-report-delivery-sales">0 ج.م</span>
+        </div>
+        <div class="flex justify-between">
+          <span>مبيعات التيك واي:</span>
+          <span id="z-report-takeaway-sales">0 ج.م</span>
+        </div>
+        <div class="flex justify-between text-[11px] text-gray-600">
+          <span>المسؤول عن الإغلاق:</span>
+          <span id="z-report-closed-by">--</span>
+        </div>
+      </div>
+
+      <!-- Items Sold Breakdown -->
+      <div class="space-y-2 border-b pb-3">
+        <div class="font-bold text-[11px] flex justify-between">
+          <span>الوجبة / الصنف</span>
+          <span>الكمية | المبلغ</span>
+        </div>
+        <div id="z-report-items-list" class="space-y-1 text-[11px] max-h-48 overflow-y-auto">
+          <!-- populated dynamically -->
+        </div>
+      </div>
+
+      <div id="z-report-notes-row" class="text-[10px] bg-gray-100 p-2 rounded-lg border border-gray-200">
+        <span class="font-bold block">ملاحظات الإغلاق:</span>
+        <span id="z-report-notes"></span>
+      </div>
+
+      <div class="text-center text-[10px] text-gray-400 pt-1">
+        نظام مطعم ضجة لإدارة المطاعم والكاشير 🍔🔥
+      </div>
+
+      <!-- Actions (No Print) -->
+      <div class="flex gap-2 pt-2 border-t no-print">
+        <button onclick="window.print()" class="flex-1 h-9 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
+          <span>🖨️</span>
+          <span>طباعة بون Z-Report</span>
+        </button>
+        <button onclick="closeClosureDetailsModal()" class="flex-1 h-9 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT ENGINE -->
   <script>
     const token = localStorage.getItem('auth_token') || 'mock_token_key';
@@ -874,9 +1209,16 @@
       if (tab === 'pos') renderPosUI();
       if (tab === 'orders') loadLiveOrders();
       if (tab === 'menu') loadMenuData();
-      if (tab === 'reports') loadReportsData();
+      if (tab === 'reports') {
+        loadReportsData();
+        loadCurrentShiftSummary();
+      }
       if (tab === 'captains') loadCaptains();
-      if (tab === 'settings') loadSettingsData();
+      if (tab === 'settings') {
+        loadSettingsData();
+        loadUserProfile();
+        loadCurrentShiftSummary();
+      }
     }
 
     // ==============================================
@@ -1488,15 +1830,119 @@
     }
 
     // ==============================================
-    // 5. REPORTS & ITEM SALES ANALYTICS
+    // 5. REPORTS, PERIOD ANALYTICS & DAILY CLOSURE
     // ==============================================
-    async function loadReportsData() {
+    let currentShiftData = null;
+    let activeReportsSubTab = 'summary';
+
+    function switchReportsSubTab(subtab) {
+      activeReportsSubTab = subtab;
+      const btnSummary = document.getElementById('rep-subtab-btn-summary');
+      const btnArchive = document.getElementById('rep-subtab-btn-archive');
+      const viewSummary = document.getElementById('rep-subview-summary');
+      const viewArchive = document.getElementById('rep-subview-archive');
+
+      if (subtab === 'summary') {
+        btnSummary.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
+        btnArchive.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
+        viewSummary.classList.remove('hidden');
+        viewArchive.classList.add('hidden');
+      } else {
+        btnArchive.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
+        btnSummary.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
+        viewSummary.classList.add('hidden');
+        viewArchive.classList.remove('hidden');
+        loadDailyClosuresArchive();
+      }
+    }
+
+    function setReportDatePreset(preset) {
+      document.querySelectorAll('#reports-presets-container button').forEach(b => {
+        b.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all";
+      });
+      const activeBtn = document.getElementById(`preset-btn-${preset}`);
+      if (activeBtn) {
+        activeBtn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-600 text-white border border-orange-500 shadow-md transition-all";
+      }
+
+      const today = new Date();
+      const formatDate = (d) => d.toISOString().split('T')[0];
+
+      let from = '';
+      let to = formatDate(today);
+      let label = 'اليوم الحالي';
+
+      if (preset === 'current') {
+        from = '';
+        to = '';
+        label = 'اليوم الحالي المفتوح (الوردية النشطة)';
+      } else if (preset === 'today') {
+        from = formatDate(today);
+        to = formatDate(today);
+        label = `اليوم (${from})`;
+      } else if (preset === 'yesterday') {
+        const y = new Date();
+        y.setDate(y.getDate() - 1);
+        from = formatDate(y);
+        to = formatDate(y);
+        label = `أمس (${from})`;
+      } else if (preset === '7days') {
+        const d7 = new Date();
+        d7.setDate(d7.getDate() - 6);
+        from = formatDate(d7);
+        to = formatDate(today);
+        label = `آخر 7 أيام (من ${from} إلى ${to})`;
+      } else if (preset === 'this_month') {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        from = formatDate(firstDay);
+        to = formatDate(today);
+        label = `هذا الشهر (${today.getMonth() + 1}/${today.getFullYear()})`;
+      } else if (preset === 'last_month') {
+        const firstPrev = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastPrev = new Date(today.getFullYear(), today.getMonth(), 0);
+        from = formatDate(firstPrev);
+        to = formatDate(lastPrev);
+        label = `الشهر السابق (${firstPrev.getMonth() + 1}/${firstPrev.getFullYear()})`;
+      }
+
+      document.getElementById('rep-from-date').value = from;
+      document.getElementById('rep-to-date').value = to;
+      document.getElementById('rep-period-text').innerText = label;
+
+      loadReportsData(from, to, label);
+    }
+
+    function applyPeriodFilter() {
+      const from = document.getElementById('rep-from-date').value;
+      const to = document.getElementById('rep-to-date').value;
+
+      document.querySelectorAll('#reports-presets-container button').forEach(b => {
+        b.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all";
+      });
+
+      let label = 'فترة مخصصة';
+      if (from && to) label = `من ${from} إلى ${to}`;
+      else if (from) label = `من تاريخ ${from}`;
+      else if (to) label = `حتى تاريخ ${to}`;
+
+      document.getElementById('rep-period-text').innerText = label;
+      loadReportsData(from, to, label);
+    }
+
+    async function loadReportsData(from = '', to = '', label = '') {
       try {
-        const rep = await apiFetch('/api/v1/reports/sales');
+        let url = '/api/v1/reports/period';
+        const params = [];
+        if (from) params.push(`from=${from}`);
+        if (to) params.push(`to=${to}`);
+        if (params.length > 0) url += `?${params.join('&')}`;
+
+        const rep = await apiFetch(url);
         currentReportsData = rep;
 
         document.getElementById('rep-total-revenue').innerText = `${rep.totalRevenue} ج.م`;
         document.getElementById('rep-total-orders').innerText = rep.totalOrders;
+        document.getElementById('rep-avg-order').innerText = `${rep.averageOrderValue || 0} ج.م`;
         document.getElementById('rep-delivery-rev').innerText = `${rep.deliveryRevenue} ج.م`;
         document.getElementById('rep-takeaway-rev').innerText = `${rep.takeawayRevenue} ج.م`;
 
@@ -1510,10 +1956,10 @@
         document.getElementById('rep-takeaway-pct').innerText = `${takePct}% (${rep.takeawayOrdersCount} طلب)`;
         document.getElementById('rep-takeaway-bar').style.width = `${takePct}%`;
 
-        // Render Top 5 Sellers
+        // Top Sellers
         const topContainer = document.getElementById('top-sellers-container');
         if (!rep.topSellingItems || rep.topSellingItems.length === 0) {
-          topContainer.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">لا توجد مبيعات مسجلة حتى الآن.</p>';
+          topContainer.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">لا توجد مبيعات أصناف في هذه الفترة.</p>';
         } else {
           topContainer.innerHTML = rep.topSellingItems.map((it, idx) => `
             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5 text-xs">
@@ -1529,8 +1975,11 @@
           `).join('');
         }
 
-        // Render Full Item Sales Table
+        // Full Items Table
         renderItemSalesTable(rep.itemsReport || []);
+
+        // Period Orders Table
+        renderPeriodOrdersTable(rep.orders || []);
 
       } catch (err) {
         console.error('Reports error:', err);
@@ -1540,7 +1989,7 @@
     function renderItemSalesTable(items) {
       const tbody = document.getElementById('items-sales-table-body');
       if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">لا توجد مبيعات أصناف حتى الآن.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">لا توجد مبيعات مسجلة خلال هذه الفترة.</td></tr>';
         return;
       }
 
@@ -1573,6 +2022,277 @@
         it.name.toLowerCase().includes(q) || (it.categoryName && it.categoryName.toLowerCase().includes(q))
       );
       renderItemSalesTable(filtered);
+    }
+
+    function renderPeriodOrdersTable(orders) {
+      const tbody = document.getElementById('period-orders-table-body');
+      const badge = document.getElementById('period-orders-badge');
+      if (badge) badge.innerText = `${orders.length} فاتورة`;
+
+      if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-500">لا توجد فواتير في هذه الفترة.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => `
+        <tr class="hover:bg-white/5 transition-all">
+          <td class="py-2.5 px-3 font-mono font-bold text-orange-400">${o.orderNumber}</td>
+          <td class="py-2.5 px-3">
+            <span class="font-bold text-white block">${o.customerName}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${o.customerPhone}</span>
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${o.orderType === 'DELIVERY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-cyan-500/10 text-cyan-400'}">
+              ${o.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${new Date(o.createdAt).toLocaleString('ar-EG')}</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/5 text-slate-300">${o.status}</span>
+          </td>
+          <td class="py-2.5 px-3 font-mono font-bold text-white">${o.totalAmount} ج.م</td>
+          <td class="py-2.5 px-3 text-center">
+            <button type="button" onclick="printOrderReceipt('${o.id}', ${JSON.stringify(o).replace(/"/g, '&quot;')})" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-slate-300 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 mx-auto">
+              <span>🖨️</span>
+              <span>بون</span>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ==============================================
+    // 5.B DAILY CLOSURES ARCHIVE & DAY SHIFT CLOSE
+    // ==============================================
+    async function loadCurrentShiftSummary() {
+      try {
+        const shift = await apiFetch('/api/v1/reports/current-shift');
+        currentShiftData = shift;
+
+        // Settings shift card
+        const salesEl = document.getElementById('shift-summary-sales');
+        if (salesEl) salesEl.innerText = `${shift.totalSales} ج.م`;
+
+        const ordEl = document.getElementById('shift-summary-orders');
+        if (ordEl) ordEl.innerText = `${shift.orderCount} طلب`;
+
+        const typesEl = document.getElementById('shift-summary-types');
+        if (typesEl) typesEl.innerText = `${shift.deliveryCount} دليفري (${shift.deliverySales}ج) | ${shift.takeawayCount} تيك (${shift.takeawaySales}ج)`;
+
+        const openEl = document.getElementById('shift-summary-opened');
+        if (openEl) openEl.innerText = shift.openedAt ? new Date(shift.openedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '--';
+
+        // Close Day Modal fields
+        const modalSales = document.getElementById('close-modal-sales');
+        if (modalSales) modalSales.innerText = `${shift.totalSales} ج.م`;
+
+        const modalOrders = document.getElementById('close-modal-orders');
+        if (modalOrders) modalOrders.innerText = `${shift.orderCount} طلب`;
+
+        const modalTypes = document.getElementById('close-modal-types');
+        if (modalTypes) modalTypes.innerText = `${shift.deliveryCount} دليفري (${shift.deliverySales} ج.م) | ${shift.takeawayCount} تيك واي (${shift.takeawaySales} ج.م)`;
+
+      } catch (err) {
+        console.error('Failed to load shift summary:', err);
+      }
+    }
+
+    function openCloseDayModal() {
+      loadCurrentShiftSummary();
+      const modal = document.getElementById('close-day-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCloseDayModal() {
+      const modal = document.getElementById('close-day-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function confirmCloseDay() {
+      const btn = document.getElementById('btn-confirm-close-day');
+      btn.disabled = true;
+      btn.innerText = 'جاري الإغلاق... ⏳';
+
+      const notes = document.getElementById('close-day-notes')?.value?.trim() || '';
+
+      try {
+        const res = await apiFetch('/api/v1/reports/close-day', {
+          method: 'POST',
+          body: JSON.stringify({ notes })
+        });
+
+        alert('تم غلق اليوم المالي وتصفير الوردية بنجاح 🔒✅');
+        closeCloseDayModal();
+        
+        // Show Z-Report of the closed shift
+        if (res.closure) {
+          renderClosureDetails(res.closure);
+        }
+
+        // Refresh live stats & orders
+        loadCurrentShiftSummary();
+        loadLiveOrders();
+        loadReportsData();
+        loadDailyClosuresArchive();
+
+      } catch (err) {
+        alert('فشل إغلاق اليوم المالي: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔒</span><span>تأكيد الإغلاق والأرشفة</span>';
+      }
+    }
+
+    async function loadDailyClosuresArchive() {
+      const tbody = document.getElementById('daily-closures-table-body');
+      if (!tbody) return;
+
+      try {
+        const closures = await apiFetch('/api/v1/reports/closures');
+        if (!closures || closures.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-500">لا توجد أيام مغلقة سابقة في الأرشيف بعد.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = closures.map(c => `
+          <tr class="hover:bg-white/5 transition-all">
+            <td class="py-3 px-3 font-mono font-bold text-white">${new Date(c.closureDate).toLocaleDateString('ar-EG')}</td>
+            <td class="py-3 px-3 text-[11px] font-mono text-slate-400">
+              ${new Date(c.openedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })} - ${new Date(c.closedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+            </td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-white bg-black/20 rounded-lg">${c.orderCount}</td>
+            <td class="py-3 px-3 font-mono font-black text-orange-400 text-sm">${c.totalSales} ج.م</td>
+            <td class="py-3 px-3 font-mono text-emerald-400 text-xs">${c.deliverySales} ج.م (${c.deliveryCount})</td>
+            <td class="py-3 px-3 font-mono text-cyan-400 text-xs">${c.takeawaySales} ج.م (${c.takeawayCount})</td>
+            <td class="py-3 px-3 text-slate-300 text-xs">${c.closedBy || 'الإدارة'}</td>
+            <td class="py-3 px-3 text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                <button type="button" onclick="viewClosureDetails('${c.id}')" title="معاينة تفاصيل اليوم" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-slate-300 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1">
+                  <span>👁️</span>
+                  <span>تفاصيل</span>
+                </button>
+                <button type="button" onclick="viewClosureDetails('${c.id}', true)" title="طباعة بون Z-Report" class="px-2.5 py-1 bg-orange-600/20 hover:bg-orange-600 text-orange-400 hover:text-white border border-orange-500/30 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1">
+                  <span>🖨️</span>
+                  <span>بون</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error('Failed to load closures archive:', err);
+      }
+    }
+
+    async function viewClosureDetails(closureId, triggerPrint = false) {
+      try {
+        const closure = await apiFetch(`/api/v1/reports/closures/${closureId}`);
+        renderClosureDetails(closure);
+        if (triggerPrint) {
+          setTimeout(() => window.print(), 300);
+        }
+      } catch (err) {
+        alert('فشل جلب تفاصيل إغلاق اليوم: ' + err.message);
+      }
+    }
+
+    function renderClosureDetails(c) {
+      document.getElementById('z-report-date').innerText = `تاريخ الإغلاق: ${new Date(c.closureDate).toLocaleDateString('ar-EG')} - ${new Date(c.closedAt).toLocaleTimeString('ar-EG')}`;
+      document.getElementById('z-report-duration').innerText = `الوردية: من ${new Date(c.openedAt).toLocaleTimeString('ar-EG')} إلى ${new Date(c.closedAt).toLocaleTimeString('ar-EG')}`;
+      document.getElementById('z-report-total').innerText = `${c.totalSales} ج.م`;
+      document.getElementById('z-report-orders-count').innerText = `${c.orderCount} طلب`;
+      document.getElementById('z-report-delivery-sales').innerText = `${c.deliverySales} ج.م (${c.deliveryCount} طلب)`;
+      document.getElementById('z-report-takeaway-sales').innerText = `${c.takeawaySales} ج.م (${c.takeawayCount} طلب)`;
+      document.getElementById('z-report-closed-by').innerText = c.closedBy || 'الإدارة';
+
+      const notesRow = document.getElementById('z-report-notes-row');
+      if (c.notes) {
+        notesRow.style.display = 'block';
+        document.getElementById('z-report-notes').innerText = c.notes;
+      } else {
+        notesRow.style.display = 'none';
+      }
+
+      const itemsContainer = document.getElementById('z-report-items-list');
+      const breakdown = Array.isArray(c.itemsBreakdown) ? c.itemsBreakdown : [];
+      if (breakdown.length === 0) {
+        itemsContainer.innerHTML = '<p class="text-gray-400 py-2 text-center">لا توجد مبيعات أصناف.</p>';
+      } else {
+        itemsContainer.innerHTML = breakdown.map(it => `
+          <div class="flex justify-between border-b border-gray-100 pb-1">
+            <span class="font-bold">${it.name}</span>
+            <span>${it.quantity}x | ${it.revenue} ج.م</span>
+          </div>
+        `).join('');
+      }
+
+      const modal = document.getElementById('closure-details-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeClosureDetailsModal() {
+      const modal = document.getElementById('closure-details-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // ==============================================
+    // 5.C USER PROFILE & ACCOUNT MANAGEMENT
+    // ==============================================
+    async function loadUserProfile() {
+      try {
+        const user = await apiFetch('/api/v1/auth/me');
+        if (!user) return;
+
+        const nameEl = document.getElementById('profile-fullname');
+        if (nameEl) nameEl.value = user.fullName || 'مدير مطعم ضجة';
+
+        const emailEl = document.getElementById('profile-email');
+        if (emailEl) emailEl.value = user.email || 'admin@dajja.com';
+
+        const headerName = document.getElementById('header-user-name');
+        if (headerName) headerName.innerText = user.fullName || 'مدير مطعم ضجة';
+
+        const headerEmail = document.getElementById('header-user-email');
+        if (headerEmail) headerEmail.innerText = user.email || 'admin@dajja.com';
+
+      } catch (err) {
+        console.error('Failed to load user profile:', err);
+      }
+    }
+
+    async function submitUpdateProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-profile');
+      btn.disabled = true;
+      btn.innerText = 'جاري الحفظ... ⏳';
+
+      const fullName = document.getElementById('profile-fullname')?.value?.trim();
+      const email = document.getElementById('profile-email')?.value?.trim();
+
+      try {
+        const res = await apiFetch('/api/v1/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ fullName, email })
+        });
+
+        if (res.token) {
+          localStorage.setItem('auth_token', res.token);
+        }
+
+        alert('تم تحديث بيانات الحساب واسم المستخدم بنجاح! ✅');
+        loadUserProfile();
+
+      } catch (err) {
+        alert('فشل تحديث بيانات الحساب: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span><span>حفظ بيانات الحساب واسم المستخدم</span>';
+      }
     }
 
     // ==============================================
@@ -1865,9 +2585,14 @@
     loadLiveOrders();
     loadCaptains();
     loadMenuData();
+    loadUserProfile();
+    loadCurrentShiftSummary();
 
-    // Auto-refresh live orders every 10 seconds
-    setInterval(loadLiveOrders, 10000);
+    // Auto-refresh live orders and shift summary every 10 seconds
+    setInterval(() => {
+      loadLiveOrders();
+      loadCurrentShiftSummary();
+    }, 10000);
   </script>
 </body>
 </html>

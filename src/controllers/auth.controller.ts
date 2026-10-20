@@ -65,6 +65,7 @@ export class AuthController {
         {
           userId: user.id,
           email: user.email,
+          fullName: user.fullName || 'مدير مطعم ضجة',
           role: user.role,
           restaurantId: user.restaurantId
         },
@@ -78,6 +79,7 @@ export class AuthController {
         user: {
           id: user.id,
           email: user.email,
+          fullName: user.fullName || 'مدير مطعم ضجة',
           role: user.role,
           restaurant: user.restaurant
         }
@@ -161,4 +163,102 @@ export class AuthController {
       return res.status(500).json({ error: 'فشل تغيير كلمة المرور', message: err.message });
     }
   }
+
+  /**
+   * Get current logged-in user profile.
+   */
+  static async getProfile(req: Request, res: Response) {
+    try {
+      const userPayload = (req as any).user;
+      const user = await prisma.user.findUnique({
+        where: { id: userPayload.userId },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          role: true,
+          restaurantId: true,
+          createdAt: true
+        }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+
+      return res.json(user);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل جلب الملف الشخصي', message: err.message });
+    }
+  }
+
+  /**
+   * Update profile (name, username/email).
+   */
+  static async updateProfile(req: Request, res: Response) {
+    try {
+      const userPayload = (req as any).user;
+      const { fullName, email } = req.body;
+
+      const user = await prisma.user.findUnique({
+        where: { id: userPayload.userId }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+
+      const updateData: any = {};
+
+      if (fullName && fullName.trim()) {
+        updateData.fullName = fullName.trim();
+      }
+
+      if (email && email.trim()) {
+        const cleanEmail = email.toLowerCase().trim();
+        if (cleanEmail !== user.email) {
+          // Check uniqueness
+          const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
+          if (existing && existing.id !== user.id) {
+            return res.status(409).json({ error: 'هذا البريد أو اسم المستخدم مسجل بالفعل بحساب آخر' });
+          }
+          updateData.email = cleanEmail;
+        }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          role: true,
+          restaurantId: true
+        }
+      });
+
+      // Generate refreshed token
+      const token = jwt.sign(
+        {
+          userId: updatedUser.id,
+          email: updatedUser.email,
+          fullName: updatedUser.fullName,
+          role: updatedUser.role,
+          restaurantId: updatedUser.restaurantId
+        },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      return res.json({
+        message: 'تم تحديث بيانات الحساب بنجاح ✅',
+        token,
+        user: updatedUser
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل تحديث بيانات الحساب', message: err.message });
+    }
+  }
 }
+

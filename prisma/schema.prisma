@@ -58,6 +58,7 @@ model Restaurant {
   menuItems       MenuItem[]
   orders          Order[]
   captains        Captain[]
+  dailyClosures   DailyClosure[]
 
   @@map("restaurants")
 }
@@ -65,6 +66,7 @@ model Restaurant {
 model User {
   id           String      @id @default(uuid()) @db.Uuid
   email        String      @unique @db.VarChar(255)
+  fullName     String?     @default("مدير مطعم ضجة") @map("full_name") @db.VarChar(150)
   passwordHash String      @map("password_hash") @db.VarChar(255)
   role         Role        @default(RESTAURANT_ADMIN)
   restaurantId String?     @map("restaurant_id") @db.Uuid
@@ -147,16 +149,19 @@ model Order {
   status          OrderStatus   @default(PENDING)
   paymentStatus   PaymentStatus @default(UNPAID) @map("payment_status")
   captainId       String?       @map("captain_id") @db.Uuid
+  closureId       String?       @map("closure_id") @db.Uuid
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   restaurant      Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   captain         Captain?      @relation(fields: [captainId], references: [id], onDelete: SetNull)
+  dailyClosure    DailyClosure? @relation(fields: [closureId], references: [id], onDelete: SetNull)
   items           OrderItem[]
 
   @@index([restaurantId])
   @@index([status])
   @@index([orderNumber])
+  @@index([closureId])
   @@map("orders")
 }
 
@@ -176,3 +181,29 @@ model OrderItem {
   @@index([orderId])
   @@map("order_items")
 }
+
+model DailyClosure {
+  id              String      @id @default(uuid()) @db.Uuid
+  restaurantId    String      @map("restaurant_id") @db.Uuid
+  closureDate     DateTime    @default(now()) @map("closure_date")
+  openedAt        DateTime    @default(now()) @map("opened_at")
+  closedAt        DateTime    @default(now()) @map("closed_at")
+  totalSales      Decimal     @default(0.00) @map("total_sales") @db.Decimal(10, 2)
+  orderCount      Int         @default(0) @map("order_count")
+  deliverySales   Decimal     @default(0.00) @map("delivery_sales") @db.Decimal(10, 2)
+  takeawaySales   Decimal     @default(0.00) @map("takeaway_sales") @db.Decimal(10, 2)
+  deliveryCount   Int         @default(0) @map("delivery_count")
+  takeawayCount   Int         @default(0) @map("takeaway_count")
+  itemsBreakdown  Json?       @map("items_breakdown")
+  closedBy        String?     @map("closed_by") @db.VarChar(150)
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@index([restaurantId])
+  @@index([closureDate])
+  @@map("daily_closures")
+}
+

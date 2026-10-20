@@ -3,15 +3,251 @@ import prisma from '../utils/prisma';
 
 export class ReportController {
   /**
-   * Generates comprehensive restaurant sales & item analytics report.
+   * Helper to get restaurant ID
    */
-  static async getSalesReport(req: Request, res: Response) {
+  private static async getRestaurantId(): Promise<string> {
+    const rest = await prisma.restaurant.findFirst({ select: { id: true } });
+    if (!rest) {
+      const created = await prisma.restaurant.create({
+        data: { name: 'مطعم ضجة' }
+      });
+      return created.id;
+    }
+    return rest.id;
+  }
+
+  /**
+   * Get Current Open Day / Active Shift Summary (orders where closureId is null).
+   */
+  static async getCurrentShiftSummary(req: Request, res: Response) {
     try {
-      // 1. Fetch completed/active orders (excluding cancelled)
+      const restaurantId = await ReportController.getRestaurantId();
+
       const orders = await prisma.order.findMany({
         where: {
+          restaurantId,
+          closureId: null,
           status: { not: 'CANCELLED' }
         },
+        include: {
+          items: true
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      let totalRevenue = 0;
+      let deliveryRevenue = 0;
+      let takeawayRevenue = 0;
+      let deliveryCount = 0;
+      let takeawayCount = 0;
+
+      for (const ord of orders) {
+        const val = Number(ord.totalAmount);
+        totalRevenue += val;
+        if (ord.orderType === 'DELIVERY') {
+          deliveryCount++;
+          deliveryRevenue += val;
+        } else {
+          takeawayCount++;
+          takeawayRevenue += val;
+        }
+      }
+
+      const openedAt = orders.length > 0 ? orders[0].createdAt : new Date();
+
+      return res.json({
+        hasActiveShift: orders.length > 0,
+        orderCount: orders.length,
+        totalSales: Math.round(totalRevenue * 100) / 100,
+        deliverySales: Math.round(deliveryRevenue * 100) / 100,
+        takeawaySales: Math.round(takeawayRevenue * 100) / 100,
+        deliveryCount,
+        takeawayCount,
+        openedAt,
+        latestOrderAt: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
+        recentOrders: orders.slice(-10).reverse()
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل جلب ملخص الوردية الحالية', message: err.message });
+    }
+  }
+
+  /**
+   * Close Current Day / Shift (End of Day Settlement / Z-Report).
+   */
+  static async closeDay(req: Request, res: Response) {
+    try {
+      const restaurantId = await ReportController.getRestaurantId();
+      const userPayload = (req as any).user;
+      const { notes } = req.body;
+
+      // Find all unclosed active orders
+      const orders = await prisma.order.findMany({
+        where: {
+          restaurantId,
+          closureId: null,
+          status: { not: 'CANCELLED' }
+        },
+        include: {
+          items: true
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (orders.length === 0) {
+        return res.status(400).json({ error: 'لا توجد طلبات مفتوحة لليوم الحالي لإغلاقها.' });
+      }
+
+      let totalRevenue = 0;
+      let deliveryRevenue = 0;
+      let takeawayRevenue = 0;
+      let deliveryCount = 0;
+      let takeawayCount = 0;
+
+      const itemSalesMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+
+      for (const ord of orders) {
+        const val = Number(ord.totalAmount);
+        totalRevenue += val;
+        if (ord.orderType === 'DELIVERY') {
+          deliveryCount++;
+          deliveryRevenue += val;
+        } else {
+          takeawayCount++;
+          takeawayRevenue += val;
+        }
+
+        for (const it of ord.items) {
+          const cur = itemSalesMap.get(it.name) || { name: it.name, quantity: 0, revenue: 0 };
+          cur.quantity += it.quantity;
+          cur.revenue += Number(it.totalPrice);
+          itemSalesMap.set(it.name, cur);
+        }
+      }
+
+      const itemsBreakdown = Array.from(itemSalesMap.values()).sort((a, b) => b.quantity - a.quantity);
+      const openedAt = orders[0].createdAt;
+      const closedAt = new Date();
+      const closedBy = userPayload?.fullName || userPayload?.email || 'الإدارة';
+
+      // Create Daily Closure record & link orders in a transaction
+      const closure = await prisma.$transaction(async (tx) => {
+        const createdClosure = await tx.dailyClosure.create({
+          data: {
+            restaurantId,
+            closureDate: new Date(),
+            openedAt,
+            closedAt,
+            totalSales: totalRevenue,
+            orderCount: orders.length,
+            deliverySales: deliveryRevenue,
+            takeawaySales: takeawayRevenue,
+            deliveryCount,
+            takeawayCount,
+            itemsBreakdown: itemsBreakdown as any,
+            closedBy,
+            notes: notes || null
+          }
+        });
+
+        const orderIds = orders.map(o => o.id);
+        await tx.order.updateMany({
+          where: { id: { in: orderIds } },
+          data: { closureId: createdClosure.id }
+        });
+
+        return createdClosure;
+      });
+
+      return res.status(201).json({
+        message: 'تم إغلاق اليوم المالي بنجاح 🔒 وتصفير الوردية الحالية!',
+        closure
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل إغلاق اليوم المالي', message: err.message });
+    }
+  }
+
+  /**
+   * Get archive of all past daily closures.
+   */
+  static async getDailyClosures(req: Request, res: Response) {
+    try {
+      const restaurantId = await ReportController.getRestaurantId();
+
+      const closures = await prisma.dailyClosure.findMany({
+        where: { restaurantId },
+        orderBy: { closedAt: 'desc' }
+      });
+
+      return res.json(closures);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل جلب أرشيف الأيام المغلقة', message: err.message });
+    }
+  }
+
+  /**
+   * Get details of a single past closure with its full orders.
+   */
+  static async getClosureDetails(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const closure = await prisma.dailyClosure.findUnique({
+        where: { id },
+        include: {
+          orders: {
+            include: {
+              items: true,
+              captain: true
+            },
+            orderBy: { createdAt: 'asc' }
+          }
+        }
+      });
+
+      if (!closure) {
+        return res.status(404).json({ error: 'سجل إغلاق اليوم غير موجود' });
+      }
+
+      return res.json(closure);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'فشل جلب تفاصيل إغلاق اليوم', message: err.message });
+    }
+  }
+
+  /**
+   * Comprehensive custom date range or monthly report.
+   */
+  static async getPeriodReport(req: Request, res: Response) {
+    try {
+      const restaurantId = await ReportController.getRestaurantId();
+      const { from, to, type } = req.query;
+
+      const where: any = {
+        restaurantId,
+        status: { not: 'CANCELLED' }
+      };
+
+      if (type && type !== 'ALL') {
+        where.orderType = type;
+      }
+
+      // Date filtering
+      if (from || to) {
+        where.createdAt = {};
+        if (from) {
+          const fromDate = new Date(`${from}T00:00:00.000Z`);
+          where.createdAt.gte = fromDate;
+        }
+        if (to) {
+          const toDate = new Date(`${to}T23:59:59.999Z`);
+          where.createdAt.lte = toDate;
+        }
+      }
+
+      const orders = await prisma.order.findMany({
+        where,
         include: {
           items: {
             include: {
@@ -21,12 +257,12 @@ export class ReportController {
                 }
               }
             }
-          }
+          },
+          captain: true
         },
         orderBy: { createdAt: 'desc' }
       });
 
-      // 2. Metrics calculation
       let totalRevenue = 0;
       let deliveryRevenue = 0;
       let takeawayRevenue = 0;
@@ -42,7 +278,7 @@ export class ReportController {
         revenue: number;
         ordersCount: number;
       }>();
-      const dailySalesMap = new Map<string, number>();
+      const dailySalesMap = new Map<string, { date: string; amount: number; count: number }>();
 
       for (const order of orders) {
         const orderTotal = Number(order.totalAmount);
@@ -58,7 +294,10 @@ export class ReportController {
 
         // Daily revenue grouping (YYYY-MM-DD)
         const dateKey = order.createdAt.toISOString().split('T')[0];
-        dailySalesMap.set(dateKey, (dailySalesMap.get(dateKey) || 0) + orderTotal);
+        const dayStat = dailySalesMap.get(dateKey) || { date: dateKey, amount: 0, count: 0 };
+        dayStat.amount += orderTotal;
+        dayStat.count += 1;
+        dailySalesMap.set(dateKey, dayStat);
 
         // Best sellers & item sales calculation
         for (const item of order.items) {
@@ -80,7 +319,6 @@ export class ReportController {
         }
       }
 
-      // 3. Format full item sales report with percentage of total sales
       const itemsReport = Array.from(itemSalesMap.values())
         .map(item => ({
           ...item,
@@ -89,12 +327,10 @@ export class ReportController {
         }))
         .sort((a, b) => b.quantity - a.quantity);
 
-      // Quick Top Sellers
       const topSellingItems = itemsReport.slice(0, 5);
 
-      // 4. Format Daily Sales trend for charts
-      const dailyTrend = Array.from(dailySalesMap.entries())
-        .map(([date, amount]) => ({ date, amount }))
+      const dailyTrend = Array.from(dailySalesMap.values())
+        .map(d => ({ ...d, amount: Math.round(d.amount * 100) / 100 }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
       return res.json({
@@ -107,10 +343,28 @@ export class ReportController {
         averageOrderValue: orders.length > 0 ? Math.round((totalRevenue / orders.length) * 100) / 100 : 0,
         topSellingItems,
         itemsReport,
-        dailyTrend
+        dailyTrend,
+        orders: orders.map(o => ({
+          id: o.id,
+          orderNumber: o.orderNumber,
+          customerName: o.customerName,
+          customerPhone: o.customerPhone,
+          orderType: o.orderType,
+          totalAmount: Number(o.totalAmount),
+          status: o.status,
+          createdAt: o.createdAt
+        }))
       });
     } catch (err: any) {
-      return res.status(500).json({ error: 'Failed to generate restaurant report', message: err.message });
+      return res.status(500).json({ error: 'فشل استخراج تقرير الفترة', message: err.message });
     }
   }
+
+  /**
+   * Generates comprehensive restaurant sales & item analytics report (legacy route).
+   */
+  static async getSalesReport(req: Request, res: Response) {
+    return ReportController.getPeriodReport(req, res);
+  }
 }
+

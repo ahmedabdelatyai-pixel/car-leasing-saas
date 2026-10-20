@@ -131,7 +131,13 @@
           <span class="text-xl">🛒</span>
           <h3 class="text-sm font-black text-white">سلة طلبات مطعم ضجة</h3>
         </div>
-        <button onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="clearEntireCart()" title="تفريغ السلة بالكامل" class="text-[11px] text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1 rounded-xl border border-red-500/20 font-bold transition-all flex items-center gap-1">
+            <span>🗑️</span>
+            <span>مسح السلة</span>
+          </button>
+          <button type="button" onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+        </div>
       </div>
 
       <!-- Items List -->
@@ -326,9 +332,22 @@
         const itemsHtml = cat.items.map(item => {
           const badgeHtml = item.badge ? `<span class="absolute top-2 right-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md">${item.badge}</span>` : '';
           const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
+          const inCart = cart.find(i => i.id === item.id);
+
+          const actionBtnHtml = inCart ? `
+            <div class="flex items-center gap-1.5 bg-orange-600/20 border border-orange-500/40 rounded-xl p-1 shadow-sm">
+              <button type="button" onclick="updateCartItemQty('${item.id}', -1)" title="تقليل أو حذف" class="w-6 h-6 rounded-lg bg-black/50 hover:bg-black/80 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">-</button>
+              <span class="text-xs font-black text-white px-1.5 min-w-[1.2rem] text-center font-mono">${inCart.quantity}</span>
+              <button type="button" onclick="updateCartItemQty('${item.id}', 1)" title="زيادة الكمية" class="w-6 h-6 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">+</button>
+            </div>
+          ` : `
+            <button type="button" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
+              <span>+ إضافة</span>
+            </button>
+          `;
 
           return `
-            <div class="bg-[#111827] border border-white/5 hover:border-orange-500/20 rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
+            <div class="bg-[#111827] border ${inCart ? 'border-orange-500/40 bg-orange-950/10' : 'border-white/5 hover:border-orange-500/20'} rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
               <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-black/40">
                 <img src="${img}" alt="${item.name}" class="w-full h-full object-cover">
                 ${badgeHtml}
@@ -340,9 +359,7 @@
                 </div>
                 <div class="flex justify-between items-center mt-2">
                   <span class="text-xs font-black text-orange-400 font-mono">${Number(item.price)} ج.م</span>
-                  <button onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
-                    <span>+ إضافة</span>
-                  </button>
+                  ${actionBtnHtml}
                 </div>
               </div>
             </div>
@@ -371,8 +388,6 @@
         cart.push({ id, name, price: Number(price), quantity: 1, imageUrl, notes: '' });
       }
       updateCartUI();
-
-      // Quick Toast
       showQuickToast(`تم إضافة ${name} للسلة 🍔`);
     }
 
@@ -383,8 +398,25 @@
       item.quantity += change;
       if (item.quantity <= 0) {
         cart = cart.filter(i => i.id !== id);
+        showQuickToast(`تم حذف ${item.name} من السلة 🗑️`);
       }
       updateCartUI();
+    }
+
+    function removeCartItem(id) {
+      const item = cart.find(i => i.id === id);
+      const name = item ? item.name : 'الصنف';
+      cart = cart.filter(i => i.id !== id);
+      updateCartUI();
+      showQuickToast(`تم حذف ${name} من السلة 🗑️`);
+    }
+
+    function clearEntireCart() {
+      if (cart.length === 0) return;
+      if (!confirm('هل أنت متأكد من تفريغ سلة الطلبات بالكامل؟')) return;
+      cart = [];
+      updateCartUI();
+      showQuickToast('تم تفريغ السلة بنجاح');
     }
 
     function updateCartUI() {
@@ -412,23 +444,35 @@
       const container = document.getElementById('cart-items-container');
       if (cart.length === 0) {
         container.innerHTML = '<p class="text-center text-xs text-slate-500 py-6">سلة الطلبات فارغة.</p>';
-        return;
+      } else {
+        container.innerHTML = cart.map(it => `
+          <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex justify-between items-center gap-3">
+            <img src="${it.imageUrl}" class="w-12 h-12 rounded-xl object-cover shrink-0">
+            <div class="flex-1">
+              <h5 class="text-xs font-black text-white">${it.name}</h5>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[11px] text-orange-400 font-bold font-mono">${it.price * it.quantity} ج.م</span>
+                <span class="text-[10px] text-slate-500 font-mono">(${it.price} ج.م × ${it.quantity})</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 bg-white/5 rounded-xl border border-white/10 px-2 py-1">
+                <button type="button" onclick="updateCartItemQty('${it.id}', -1)" title="تقليل الكمية" class="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-bold flex items-center justify-center transition-all text-xs">-</button>
+                <span class="text-xs font-black text-white w-5 text-center font-mono">${it.quantity}</span>
+                <button type="button" onclick="updateCartItemQty('${it.id}', 1)" title="زيادة الكمية" class="w-6 h-6 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center justify-center transition-all text-xs">+</button>
+              </div>
+              <button type="button" onclick="removeCartItem('${it.id}')" title="حذف الصنف نهائياً" class="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 hover:text-red-300 flex items-center justify-center transition-all text-sm active:scale-90">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
       }
 
-      container.innerHTML = cart.map(it => `
-        <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex justify-between items-center gap-3">
-          <img src="${it.imageUrl}" class="w-12 h-12 rounded-xl object-cover shrink-0">
-          <div class="flex-1">
-            <h5 class="text-xs font-black text-white">${it.name}</h5>
-            <span class="text-[11px] text-orange-400 font-bold font-mono">${it.price * it.quantity} ج.م</span>
-          </div>
-          <div class="flex items-center gap-2 bg-white/5 rounded-xl border border-white/10 px-2 py-1">
-            <button type="button" onclick="updateCartItemQty('${it.id}', -1)" class="w-6 h-6 rounded-lg bg-white/5 text-slate-300 font-bold flex items-center justify-center">-</button>
-            <span class="text-xs font-black text-white w-4 text-center">${it.quantity}</span>
-            <button type="button" onclick="updateCartItemQty('${it.id}', 1)" class="w-6 h-6 rounded-lg bg-orange-600 text-white font-bold flex items-center justify-center">+</button>
-          </div>
-        </div>
-      `).join('');
+      // Re-render menu cards to keep count indicators synchronized
+      if (restaurantData && restaurantData.categories) {
+        renderMenuCards();
+      }
     }
 
     // 5. Order Type Switcher

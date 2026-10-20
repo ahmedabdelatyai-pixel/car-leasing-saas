@@ -63,6 +63,8 @@ router.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
 // ==========================================
 router.post('/auth/login', AuthController.login);
 router.post('/auth/register', AuthController.register);
+router.get('/auth/me', authenticateToken, AuthController.getProfile);
+router.put('/auth/profile', authenticateToken, AuthController.updateProfile);
 router.post('/auth/change-password', authenticateToken, AuthController.changePassword);
 
 // ==========================================
@@ -164,13 +166,48 @@ router.delete(
 );
 
 // ==========================================
-// 6. REPORTS & ANALYTICS
+// 6. REPORTS, DAY CLOSURE & ANALYTICS
 // ==========================================
 router.get(
   '/reports/sales',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
   ReportController.getSalesReport
+);
+
+router.get(
+  '/reports/current-shift',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  ReportController.getCurrentShiftSummary
+);
+
+router.post(
+  '/reports/close-day',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  ReportController.closeDay
+);
+
+router.get(
+  '/reports/closures',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  ReportController.getDailyClosures
+);
+
+router.get(
+  '/reports/closures/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  ReportController.getClosureDetails
+);
+
+router.get(
+  '/reports/period',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  ReportController.getPeriodReport
 );
 
 export default router;
