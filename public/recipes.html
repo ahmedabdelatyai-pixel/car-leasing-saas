@@ -420,9 +420,12 @@
       try {
         const res = await apiFetch('/api/v1/overheads');
         overheads = res.overheads || [];
-        totalMonthlyOverheads = Number(res.totalMonthlyOverheads !== undefined ? res.totalMonthlyOverheads : res.summary?.totalMonthlyOverheads) || 0;
+        
+        // Sum directly from items array to ensure 100% accuracy under all conditions
+        const sumFromList = overheads.reduce((sum, item) => sum + (Number(item.monthlyAmount) || 0), 0);
+        totalMonthlyOverheads = sumFromList > 0 ? sumFromList : (Number(res.totalMonthlyOverheads !== undefined ? res.totalMonthlyOverheads : res.summary?.totalMonthlyOverheads) || 0);
         averageDailyOrders = Number(res.averageDailyOrders !== undefined ? res.averageDailyOrders : res.summary?.averageDailyOrders) || 80;
-        indirectCostPerOrder = Number(res.indirectCostPerOrder !== undefined ? res.indirectCostPerOrder : res.summary?.indirectCostPerOrder) || 0;
+        indirectCostPerOrder = averageDailyOrders > 0 ? Number((totalMonthlyOverheads / 30 / averageDailyOrders).toFixed(2)) : 0;
 
         document.getElementById('stat-monthly-overheads').textContent = `${totalMonthlyOverheads.toLocaleString('ar-EG')} ج.م`;
         document.getElementById('stat-indirect-cost-preview').textContent = `${indirectCostPerOrder.toFixed(2)} ج.م`;
@@ -438,6 +441,13 @@
 
     function renderOverheadsList() {
       const container = document.getElementById('overheads-list-container');
+      const sum = overheads.reduce((s, o) => s + (Number(o.monthlyAmount) || 0), 0);
+      if (sum > 0) {
+        totalMonthlyOverheads = sum;
+        document.getElementById('modal-total-overheads-sum').textContent = `${sum.toLocaleString('ar-EG')} ج.م`;
+        document.getElementById('stat-monthly-overheads').textContent = `${sum.toLocaleString('ar-EG')} ج.م`;
+      }
+
       if (overheads.length === 0) {
         container.innerHTML = '<p class="text-xs text-slate-500 p-3 text-center">لا توجد مصاريف مسجلة حتى الآن.</p>';
         return;
@@ -826,6 +836,7 @@
 
     // Overhead Modal Handlers
     function openOverheadsModal() {
+      loadOverheads();
       document.getElementById('overheads-modal').classList.remove('hidden');
     }
 
