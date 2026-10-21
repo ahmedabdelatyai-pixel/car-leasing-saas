@@ -1528,13 +1528,9 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-white line-clamp-1">${it.name}</h4>
-              <div class="flex justify-between items-center text-[10px] text-slate-400 mt-0.5">
-                <span>تكلفة: <strong class="text-amber-300 font-mono">${it.directCost || 0}</strong> ج.م</span>
-                <span class="${(it.profitMarginPercent || 0) < 30 ? 'text-rose-400' : 'text-emerald-400'} font-bold">ربح ${it.profitMarginPercent || 0}%</span>
-              </div>
-              <div class="flex justify-between items-center mt-1.5">
-                <span class="text-xs font-bold text-orange-400 font-mono">${it.price} ج.م</span>
-                <button type="button" class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs font-black group-hover:bg-orange-500 transition-all">+</button>
+              <div class="flex justify-between items-center mt-2 pt-1 border-t border-white/5">
+                <span class="text-sm font-black text-orange-400 font-mono">${it.price} ج.م</span>
+                <button type="button" class="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-sm font-black group-hover:bg-orange-500 transition-all shadow">+</button>
               </div>
             </div>
           </div>
