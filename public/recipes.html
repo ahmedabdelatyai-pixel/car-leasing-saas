@@ -767,14 +767,15 @@
       }
 
       tbody.innerHTML = allRecipes.map(r => {
-        const product = r.product;
-        const name = product ? product.name : 'صنف غير معروف';
-        const sellingPrice = product ? Number(product.price) : 0;
+        const matchedItem = allMenuItems.find(i => i.id === r.productId);
+        const name = r.productName || r.product?.name || r.menuItem?.name || matchedItem?.name || 'صنف غير معروف';
+        const category = r.categoryName || matchedItem?.categoryName || '';
+        const sellingPrice = Number(r.sellingPrice || r.product?.price || r.menuItem?.price || matchedItem?.price || 0);
         const directCost = Number(r.directCost) || 0;
         const indirectCost = Number(r.indirectCost) || 0;
         const trueCost = Number(r.trueCost) || (directCost + indirectCost);
-        const netProfit = Number(r.netProfit) || (sellingPrice - trueCost);
-        const marginPercent = Number(r.profitMarginPercent) || (sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0);
+        const netProfit = Number(r.netProfit !== undefined ? r.netProfit : (sellingPrice - trueCost));
+        const marginPercent = Number(r.profitMargin !== undefined ? r.profitMargin : (r.profitMarginPercent !== undefined ? r.profitMarginPercent : (sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0)));
 
         const isLowMargin = marginPercent < 30;
         const marginBadge = isLowMargin 
@@ -790,7 +791,10 @@
             <td class="p-3.5 font-black text-white">
               <div class="flex items-center gap-2">
                 <span>🍔</span>
-                <span>${name}</span>
+                <div>
+                  <span class="block">${name}</span>
+                  ${category ? `<span class="text-[10px] text-slate-400 font-normal">${category}</span>` : ''}
+                </div>
               </div>
             </td>
             <td class="p-3.5 font-bold text-slate-200">${sellingPrice.toFixed(2)} ج.م</td>

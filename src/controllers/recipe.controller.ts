@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 
 export class RecipeController {
@@ -61,7 +61,7 @@ export class RecipeController {
           };
         });
 
-        const sellingPrice = Number(recipe.menuItem.price) || 0;
+        const sellingPrice = Number(recipe.menuItem?.price) || 0;
         const trueCost = directCost + indirectCost;
         const netProfit = sellingPrice - trueCost;
         const profitMargin = sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0;
@@ -70,15 +70,22 @@ export class RecipeController {
         return {
           id: recipe.id,
           productId: recipe.productId,
-          productName: recipe.menuItem.name,
-          categoryName: recipe.menuItem.category?.name || 'عام',
-          productImageUrl: recipe.menuItem.imageUrl,
+          productName: recipe.menuItem?.name || 'صنف غير معروف',
+          product: recipe.menuItem ? {
+            id: recipe.menuItem.id,
+            name: recipe.menuItem.name,
+            price: Number(recipe.menuItem.price),
+            imageUrl: recipe.menuItem.imageUrl
+          } : null,
+          categoryName: recipe.menuItem?.category?.name || 'عام',
+          productImageUrl: recipe.menuItem?.imageUrl,
           sellingPrice: Number(sellingPrice.toFixed(2)),
           directCost: Number(directCost.toFixed(2)),
           indirectCost: Number(indirectCost.toFixed(2)),
           trueCost: Number(trueCost.toFixed(2)),
           netProfit: Number(netProfit.toFixed(2)),
           profitMargin: Number(profitMargin.toFixed(1)),
+          profitMarginPercent: Number(profitMargin.toFixed(1)),
           isLowMargin,
           notes: recipe.notes,
           ingredients: ingredientsList,
@@ -141,7 +148,7 @@ export class RecipeController {
         };
       });
 
-      const sellingPrice = Number(recipe.menuItem.price) || 0;
+      const sellingPrice = Number(recipe.menuItem?.price) || 0;
       const trueCost = directCost + indirectCost;
       const netProfit = sellingPrice - trueCost;
       const profitMargin = sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0;
@@ -149,13 +156,20 @@ export class RecipeController {
       return res.json({
         id: recipe.id,
         productId: recipe.productId,
-        productName: recipe.menuItem.name,
+        productName: recipe.menuItem?.name || 'صنف غير معروف',
+        product: recipe.menuItem ? {
+          id: recipe.menuItem.id,
+          name: recipe.menuItem.name,
+          price: Number(recipe.menuItem.price),
+          imageUrl: recipe.menuItem.imageUrl
+        } : null,
         sellingPrice: Number(sellingPrice.toFixed(2)),
         directCost: Number(directCost.toFixed(2)),
         indirectCost: Number(indirectCost.toFixed(2)),
         trueCost: Number(trueCost.toFixed(2)),
         netProfit: Number(netProfit.toFixed(2)),
         profitMargin: Number(profitMargin.toFixed(1)),
+        profitMarginPercent: Number(profitMargin.toFixed(1)),
         isLowMargin: profitMargin < 30,
         notes: recipe.notes,
         ingredients: ingredientsList
