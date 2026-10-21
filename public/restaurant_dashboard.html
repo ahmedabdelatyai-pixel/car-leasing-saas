@@ -457,10 +457,23 @@
            ============================================== -->
       <div id="rep-subview-summary" class="space-y-6">
         <!-- KPI Summary Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
             <span class="text-[10px] text-slate-400 block font-bold">إجمالي الإيرادات 💰</span>
             <span class="text-lg sm:text-xl font-black text-orange-400 font-mono" id="rep-total-revenue">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">تكلفة المواد الخام 🧂</span>
+            <span class="text-lg sm:text-xl font-black text-amber-300 font-mono" id="rep-total-food-cost">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">صافي أرباح الطعام 📈</span>
+            <span class="text-lg sm:text-xl font-black text-emerald-400 font-mono" id="rep-gross-profit">0 ج.م</span>
+          </div>
+          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
+            <span class="text-[10px] text-slate-400 block font-bold">نسبة هامش الربح 🎯</span>
+            <span class="text-lg sm:text-xl font-black text-emerald-300 font-mono" id="rep-gross-margin">0%</span>
           </div>
           <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-1">
             <span class="text-[10px] text-slate-400 block font-bold">إجمالي الطلبات 📦</span>
@@ -485,9 +498,9 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
             <div>
               <h3 class="text-xs font-black text-white flex items-center gap-2">
-                <span>🍔</span> تقرير مبيعات الأصناف (Item Sales Report)
+                <span>🍔</span> تقرير مبيعات وتكاليف وأرباح الأصناف (Item Sales & Food Cost)
               </h3>
-              <p class="text-[10px] text-slate-400">إجمالي الكمية المباعة والمبالغ المحصلة لكل وجبة خلال هذه الفترة</p>
+              <p class="text-[10px] text-slate-400">إجمالي الكمية المباعة، تكلفة الطعام، وصافي الربح لكل وجبة</p>
             </div>
             <div class="w-full sm:w-64">
               <input type="text" id="rep-items-search" oninput="filterReportTable()" placeholder="تصفية حسب اسم الوجبة... 🔍" class="w-full h-8 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white focus:outline-none">
@@ -500,9 +513,12 @@
                 <tr class="text-slate-400 border-b border-white/10 text-[11px]">
                   <th class="py-2.5 px-3">اسم الوجبة</th>
                   <th class="py-2.5 px-3">القسم</th>
-                  <th class="py-2.5 px-3">سعر الصنف</th>
+                  <th class="py-2.5 px-3">سعر البيع</th>
+                  <th class="py-2.5 px-3 text-amber-300">تكلفة الصنف</th>
                   <th class="py-2.5 px-3 text-center">الكمية المباعة</th>
                   <th class="py-2.5 px-3 text-left">إجمالي الإيراد</th>
+                  <th class="py-2.5 px-3 text-left text-emerald-400">صافي الربح</th>
+                  <th class="py-2.5 px-3 text-center">هامش الربح %</th>
                   <th class="py-2.5 px-3 text-center">نسبة المساهمة</th>
                 </tr>
               </thead>
@@ -1488,16 +1504,34 @@
 
       container.innerHTML = allItems.map(it => {
         const isAvail = it.isAvailable !== false;
+        const isOutOfStock = it.isOutOfStock;
+        const isLowStock = it.isLowStock;
         const img = it.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+        
+        let stockBadge = '';
+        if (isOutOfStock) {
+          stockBadge = `<span class="absolute bottom-1 right-1 bg-rose-600/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">نفد المخزون ⚠️</span>`;
+        } else if (isLowStock) {
+          stockBadge = `<span class="absolute bottom-1 right-1 bg-amber-500/90 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">متبقي ${it.availablePortions} ⚠️</span>`;
+        } else if (it.availablePortions !== null) {
+          stockBadge = `<span class="absolute bottom-1 right-1 bg-black/70 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded z-10">${it.availablePortions} بالمخزن</span>`;
+        }
+
         return `
-          <div onclick="${isAvail ? `addPosCartItem('${it.id}', '${it.name.replace(/'/g, "\\'")}', ${it.price})` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border border-white/5 rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
+          <div onclick="${isAvail ? `addPosCartItem('${it.id}', '${it.name.replace(/'/g, "\\'")}', ${it.price}, ${isOutOfStock})` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
             <div class="relative w-full h-24 rounded-xl overflow-hidden mb-2 bg-black/40">
               <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300">
-              ${it.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">${it.badge}</span>` : ''}
-              ${!isAvail ? `<span class="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] font-black text-rose-400">غير متاح</span>` : ''}
+              ${it.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">${it.badge}</span>` : ''}
+              ${stockBadge}
+              ${!isAvail ? `<span class="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] font-black text-rose-400 z-20">غير متاح</span>` : ''}
+              ${(isAvail && isOutOfStock) ? `<span class="absolute inset-0 bg-black/60 flex items-center justify-center text-[9px] font-black text-rose-400 z-10">نفد المخزون ⚠️</span>` : ''}
             </div>
             <div>
               <h4 class="text-xs font-black text-white line-clamp-1">${it.name}</h4>
+              <div class="flex justify-between items-center text-[10px] text-slate-400 mt-0.5">
+                <span>تكلفة: <strong class="text-amber-300 font-mono">${it.directCost || 0}</strong> ج.م</span>
+                <span class="${(it.profitMarginPercent || 0) < 30 ? 'text-rose-400' : 'text-emerald-400'} font-bold">ربح ${it.profitMarginPercent || 0}%</span>
+              </div>
               <div class="flex justify-between items-center mt-1.5">
                 <span class="text-xs font-bold text-orange-400 font-mono">${it.price} ج.م</span>
                 <button type="button" class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs font-black group-hover:bg-orange-500 transition-all">+</button>
@@ -1508,7 +1542,12 @@
       }).join('');
     }
 
-    function addPosCartItem(id, name, price) {
+    function addPosCartItem(id, name, price, isOutOfStock) {
+      if (isOutOfStock) {
+        if (!confirm(`تنبيه: مكونات الصنف "${name}" أوشكت أو نفدت من المخزون! هل تريد المتابعة وإضافته للطلب؟`)) {
+          return;
+        }
+      }
       const existing = posCart.find(i => i.id === id);
       if (existing) {
         existing.quantity++;
@@ -1811,11 +1850,28 @@
             ${(cat.items || []).map(item => {
               const isAvail = item.isAvailable !== false;
               const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+              const isOutOfStock = item.isOutOfStock;
+              const isLowStock = item.isLowStock;
+              const portions = item.availablePortions !== null ? item.availablePortions : 'غير محدد';
+              const margin = item.profitMarginPercent || 0;
+              const isLowMargin = margin < 30;
+
+              const stockBadge = isOutOfStock
+                ? `<span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">⚠️ نفد المخزون</span>`
+                : (isLowStock
+                  ? `<span class="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⚠️ متبقي ${portions} وجبات</span>`
+                  : `<span class="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-slate-300">متبقي: ${portions} وجبة</span>`);
+
+              const marginBadge = isLowMargin
+                ? `<span class="text-[9px] font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">هامش ${margin}% ⚠️</span>`
+                : `<span class="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">ربح ${margin}% ✅</span>`;
+
               return `
-                <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex gap-3 justify-between relative hover:border-white/10 transition-all">
+                <div class="bg-black/30 border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-3 flex gap-3 justify-between relative hover:border-white/10 transition-all">
                   <div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-black/40">
                     <img src="${img}" class="w-full h-full object-cover">
                     ${item.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">${item.badge}</span>` : ''}
+                    ${isOutOfStock ? `<span class="absolute inset-0 bg-black/80 flex items-center justify-center text-[9px] font-black text-rose-400 text-center p-1">نفد المخزون ⚠️</span>` : ''}
                   </div>
                   
                   <div class="flex-1 flex flex-col justify-between">
@@ -1824,16 +1880,23 @@
                         <h5 class="text-xs font-black text-white">${item.name}</h5>
                         <span class="text-xs font-black text-orange-400 font-mono">${item.price} ج.م</span>
                       </div>
-                      <p class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">${item.description || ''}</p>
+                      
+                      <!-- Costing & Stock Metrics -->
+                      <div class="flex items-center gap-1.5 flex-wrap mt-1">
+                        ${stockBadge}
+                        <span class="text-[9px] font-bold text-slate-400">تكلفة: <strong class="text-amber-300">${item.directCost || 0} ج.م</strong></span>
+                        ${marginBadge}
+                      </div>
                     </div>
 
                     <!-- Availability Badge & Actions -->
-                    <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/5">
+                    <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 mt-2">
                       <button onclick="toggleItemAvailability('${item.id}', ${!isAvail})" class="px-2 py-0.5 rounded-md font-bold transition-all ${isAvail ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}">
                         ${isAvail ? 'متاح 🟢' : 'غير متاح 🔴'}
                       </button>
 
-                      <div class="flex gap-2">
+                      <div class="flex items-center gap-2">
+                        <a href="/recipes" class="text-amber-400 font-bold hover:underline flex items-center gap-0.5"><span>🧪</span> الوصفة</a>
                         <button onclick="editMenuItem('${item.id}')" class="text-cyan-400 font-bold hover:underline">تعديل 📝</button>
                         <button onclick="deleteMenuItem('${item.id}')" class="text-rose-400 font-bold hover:underline">حذف 🗑️</button>
                       </div>
@@ -2128,6 +2191,16 @@
         document.getElementById('rep-avg-order').innerText = `${rep.averageOrderValue || 0} ج.م`;
         document.getElementById('rep-delivery-rev').innerText = `${rep.deliveryRevenue} ج.م`;
         document.getElementById('rep-takeaway-rev').innerText = `${rep.takeawayRevenue} ج.م`;
+        
+        if (document.getElementById('rep-total-food-cost')) {
+          document.getElementById('rep-total-food-cost').innerText = `${rep.totalFoodCost || 0} ج.م`;
+        }
+        if (document.getElementById('rep-gross-profit')) {
+          document.getElementById('rep-gross-profit').innerText = `${rep.grossProfit || 0} ج.م`;
+        }
+        if (document.getElementById('rep-gross-margin')) {
+          document.getElementById('rep-gross-margin').innerText = `${rep.grossMarginPercent || 0}%`;
+        }
 
         const totalOrders = rep.totalOrders || 1;
         const delivPct = Math.round((rep.deliveryOrdersCount / totalOrders) * 100);
@@ -2172,29 +2245,40 @@
     function renderItemSalesTable(items) {
       const tbody = document.getElementById('items-sales-table-body');
       if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">لا توجد مبيعات مسجلة خلال هذه الفترة.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">لا توجد مبيعات مسجلة خلال هذه الفترة.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = items.map(it => `
-        <tr class="hover:bg-white/5 transition-all">
-          <td class="py-3 px-3 font-bold text-white flex items-center gap-2">
-            <span>🍔</span> ${it.name}
-          </td>
-          <td class="py-3 px-3 text-slate-400">${it.categoryName || 'عام'}</td>
-          <td class="py-3 px-3 font-mono text-slate-300 font-bold">${it.unitPrice || 0} ج.م</td>
-          <td class="py-3 px-3 text-center font-mono font-black text-white text-sm bg-black/20 rounded-lg">${it.quantity}</td>
-          <td class="py-3 px-3 text-left font-mono font-black text-orange-400 text-sm">${it.revenue} ج.م</td>
-          <td class="py-3 px-3 text-center">
-            <div class="flex items-center justify-center gap-2">
-              <div class="w-16 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                <div class="h-full bg-emerald-500" style="width: ${it.percentageOfSales || 0}%;"></div>
+      tbody.innerHTML = items.map(it => {
+        const margin = it.profitMargin !== undefined ? it.profitMargin : 0;
+        const isLowMargin = margin < 30;
+        const marginBadge = isLowMargin 
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">⚠️ ${margin}%</span>`
+          : `<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✅ ${margin}%</span>`;
+
+        return `
+          <tr class="hover:bg-white/5 transition-all">
+            <td class="py-3 px-3 font-bold text-white flex items-center gap-2">
+              <span>🍔</span> ${it.name}
+            </td>
+            <td class="py-3 px-3 text-slate-400">${it.categoryName || 'عام'}</td>
+            <td class="py-3 px-3 font-mono text-slate-300 font-bold">${it.unitPrice || 0} ج.م</td>
+            <td class="py-3 px-3 font-mono text-amber-300 font-semibold">${it.cost || 0} ج.م</td>
+            <td class="py-3 px-3 text-center font-mono font-black text-white text-sm bg-black/20 rounded-lg">${it.quantity}</td>
+            <td class="py-3 px-3 text-left font-mono font-black text-orange-400 text-sm">${it.revenue} ج.م</td>
+            <td class="py-3 px-3 text-left font-mono font-black ${(it.netProfit || 0) < 0 ? 'text-rose-400' : 'text-emerald-400'} text-sm">${it.netProfit || 0} ج.م</td>
+            <td class="py-3 px-3 text-center">${marginBadge}</td>
+            <td class="py-3 px-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-16 h-1.5 bg-black/40 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500" style="width: ${it.percentageOfSales || 0}%;"></div>
+                </div>
+                <span class="font-mono text-[10px] text-emerald-400 font-bold">${it.percentageOfSales || 0}%</span>
               </div>
-              <span class="font-mono text-[10px] text-emerald-400 font-bold">${it.percentageOfSales || 0}%</span>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function filterReportTable() {

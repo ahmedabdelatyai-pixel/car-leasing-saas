@@ -30,12 +30,25 @@ export class ReportController {
           status: { not: 'CANCELLED' }
         },
         include: {
-          items: true
+          items: {
+            include: {
+              menuItem: {
+                include: {
+                  recipe: {
+                    include: {
+                      ingredients: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         orderBy: { createdAt: 'asc' }
       });
 
       let totalRevenue = 0;
+      let totalFoodCost = 0;
       let deliveryRevenue = 0;
       let takeawayRevenue = 0;
       let deliveryCount = 0;
@@ -51,14 +64,27 @@ export class ReportController {
           takeawayCount++;
           takeawayRevenue += val;
         }
+
+        for (const itm of ord.items) {
+          const recipe = itm.menuItem?.recipe;
+          if (recipe && recipe.ingredients) {
+            const unitCost = recipe.ingredients.reduce((acc, ing) => acc + (Number(ing.cost) || 0), 0);
+            totalFoodCost += (unitCost * itm.quantity);
+          }
+        }
       }
 
+      const grossProfit = Math.max(0, totalRevenue - totalFoodCost);
+      const grossMarginPercent = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
       const openedAt = orders.length > 0 ? orders[0].createdAt : new Date();
 
       return res.json({
         hasActiveShift: orders.length > 0,
         orderCount: orders.length,
         totalSales: Math.round(totalRevenue * 100) / 100,
+        totalFoodCost: Math.round(totalFoodCost * 100) / 100,
+        grossProfit: Math.round(grossProfit * 100) / 100,
+        profitMargin: Math.round(grossMarginPercent * 10) / 10,
         deliverySales: Math.round(deliveryRevenue * 100) / 100,
         takeawaySales: Math.round(takeawayRevenue * 100) / 100,
         deliveryCount,
@@ -253,7 +279,12 @@ export class ReportController {
             include: {
               menuItem: {
                 include: {
-                  category: true
+                  category: true,
+                  recipe: {
+                    include: {
+                      ingredients: true
+                    }
+                  }
                 }
               }
             }
@@ -264,6 +295,7 @@ export class ReportController {
       });
 
       let totalRevenue = 0;
+      let totalFoodCost = 0;
       let deliveryRevenue = 0;
       let takeawayRevenue = 0;
       let deliveryOrdersCount = 0;
@@ -276,6 +308,7 @@ export class ReportController {
         unitPrice: number;
         quantity: number; 
         revenue: number;
+        cost: number;
         ordersCount: number;
       }>();
       const dailySalesMap = new Map<string, { date: string; amount: number; count: number }>();
@@ -303,6 +336,13 @@ export class ReportController {
         for (const item of order.items) {
           const key = item.menuItemId || item.name;
           const catName = item.menuItem?.category?.name || 'وجبات عامة';
+          const recipe = item.menuItem?.recipe;
+          const unitCost = recipe && recipe.ingredients 
+            ? recipe.ingredients.reduce((acc, ing) => acc + (Number(ing.cost) || 0), 0)
+            : 0;
+          const lineCost = unitCost * item.quantity;
+          totalFoodCost += lineCost;
+
           const current = itemSalesMap.get(key) || { 
             id: key, 
             name: item.name, 
@@ -310,24 +350,37 @@ export class ReportController {
             unitPrice: Number(item.unitPrice),
             quantity: 0, 
             revenue: 0,
+            cost: 0,
             ordersCount: 0 
           };
           current.quantity += item.quantity;
           current.revenue += Number(item.totalPrice);
+          current.cost += lineCost;
           current.ordersCount += 1;
           itemSalesMap.set(key, current);
         }
       }
 
       const itemsReport = Array.from(itemSalesMap.values())
-        .map(item => ({
-          ...item,
-          revenue: Math.round(item.revenue * 100) / 100,
-          percentageOfSales: totalRevenue > 0 ? Math.round((item.revenue / totalRevenue) * 1000) / 10 : 0
-        }))
+        .map(item => {
+          const rev = Math.round(item.revenue * 100) / 100;
+          const cst = Math.round(item.cost * 100) / 100;
+          const profit = Math.round((rev - cst) * 100) / 100;
+          const margin = rev > 0 ? Math.round((profit / rev) * 1000) / 10 : 0;
+          return {
+            ...item,
+            revenue: rev,
+            cost: cst,
+            netProfit: profit,
+            profitMargin: margin,
+            percentageOfSales: totalRevenue > 0 ? Math.round((rev / totalRevenue) * 1000) / 10 : 0
+          };
+        })
         .sort((a, b) => b.quantity - a.quantity);
 
       const topSellingItems = itemsReport.slice(0, 5);
+      const grossProfit = Math.max(0, totalRevenue - totalFoodCost);
+      const grossMarginPercent = totalRevenue > 0 ? Math.round((grossProfit / totalRevenue) * 1000) / 10 : 0;
 
       const dailyTrend = Array.from(dailySalesMap.values())
         .map(d => ({ ...d, amount: Math.round(d.amount * 100) / 100 }))
@@ -335,6 +388,9 @@ export class ReportController {
 
       return res.json({
         totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalFoodCost: Math.round(totalFoodCost * 100) / 100,
+        grossProfit: Math.round(grossProfit * 100) / 100,
+        grossMarginPercent,
         totalOrders: orders.length,
         deliveryOrdersCount,
         takeawayOrdersCount,

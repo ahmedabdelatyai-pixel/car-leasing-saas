@@ -8,10 +8,23 @@ export class RestaurantController {
   private static async getOrCreateRestaurant() {
     let restaurant = await prisma.restaurant.findFirst({
       include: {
+        overheads: true,
         categories: {
           orderBy: { sortOrder: 'asc' },
           include: {
-            items: true
+            items: {
+              include: {
+                recipe: {
+                  include: {
+                    ingredients: {
+                      include: {
+                        inventoryItem: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -136,9 +149,24 @@ export class RestaurantController {
       restaurant = await prisma.restaurant.findUnique({
         where: { id: created.id },
         include: {
+          overheads: true,
           categories: {
             orderBy: { sortOrder: 'asc' },
-            include: { items: true }
+            include: {
+              items: {
+                include: {
+                  recipe: {
+                    include: {
+                      ingredients: {
+                        include: {
+                          inventoryItem: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       });
@@ -153,7 +181,68 @@ export class RestaurantController {
   static async getPublicMenu(req: Request, res: Response) {
     try {
       const restaurant = await RestaurantController.getOrCreateRestaurant();
-      return res.json(restaurant);
+
+      const totalOverheads = (restaurant.overheads || []).reduce(
+        (acc: number, curr: any) => acc + Number(curr.monthlyAmount || 0), 0
+      );
+      const avgOrders = Math.max(1, restaurant.averageDailyOrders || 80);
+      const indirectCostPerOrder = Number((totalOverheads / 30 / avgOrders).toFixed(2));
+
+      const categoriesFormatted = (restaurant.categories || []).map((cat: any) => ({
+        ...cat,
+        items: (cat.items || []).map((item: any) => {
+          let directCost = 0;
+          let availablePortions = 999;
+          let limitingIngredient = '';
+          const hasRecipe = !!(item.recipe && item.recipe.ingredients && item.recipe.ingredients.length > 0);
+
+          if (hasRecipe) {
+            for (const ing of item.recipe.ingredients) {
+              const qtyUsed = Number(ing.quantityUsed) || 0;
+              const unitPrice = ing.inventoryItem ? Number(ing.inventoryItem.pricePerUnit) : 0;
+              directCost += (qtyUsed * unitPrice);
+
+              if (ing.inventoryItem && qtyUsed > 0) {
+                const stock = Number(ing.inventoryItem.currentStock) || 0;
+                const portions = Math.max(0, Math.floor(stock / qtyUsed));
+                if (portions < availablePortions) {
+                  availablePortions = portions;
+                  limitingIngredient = ing.inventoryItem.name;
+                }
+              }
+            }
+          }
+
+          directCost = Number(directCost.toFixed(2));
+          const trueCost = Number((directCost + indirectCostPerOrder).toFixed(2));
+          const sellingPrice = Number(item.price);
+          const netProfit = Number((sellingPrice - trueCost).toFixed(2));
+          const profitMarginPercent = sellingPrice > 0 ? Number(((netProfit / sellingPrice) * 100).toFixed(1)) : 0;
+          const isOutOfStock = hasRecipe && availablePortions <= 0;
+          const isLowStock = hasRecipe && availablePortions > 0 && availablePortions <= 5;
+
+          return {
+            ...item,
+            directCost,
+            indirectCost: indirectCostPerOrder,
+            trueCost,
+            netProfit,
+            profitMarginPercent,
+            hasRecipe,
+            availablePortions: hasRecipe ? availablePortions : null,
+            isOutOfStock,
+            isLowStock,
+            limitingIngredient: (isOutOfStock || isLowStock) ? limitingIngredient : null
+          };
+        })
+      }));
+
+      return res.json({
+        ...restaurant,
+        totalMonthlyOverheads: totalOverheads,
+        indirectCostPerOrder,
+        categories: categoriesFormatted
+      });
     } catch (err: any) {
       return res.status(500).json({ error: 'Failed to load restaurant menu', message: err.message });
     }

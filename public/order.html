@@ -395,27 +395,38 @@
         if (!cat.items || cat.items.length === 0) return '';
 
         const itemsHtml = cat.items.map(item => {
-          const badgeHtml = item.badge ? `<span class="absolute top-2 right-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md">${item.badge}</span>` : '';
+          const isAvailable = (item.isAvailable !== false) && !item.isOutOfStock;
+          const badgeHtml = item.badge 
+            ? `<span class="absolute top-2 right-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md z-10">${item.badge}</span>` 
+            : '';
           const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
           const inCart = cart.find(i => i.id === item.id);
 
-          const actionBtnHtml = inCart ? `
-            <div class="flex items-center gap-1.5 bg-orange-600/20 border border-orange-500/40 rounded-xl p-1 shadow-sm">
-              <button type="button" onclick="updateCartItemQty('${item.id}', -1)" title="تقليل أو حذف" class="w-6 h-6 rounded-lg bg-black/50 hover:bg-black/80 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">-</button>
-              <span class="text-xs font-black text-white px-1.5 min-w-[1.2rem] text-center font-mono">${inCart.quantity}</span>
-              <button type="button" onclick="updateCartItemQty('${item.id}', 1)" title="زيادة الكمية" class="w-6 h-6 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">+</button>
-            </div>
-          ` : `
-            <button type="button" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
-              <span>+ إضافة</span>
-            </button>
-          `;
+          let actionBtnHtml = '';
+          if (!isAvailable) {
+            actionBtnHtml = `<span class="px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-slate-500 text-[10px] font-bold">غير متوفر حالياً 🚫</span>`;
+          } else if (inCart) {
+            actionBtnHtml = `
+              <div class="flex items-center gap-1.5 bg-orange-600/20 border border-orange-500/40 rounded-xl p-1 shadow-sm">
+                <button type="button" onclick="updateCartItemQty('${item.id}', -1)" title="تقليل أو حذف" class="w-6 h-6 rounded-lg bg-black/50 hover:bg-black/80 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">-</button>
+                <span class="text-xs font-black text-white px-1.5 min-w-[1.2rem] text-center font-mono">${inCart.quantity}</span>
+                <button type="button" onclick="updateCartItemQty('${item.id}', 1)" title="زيادة الكمية" class="w-6 h-6 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-95">+</button>
+              </div>
+            `;
+          } else {
+            actionBtnHtml = `
+              <button type="button" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
+                <span>+ إضافة</span>
+              </button>
+            `;
+          }
 
           return `
-            <div class="bg-[#111827] border ${inCart ? 'border-orange-500/40 bg-orange-950/10' : 'border-white/5 hover:border-orange-500/20'} rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
+            <div class="bg-[#111827] border ${!isAvailable ? 'border-white/5 opacity-60' : inCart ? 'border-orange-500/40 bg-orange-950/10' : 'border-white/5 hover:border-orange-500/20'} rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
               <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-black/40">
                 <img src="${img}" alt="${item.name}" class="w-full h-full object-cover">
                 ${badgeHtml}
+                ${!isAvailable ? `<span class="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center text-[10px] font-black text-rose-400 text-center p-1">غير متوفر اليوم</span>` : ''}
               </div>
               <div class="flex-1 flex flex-col justify-between">
                 <div>
