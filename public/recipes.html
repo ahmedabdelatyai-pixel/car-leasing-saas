@@ -468,33 +468,48 @@
         const resRecipes = await apiFetch('/api/v1/recipes');
         allRecipes = resRecipes.recipes || [];
         
-        // Also fetch restaurant menu to populate select box
-        const resRest = await apiFetch('/api/v1/restaurants/my-restaurant');
-        const restaurant = resRest.restaurant;
+        // Fetch restaurant menu correctly from /api/v1/restaurant/menu
+        const resRest = await apiFetch('/api/v1/restaurant/menu');
+        const categories = resRest.categories || (resRest.restaurant && resRest.restaurant.categories) || [];
         allMenuItems = [];
-        if (restaurant && restaurant.menuCategories) {
-          restaurant.menuCategories.forEach(cat => {
-            if (cat.items) {
-              cat.items.forEach(itm => {
-                allMenuItems.push({ ...itm, categoryName: cat.name });
-              });
-            }
-          });
-        }
+        categories.forEach(cat => {
+          if (cat.items) {
+            cat.items.forEach(itm => {
+              allMenuItems.push({ ...itm, categoryName: cat.name });
+            });
+          }
+        });
 
         document.getElementById('stat-menu-items-count').textContent = allMenuItems.length;
         document.getElementById('stat-recipes-count').textContent = allRecipes.length;
 
-        // Populate dropdown
+        // Populate dropdown with category optgroups
         const select = document.getElementById('menu-item-select');
-        select.innerHTML = '<option value="">-- اضغط لاختيار الصنف من المنيو --</option>' + 
-          allMenuItems.map(item => {
-            const hasRecipe = allRecipes.some(r => r.productId === item.id);
-            const tag = hasRecipe ? '🧪 (مُسجل له وصفة)' : '';
-            return `<option value="${item.id}">${item.name} - ${item.price} ج.م ${tag}</option>`;
-          }).join('');
+        let optionsHtml = '<option value="">-- اضغط لاختيار الصنف من المنيو --</option>';
+
+        categories.forEach(cat => {
+          if (cat.items && cat.items.length > 0) {
+            optionsHtml += `<optgroup label="${cat.icon || '🍔'} ${cat.name}">`;
+            cat.items.forEach(item => {
+              const hasRecipe = allRecipes.some(r => r.productId === item.id);
+              const tag = hasRecipe ? '🧪 (مسجل له وصفة وتكلفة)' : '';
+              optionsHtml += `<option value="${item.id}">${item.name} - ${item.price} ج.م ${tag}</option>`;
+            });
+            optionsHtml += `</optgroup>`;
+          }
+        });
+
+        select.innerHTML = optionsHtml;
 
         renderAllRecipesTable();
+
+        // Check if productId is passed in URL query e.g. /recipes?productId=...
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryProductId = urlParams.get('productId');
+        if (queryProductId) {
+          select.value = queryProductId;
+          onMenuItemSelected();
+        }
       } catch (err) {
         console.error('Failed to load menu & recipes:', err);
       }
