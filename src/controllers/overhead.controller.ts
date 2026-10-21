@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 
 export class OverheadController {
@@ -29,6 +29,10 @@ export class OverheadController {
           monthlyAmount: Number(o.monthlyAmount),
           createdAt: o.createdAt
         })),
+        totalMonthlyOverheads: Number(totalMonthly.toFixed(2)),
+        dailyOverhead: Number(dailyOverhead.toFixed(2)),
+        averageDailyOrders,
+        indirectCostPerOrder: Number(indirectCostPerOrder.toFixed(2)),
         summary: {
           totalMonthlyOverheads: Number(totalMonthly.toFixed(2)),
           dailyOverhead: Number(dailyOverhead.toFixed(2)),

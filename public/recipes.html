@@ -420,9 +420,9 @@
       try {
         const res = await apiFetch('/api/v1/overheads');
         overheads = res.overheads || [];
-        totalMonthlyOverheads = Number(res.totalMonthlyOverheads) || 0;
-        averageDailyOrders = Number(res.averageDailyOrders) || 80;
-        indirectCostPerOrder = Number(res.indirectCostPerOrder) || 0;
+        totalMonthlyOverheads = Number(res.totalMonthlyOverheads !== undefined ? res.totalMonthlyOverheads : res.summary?.totalMonthlyOverheads) || 0;
+        averageDailyOrders = Number(res.averageDailyOrders !== undefined ? res.averageDailyOrders : res.summary?.averageDailyOrders) || 80;
+        indirectCostPerOrder = Number(res.indirectCostPerOrder !== undefined ? res.indirectCostPerOrder : res.summary?.indirectCostPerOrder) || 0;
 
         document.getElementById('stat-monthly-overheads').textContent = `${totalMonthlyOverheads.toLocaleString('ar-EG')} ج.م`;
         document.getElementById('stat-indirect-cost-preview').textContent = `${indirectCostPerOrder.toFixed(2)} ج.م`;
