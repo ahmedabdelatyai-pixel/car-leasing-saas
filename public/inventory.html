@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>إدارة المخزون والبضاعة 📦 | مطعم ضجة</title>
+  <link rel="icon" type="image/jpeg" href="/dajja_logo.jpg">
+  <link rel="apple-touch-icon" href="/dajja_logo.jpg">
+  <meta name="theme-color" content="#ea580c">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    .glow-orange {
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+    }
+    .glow-red {
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.45);
+    }
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .alert-pulse {
+      animation: pulseSlow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#0b0f19] flex flex-col custom-scrollbar">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="bg-slate-900/90 border-b border-white/10 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="/dashboard" class="flex items-center gap-2 group">
+          <img src="/dajja_logo.jpg" alt="Logo" class="w-10 h-10 rounded-xl object-cover border border-orange-500/30 group-hover:scale-105 transition-all">
+          <div>
+            <h1 class="text-base font-black text-white flex items-center gap-2">
+              مطعم ضجة <span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">المخزون</span>
+            </h1>
+            <p class="text-[10px] text-slate-400 font-semibold">إدارة المشتريات وحركة البضاعة وحساب التكلفة</p>
+          </div>
+        </a>
+      </div>
+
+      <nav class="flex items-center gap-1.5 sm:gap-2">
+        <a href="/dashboard" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <span>🖥️</span> <span class="hidden sm:inline">الكاشير / الطلبات</span>
+        </a>
+        <a href="/recipes" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <span>🧪</span> <span class="hidden sm:inline">الوصفات والتسعير</span>
+        </a>
+        <button onclick="openAddItemModal()" class="px-3 py-1.5 text-xs font-black rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:brightness-110 shadow-lg glow-orange flex items-center gap-1.5 transition-all">
+          <span>➕</span> <span>إضافة بضاعة</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- KPI STATS CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl">
+          📦
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">أصناف البضاعة</p>
+          <h3 id="stat-total-items" class="text-xl font-black text-white mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl">
+          💰
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">إجمالي المشتريات</p>
+          <h3 id="stat-total-purchased" class="text-xl font-black text-emerald-400 mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-xl">
+          🏷️
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">قيمة المخزون الحالي</p>
+          <h3 id="stat-current-value" class="text-xl font-black text-amber-300 mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div id="stat-low-stock-card" class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3 transition-all">
+        <div class="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-xl">
+          ⚠️
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">أصناف قربت تخلص</p>
+          <h3 id="stat-low-stock" class="text-xl font-black text-rose-400 mt-0.5">--</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS & SEARCH -->
+    <div class="bg-slate-900/50 border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div class="relative flex-1">
+        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+        <input 
+          type="text" 
+          id="search-input" 
+          oninput="filterItems()" 
+          placeholder="ابحث باسم الصنف (مثل: فراخ، لحمة، عيش، جبنة...)" 
+          class="w-full bg-slate-950/70 border border-white/10 rounded-xl pr-10 pl-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-all"
+        >
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          id="btn-filter-all" 
+          onclick="setFilter('ALL')" 
+          class="px-3.5 py-2 rounded-xl text-xs font-black bg-orange-500 text-white transition-all shadow-md">
+          الكل (<span id="count-all">0</span>)
+        </button>
+        <button 
+          id="btn-filter-low" 
+          onclick="setFilter('LOW')" 
+          class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 text-slate-400 hover:text-white border border-white/5 transition-all flex items-center gap-1.5">
+          <span>⚠️</span> <span>قرب يخلص</span> (<span id="count-low">0</span>)
+        </button>
+      </div>
+    </div>
+
+    <!-- INVENTORY TABLE CARD -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+          <h2 class="text-sm font-black text-white">قائمة أصناف بضاعة المخزون</h2>
+        </div>
+        <span class="text-xs text-slate-400 font-bold" id="items-summary-text">جاري التحميل...</span>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-950/60 border-b border-white/5 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+              <th class="p-3.5">اسم الصنف</th>
+              <th class="p-3.5">الوحدة</th>
+              <th class="p-3.5">الكمية المشتراة</th>
+              <th class="p-3.5">إجمالي المدفوع</th>
+              <th class="p-3.5 text-amber-300">سعر الوحدة (احسبها)</th>
+              <th class="p-3.5">المخزون الحالي</th>
+              <th class="p-3.5">حد التنبيه</th>
+              <th class="p-3.5">الحالة</th>
+              <th class="p-3.5 text-center">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-table-body" class="divide-y divide-white/5 text-xs">
+            <tr>
+              <td colspan="9" class="p-8 text-center text-slate-500 font-bold">
+                <div class="inline-block animate-spin text-2xl mb-2">⏳</div>
+                <div>جاري جلب بيانات المخزون...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD INVENTORY ITEM -->
+  <div id="add-item-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <span>📦</span> <span>إضافة صنف بضاعة جديد للمخزون</span>
+        </h3>
+        <button onclick="closeModal('add-item-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="add-item-form" onsubmit="handleCreateItem(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">اسم الصنف (مثل: فراخ بانيه فريش، لحمة مفرومة بلدي، كبدة...)</label>
+          <input type="text" id="add-name" required placeholder="ادخل اسم الصنف" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">وحدة القياس</label>
+            <select id="add-unit" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+              <option value="جرام">جرام (g)</option>
+              <option value="كيلو">كيلو (kg)</option>
+              <option value="قطعة">قطعة (pcs)</option>
+              <option value="رغيف">رغيف</option>
+              <option value="علبة">علبة / كانز</option>
+              <option value="لتر">لتر</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">حد التنبيه (لما المخزون يقل عنه)</label>
+            <input type="number" step="any" id="add-min-alert" required placeholder="مثلاً: 2000 جرام أو 20 قطعة" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+        </div>
+
+        <div class="bg-slate-950/60 p-3 rounded-xl border border-white/5 space-y-3">
+          <p class="text-[11px] font-bold text-amber-300">أول فاتورة شراء (لحساب سعر الوحدة تلقائياً):</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">الكمية المشتراة</label>
+              <input type="number" step="any" id="add-qty" required placeholder="مثلاً: 10000" oninput="calculateUnitPreview()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">إجمالي السعر المدفوع (ج.م)</label>
+              <input type="number" step="any" id="add-price" required placeholder="مثلاً: 1800" oninput="calculateUnitPreview()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs flex items-center justify-between">
+            <span class="text-slate-300 font-bold">سعر الوحدة المحسوب:</span>
+            <span id="add-unit-preview" class="font-black text-orange-400">0.00 ج.م / وحدة</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('add-item-modal')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
+          <button type="submit" id="btn-submit-add" class="px-5 py-2 text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl shadow-lg glow-orange hover:brightness-110">حفظ الصنف</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RESTOCK INVENTORY ITEM -->
+  <div id="restock-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <span>➕</span> <span>شراء / توريد جديد للصنف</span>
+        </h3>
+        <button onclick="closeModal('restock-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="bg-slate-950/70 p-3 rounded-xl border border-white/5">
+        <h4 id="restock-item-name" class="text-sm font-black text-white">--</h4>
+        <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+          <span>المخزون الحالي: <strong id="restock-current-stock" class="text-white">--</strong></span>
+          <span>سعر الوحدة الحالي: <strong id="restock-current-price" class="text-amber-300">--</strong></span>
+        </div>
+      </div>
+
+      <form id="restock-form" onsubmit="handleRestockSubmit(event)" class="space-y-4">
+        <input type="hidden" id="restock-item-id">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">الكمية الإضافية المشتراة (<span id="restock-unit-label">وحدة</span>)</label>
+          <input type="number" step="any" id="restock-qty" required placeholder="ادخل الكمية الجديدة" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">المبلغ الإضافي المدفوع في هذه الشروة (ج.م)</label>
+          <input type="number" step="any" id="restock-price" required placeholder="المبلغ الإجمالي للفاتورة" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <p class="text-[10px] text-slate-400 leading-relaxed bg-white/5 p-2.5 rounded-lg border border-white/5">
+          ℹ️ سيقوم السيستم تلقائياً بزيادة المخزون الحالي وإعادة حساب متوسط سعر الوحدة المرجح بدقة.
+        </p>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('restock-modal')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
+          <button type="submit" id="btn-submit-restock" class="px-5 py-2 text-xs font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl shadow-lg hover:brightness-110">تأكيد التوريد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT ITEM -->
+  <div id="edit-item-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <span>✏️</span> <span>تعديل بيانات الصنف</span>
+        </h3>
+        <button onclick="closeModal('edit-item-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="edit-item-form" onsubmit="handleEditSubmit(event)" class="space-y-4">
+        <input type="hidden" id="edit-item-id">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">اسم الصنف</label>
+          <input type="text" id="edit-name" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">الوحدة</label>
+          <input type="text" id="edit-unit" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">الرصيد الحالي</label>
+            <input type="number" step="any" id="edit-current-stock" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">حد التنبيه</label>
+            <input type="number" step="any" id="edit-min-alert" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('edit-item-modal')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
+          <button type="submit" class="px-5 py-2 text-xs font-black bg-orange-500 text-white rounded-xl shadow-lg hover:brightness-110">حفظ التعديلات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const token = localStorage.getItem('auth_token') || 'mock_token_key';
+    let inventoryItems = [];
+    let currentFilter = 'ALL';
+
+    async function apiFetch(endpoint, options = {}) {
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      const res = await fetch(endpoint, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.clear();
+        window.location.href = '/dashboard';
+        throw new Error('Unauthorized');
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'فشلت العملية');
+      return data;
+    }
+
+    async function loadInventory() {
+      try {
+        const res = await apiFetch('/api/v1/inventory');
+        inventoryItems = res.items || [];
+        updateStats();
+        renderTable();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('inventory-table-body').innerHTML = `
+          <tr>
+            <td colspan="9" class="p-8 text-center text-rose-400 font-bold">
+              ❌ فشل تحميل بيانات المخزون: ${err.message}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function updateStats() {
+      const totalItems = inventoryItems.length;
+      let totalPurchased = 0;
+      let currentValue = 0;
+      let lowStockCount = 0;
+
+      inventoryItems.forEach(i => {
+        totalPurchased += Number(i.totalPricePaid) || 0;
+        const curStock = Number(i.currentStock) || 0;
+        const unitPrice = Number(i.pricePerUnit) || 0;
+        currentValue += (curStock * unitPrice);
+        if (i.isLowStock) {
+          lowStockCount++;
+        }
+      });
+
+      document.getElementById('stat-total-items').textContent = totalItems;
+      document.getElementById('stat-total-purchased').textContent = `${totalPurchased.toLocaleString('ar-EG', { maximumFractionDigits: 1 })} ج.م`;
+      document.getElementById('stat-current-value').textContent = `${currentValue.toLocaleString('ar-EG', { maximumFractionDigits: 1 })} ج.م`;
+      document.getElementById('stat-low-stock').textContent = lowStockCount;
+
+      document.getElementById('count-all').textContent = totalItems;
+      document.getElementById('count-low').textContent = lowStockCount;
+
+      const lowStockCard = document.getElementById('stat-low-stock-card');
+      if (lowStockCount > 0) {
+        lowStockCard.className = "bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 flex items-center gap-3 glow-red alert-pulse";
+      } else {
+        lowStockCard.className = "bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3";
+      }
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      const btnAll = document.getElementById('btn-filter-all');
+      const btnLow = document.getElementById('btn-filter-low');
+
+      if (filter === 'ALL') {
+        btnAll.className = "px-3.5 py-2 rounded-xl text-xs font-black bg-orange-500 text-white transition-all shadow-md";
+        btnLow.className = "px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 text-slate-400 hover:text-white border border-white/5 transition-all flex items-center gap-1.5";
+      } else {
+        btnAll.className = "px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 text-slate-400 hover:text-white border border-white/5 transition-all";
+        btnLow.className = "px-3.5 py-2 rounded-xl text-xs font-black bg-rose-600 text-white transition-all shadow-md flex items-center gap-1.5";
+      }
+      renderTable();
+    }
+
+    function filterItems() {
+      renderTable();
+    }
+
+    function renderTable() {
+      const searchQuery = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const tbody = document.getElementById('inventory-table-body');
+
+      let filtered = inventoryItems.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+        const matchesFilter = currentFilter === 'ALL' || (currentFilter === 'LOW' && item.isLowStock);
+        return matchesSearch && matchesFilter;
+      });
+
+      document.getElementById('items-summary-text').textContent = `عرض ${filtered.length} من أصل ${inventoryItems.length} صنف`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-8 text-center text-slate-500 font-bold">
+              لا توجد أصناف مطابقة للبحث أو الفلتر المختار.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        const isLow = item.isLowStock;
+        const rowBg = isLow ? 'bg-rose-950/20 hover:bg-rose-950/30' : 'hover:bg-white/[0.02]';
+        const stockHighlight = isLow 
+          ? 'text-rose-400 font-black flex items-center gap-1' 
+          : 'text-slate-200 font-bold';
+
+        const statusBadge = isLow 
+          ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40 alert-pulse">
+               ⚠️ قرب يخلص
+             </span>`
+          : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+               ✅ متوفر
+             </span>`;
+
+        return `
+          <tr class="${rowBg} transition-colors">
+            <td class="p-3.5 font-black text-white">
+              <div class="flex items-center gap-2">
+                ${isLow ? '<span class="text-rose-500 text-base">⚠️</span>' : '<span class="text-slate-500 text-sm">📦</span>'}
+                <span>${item.name}</span>
+              </div>
+            </td>
+            <td class="p-3.5 text-slate-300 font-bold">${item.unit}</td>
+            <td class="p-3.5 text-slate-300 font-semibold">${Number(item.totalQuantityPurchased).toLocaleString('ar-EG')} ${item.unit}</td>
+            <td class="p-3.5 text-slate-300 font-semibold">${Number(item.totalPricePaid).toLocaleString('ar-EG')} ج.م</td>
+            <td class="p-3.5 font-black text-amber-300">
+              ${Number(item.pricePerUnit).toFixed(3)} ج.م / ${item.unit}
+            </td>
+            <td class="p-3.5">
+              <div class="${stockHighlight}">
+                <span>${Number(item.currentStock).toLocaleString('ar-EG')}</span>
+                <span class="text-[10px] text-slate-400 font-normal">${item.unit}</span>
+              </div>
+            </td>
+            <td class="p-3.5 text-slate-400 font-medium">${Number(item.minStockAlert).toLocaleString('ar-EG')} ${item.unit}</td>
+            <td class="p-3.5">${statusBadge}</td>
+            <td class="p-3.5">
+              <div class="flex items-center justify-center gap-1.5">
+                <button 
+                  onclick="openRestockModal('${item.id}', '${item.name}', '${item.unit}', ${item.currentStock}, ${item.pricePerUnit})"
+                  title="توريد / شراء كمية جديدة"
+                  class="px-2.5 py-1 text-[11px] font-black rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 transition-all flex items-center gap-1">
+                  <span>➕</span> <span>توريد</span>
+                </button>
+                <button 
+                  onclick="openEditModal('${item.id}', '${item.name}', '${item.unit}', ${item.currentStock}, ${item.minStockAlert})"
+                  title="تعديل الصنف"
+                  class="px-2 py-1 text-[11px] font-bold rounded-lg bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all">
+                  ✏️
+                </button>
+                <button 
+                  onclick="handleDeleteItem('${item.id}', '${item.name}')"
+                  title="حذف الصنف"
+                  class="px-2 py-1 text-[11px] font-bold rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function calculateUnitPreview() {
+      const qty = parseFloat(document.getElementById('add-qty').value) || 0;
+      const price = parseFloat(document.getElementById('add-price').value) || 0;
+      const preview = document.getElementById('add-unit-preview');
+      if (qty > 0 && price > 0) {
+        const unit = (price / qty).toFixed(4);
+        preview.textContent = `${unit} ج.م / وحدة`;
+      } else {
+        preview.textContent = '0.00 ج.م / وحدة';
+      }
+    }
+
+    function openAddItemModal() {
+      document.getElementById('add-item-form').reset();
+      calculateUnitPreview();
+      document.getElementById('add-item-modal').classList.remove('hidden');
+    }
+
+    function openRestockModal(id, name, unit, currentStock, pricePerUnit) {
+      document.getElementById('restock-item-id').value = id;
+      document.getElementById('restock-item-name').textContent = name;
+      document.getElementById('restock-unit-label').textContent = unit;
+      document.getElementById('restock-current-stock').textContent = `${Number(currentStock).toLocaleString('ar-EG')} ${unit}`;
+      document.getElementById('restock-current-price').textContent = `${Number(pricePerUnit).toFixed(3)} ج.م / ${unit}`;
+      document.getElementById('restock-qty').value = '';
+      document.getElementById('restock-price').value = '';
+      document.getElementById('restock-modal').classList.remove('hidden');
+    }
+
+    function openEditModal(id, name, unit, currentStock, minAlert) {
+      document.getElementById('edit-item-id').value = id;
+      document.getElementById('edit-name').value = name;
+      document.getElementById('edit-unit').value = unit;
+      document.getElementById('edit-current-stock').value = currentStock;
+      document.getElementById('edit-min-alert').value = minAlert;
+      document.getElementById('edit-item-modal').classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function handleCreateItem(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-add');
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+
+      try {
+        const body = {
+          name: document.getElementById('add-name').value,
+          unit: document.getElementById('add-unit').value,
+          totalQuantityPurchased: parseFloat(document.getElementById('add-qty').value),
+          totalPricePaid: parseFloat(document.getElementById('add-price').value),
+          minStockAlert: parseFloat(document.getElementById('add-min-alert').value)
+        };
+        await apiFetch('/api/v1/inventory', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        closeModal('add-item-modal');
+        await loadInventory();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'حفظ الصنف';
+      }
+    }
+
+    async function handleRestockSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('restock-item-id').value;
+      const btn = document.getElementById('btn-submit-restock');
+      btn.disabled = true;
+      btn.textContent = 'جاري التوريد...';
+
+      try {
+        const body = {
+          additionalQuantity: parseFloat(document.getElementById('restock-qty').value),
+          additionalPricePaid: parseFloat(document.getElementById('restock-price').value)
+        };
+        await apiFetch(`/api/v1/inventory/${id}/restock`, {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        closeModal('restock-modal');
+        await loadInventory();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تأكيد التوريد';
+      }
+    }
+
+    async function handleEditSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-item-id').value;
+      try {
+        const body = {
+          name: document.getElementById('edit-name').value,
+          unit: document.getElementById('edit-unit').value,
+          currentStock: parseFloat(document.getElementById('edit-current-stock').value),
+          minStockAlert: parseFloat(document.getElementById('edit-min-alert').value)
+        };
+        await apiFetch(`/api/v1/inventory/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(body)
+        });
+        closeModal('edit-item-modal');
+        await loadInventory();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      }
+    }
+
+    async function handleDeleteItem(id, name) {
+      if (!confirm(`هل أنت متأكد من حذف الصنف "${name}" من المخزون؟`)) return;
+      try {
+        await apiFetch(`/api/v1/inventory/${id}`, { method: 'DELETE' });
+        await loadInventory();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadInventory);
+  </script>
+</body>
+</html>

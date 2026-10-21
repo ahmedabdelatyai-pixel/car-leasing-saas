@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>الوصفات وحساب التكلفة والتسعير 🧪 | مطعم ضجة</title>
+  <link rel="icon" type="image/jpeg" href="/dajja_logo.jpg">
+  <link rel="apple-touch-icon" href="/dajja_logo.jpg">
+  <meta name="theme-color" content="#ea580c">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    .glow-orange {
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+    }
+    .glow-red {
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.45);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+    }
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+    .alert-pulse {
+      animation: pulseSlow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#0b0f19] flex flex-col custom-scrollbar">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900/90 border-b border-white/10 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="/dashboard" class="flex items-center gap-2 group">
+          <img src="/dajja_logo.jpg" alt="Logo" class="w-10 h-10 rounded-xl object-cover border border-orange-500/30 group-hover:scale-105 transition-all">
+          <div>
+            <h1 class="text-base font-black text-white flex items-center gap-2">
+              مطعم ضجة <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">الوصفات والتسعير</span>
+            </h1>
+            <p class="text-[10px] text-slate-400 font-semibold">حساب تكلفة الساندوتشات والوجبات، هامش الربح، والمصاريف التشغيلية</p>
+          </div>
+        </a>
+      </div>
+
+      <nav class="flex items-center gap-1.5 sm:gap-2">
+        <a href="/dashboard" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <span>🖥️</span> <span class="hidden sm:inline">الكاشير / الطلبات</span>
+        </a>
+        <a href="/inventory" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+          <span>📦</span> <span class="hidden sm:inline">المخزون والبضاعة</span>
+        </a>
+        <button onclick="openOverheadsModal()" class="px-3 py-1.5 text-xs font-black rounded-lg bg-white/10 hover:bg-white/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 transition-all">
+          <span>⚡</span> <span>المصاريف الشهرية</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- TOP OVERVIEW SUMMARY -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-xl">
+          🍔
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">أصناف المنيو</p>
+          <h3 id="stat-menu-items-count" class="text-xl font-black text-white mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-xl">
+          🧪
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">الوصفات المسجلة</p>
+          <h3 id="stat-recipes-count" class="text-xl font-black text-purple-400 mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl">
+          ⚡
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">إجمالي المصاريف الشهرية</p>
+          <h3 id="stat-monthly-overheads" class="text-xl font-black text-amber-300 mt-0.5">--</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/60 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl">
+          📊
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 font-bold">تكلفة الصنف غير المباشرة</p>
+          <h3 id="stat-indirect-cost-preview" class="text-xl font-black text-blue-400 mt-0.5">--</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO COLUMNS: RECIPE EDITOR & LIVE COST CALCULATOR -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT/MAIN COLUMN: SELECT ITEM & CONFIGURE INGREDIENTS (8 COLS) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- ITEM PICKER -->
+        <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-black text-white flex items-center gap-2">
+              <span>🍔</span> <span>اختر صنف المنيو لضبط وصفته وتسعيره</span>
+            </h2>
+            <span id="selected-item-price-badge" class="hidden px-2.5 py-1 rounded-full text-xs font-black bg-orange-500/20 text-orange-400 border border-orange-500/30">
+              سعر البيع: 0 ج.م
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">اختر الصنف من قائمة الطعام</label>
+              <select id="menu-item-select" onchange="onMenuItemSelected()" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 custom-scrollbar">
+                <option value="">-- اضغط لاختيار الصنف --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1">تصنيف المنيو</label>
+              <input type="text" id="selected-item-category" readonly placeholder="التصنيف" class="w-full bg-slate-950/50 border border-white/5 rounded-xl px-3 py-2.5 text-xs text-slate-400 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- INGREDIENTS BUILDER -->
+        <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 shadow-xl space-y-5">
+          <div class="flex items-center justify-between border-b border-white/5 pb-3">
+            <div>
+              <h3 class="text-sm font-black text-white flex items-center gap-2">
+                <span>🧂</span> <span>مكونات الوصفة (من بضاعة المخزون)</span>
+              </h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">حدد المواد الخام والكمية المستخدمة في تجهيز الصنف</p>
+            </div>
+            <button onclick="addIngredientRow()" class="px-3 py-1.5 rounded-xl text-xs font-black bg-white/5 hover:bg-white/10 text-orange-400 border border-orange-500/30 flex items-center gap-1.5 transition-all">
+              <span>➕</span> <span>إضافة مكون</span>
+            </button>
+          </div>
+
+          <!-- DYNAMIC INGREDIENT ROWS -->
+          <div id="ingredients-container" class="space-y-3">
+            <div class="p-6 text-center text-slate-500 text-xs font-bold">
+              اختر صنفاً من المنيو أعلاه لبدء إعداد وصفته أو عرض مكوناته الحالية.
+            </div>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="pt-3 border-t border-white/5 flex items-center justify-between">
+            <button onclick="clearCurrentRecipe()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-all">
+              تفريغ المكونات
+            </button>
+
+            <button id="btn-save-recipe" onclick="saveRecipe()" class="px-6 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg glow-orange hover:brightness-110 flex items-center gap-2 transition-all">
+              <span>💾</span> <span>حفظ وتحديث الوصفة</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: LIVE COST CALCULATOR BOX (5 COLS) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <div id="cost-box-card" class="bg-slate-900/90 border border-white/10 rounded-2xl p-5 shadow-2xl space-y-5 sticky top-20">
+          
+          <div class="flex items-center justify-between border-b border-white/5 pb-3">
+            <h3 class="text-sm font-black text-white flex items-center gap-2">
+              <span>🧮</span> <span>حساب التكلفة الفورية والربحية</span>
+            </h3>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              مباشر لحظي
+            </span>
+          </div>
+
+          <!-- COST BREAKDOWN ROWS -->
+          <div class="space-y-3 text-xs">
+            
+            <!-- Direct Cost -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-white/5">
+              <div>
+                <p class="font-bold text-slate-300">1. التكلفة المباشرة (Direct Cost)</p>
+                <p class="text-[10px] text-slate-500">مجموع تكلفة المكونات المستخدمة</p>
+              </div>
+              <span id="calc-direct-cost" class="font-black text-sm text-white">0.00 ج.م</span>
+            </div>
+
+            <!-- Indirect Cost -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-white/5">
+              <div>
+                <p class="font-bold text-slate-300">2. التكلفة غير المباشرة (Overheads)</p>
+                <p class="text-[10px] text-slate-500">(إجمالي المصاريف ÷ 30 يوم ÷ متوسط الطلبات)</p>
+              </div>
+              <span id="calc-indirect-cost" class="font-black text-sm text-blue-300">0.00 ج.م</span>
+            </div>
+
+            <!-- True Cost -->
+            <div class="flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-orange-500/30">
+              <div>
+                <p class="font-black text-amber-300">3. التكلفة الحقيقية (True Cost)</p>
+                <p class="text-[10px] text-amber-200/70">المباشرة + غير المباشرة</p>
+              </div>
+              <span id="calc-true-cost" class="font-black text-base text-amber-400">0.00 ج.م</span>
+            </div>
+
+            <!-- Selling Price -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-white/5">
+              <div>
+                <p class="font-bold text-slate-300">سعر البيع للزبون (Selling Price)</p>
+                <p class="text-[10px] text-slate-500">محدد في قائمة الطعام</p>
+              </div>
+              <span id="calc-selling-price" class="font-black text-sm text-white">0.00 ج.م</span>
+            </div>
+
+            <!-- Net Profit -->
+            <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/90 border border-white/10">
+              <div>
+                <p class="font-black text-slate-200">صافي الربح للساندوتش / الوجبة</p>
+                <p class="text-[10px] text-slate-500">سعر البيع - التكلفة الحقيقية</p>
+              </div>
+              <span id="calc-net-profit" class="font-black text-base text-emerald-400">0.00 ج.م</span>
+            </div>
+
+            <!-- Profit Margin % -->
+            <div class="p-4 rounded-xl bg-slate-950 border border-white/10 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-300 text-xs">نسبة هامش الربح %</span>
+                <span id="calc-margin-percent" class="text-xl font-black text-emerald-400">0%</span>
+              </div>
+              <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-white/5">
+                <div id="margin-progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- DANGER ALERT (PROFIT < 30%) -->
+            <div id="low-margin-warning" class="hidden p-4 rounded-xl bg-rose-950/60 border border-rose-500/50 text-rose-300 text-xs space-y-1 alert-pulse glow-red">
+              <div class="flex items-center gap-2 font-black text-rose-200">
+                <span class="text-base">⚠️</span> <span>تنبيه: نسبة الربح منخفضة جداً!</span>
+              </div>
+              <p class="text-[11px] leading-relaxed text-rose-300/90">
+                هامش الربح أقل من <strong>30%</strong>. يُفضل رفع سعر البيع أو ترشيد كميات المكونات لضمان تغطية المصاريف وتحقيق عائد مجزي.
+              </p>
+            </div>
+
+            <!-- EXCELLENT MARGIN ALERT (PROFIT >= 30%) -->
+            <div id="healthy-margin-badge" class="hidden p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+              <span class="text-base">✅</span>
+              <span class="font-bold">تسعير ممتاز! هامش الربح يتجاوز 30% ويغطي كافة التكاليف.</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- EXISTING RECIPES CATALOG TABLE -->
+    <div class="bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+          <h2 class="text-sm font-black text-white">جدول جميع الوصفات وتكاليف المنيو الحالية</h2>
+        </div>
+        <span class="text-xs text-slate-400 font-bold" id="recipes-table-summary">--</span>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-950/60 border-b border-white/5 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+              <th class="p-3.5">صنف المنيو</th>
+              <th class="p-3.5">سعر البيع</th>
+              <th class="p-3.5">التكلفة المباشرة</th>
+              <th class="p-3.5">المصاريف غير المباشرة</th>
+              <th class="p-3.5 text-amber-300">التكلفة الحقيقية</th>
+              <th class="p-3.5 text-emerald-400">صافي الربح</th>
+              <th class="p-3.5">هامش الربح %</th>
+              <th class="p-3.5 text-center">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="all-recipes-table-body" class="divide-y divide-white/5 text-xs">
+            <tr>
+              <td colspan="8" class="p-8 text-center text-slate-500 font-bold">
+                <div class="inline-block animate-spin text-2xl mb-2">⏳</div>
+                <div>جاري جلب جدول الوصفات...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: OVERHEAD EXPENSES & DAILY ORDERS ESTIMATE -->
+  <div id="overheads-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-xl p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <span>⚡</span> <span>إدارة المصاريف الشهرية التشغيلية (Overheads)</span>
+        </h3>
+        <button onclick="closeModal('overheads-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- DAILY ORDERS ESTIMATE SETTING -->
+      <div class="bg-slate-950/70 p-4 rounded-xl border border-white/5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-black text-white">متوسط عدد الطلبات اليومي التقديري</h4>
+            <p class="text-[10px] text-slate-400">يُستخدم لتوزيع المصاريف الثابتة على كل وجبة (المصاريف ÷ 30 ÷ الطلبات)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="number" id="input-daily-orders" min="1" step="1" class="w-24 bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-center font-black text-orange-400 text-xs focus:outline-none focus:border-orange-500">
+            <button onclick="saveDailyOrders()" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-orange-500 text-white hover:brightness-110">حفظ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD NEW OVERHEAD -->
+      <form onsubmit="handleCreateOverhead(event)" class="bg-slate-950/50 p-3 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-2 items-center">
+        <input type="text" id="overhead-type" required placeholder="نوع المصروف (إيجار، مرتبات، كهرباء...)" class="flex-1 w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        <input type="number" id="overhead-amount" required step="any" placeholder="المبلغ الشهري (ج.م)" class="w-full sm:w-36 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 text-white hover:brightness-110 flex items-center justify-center gap-1 shrink-0">
+          <span>➕</span> <span>إضافة</span>
+        </button>
+      </form>
+
+      <!-- OVERHEADS LIST -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-400">قائمة المصاريف المسجلة حالياً:</h4>
+        <div id="overheads-list-container" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between text-xs font-bold text-amber-300">
+        <span>إجمالي المصاريف الشهرية الثابتة:</span>
+        <span id="modal-total-overheads-sum" class="text-sm font-black">0 ج.م</span>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="button" onclick="closeModal('overheads-modal')" class="px-5 py-2 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/10 text-white">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    const token = localStorage.getItem('auth_token') || 'mock_token_key';
+    let allMenuItems = [];
+    let inventoryItems = [];
+    let overheads = [];
+    let averageDailyOrders = 80;
+    let totalMonthlyOverheads = 0;
+    let indirectCostPerOrder = 0;
+    let allRecipes = [];
+
+    // Current editing recipe state
+    let selectedMenuItem = null;
+    let currentIngredients = [];
+
+    async function apiFetch(endpoint, options = {}) {
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      const res = await fetch(endpoint, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.clear();
+        window.location.href = '/dashboard';
+        throw new Error('Unauthorized');
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'فشلت العملية');
+      return data;
+    }
+
+    async function initPage() {
+      try {
+        await Promise.all([
+          loadOverheads(),
+          loadInventory(),
+          loadMenuItemsAndRecipes()
+        ]);
+      } catch (err) {
+        console.error('Initialization error:', err);
+      }
+    }
+
+    async function loadOverheads() {
+      try {
+        const res = await apiFetch('/api/v1/overheads');
+        overheads = res.overheads || [];
+        totalMonthlyOverheads = Number(res.totalMonthlyOverheads) || 0;
+        averageDailyOrders = Number(res.averageDailyOrders) || 80;
+        indirectCostPerOrder = Number(res.indirectCostPerOrder) || 0;
+
+        document.getElementById('stat-monthly-overheads').textContent = `${totalMonthlyOverheads.toLocaleString('ar-EG')} ج.م`;
+        document.getElementById('stat-indirect-cost-preview').textContent = `${indirectCostPerOrder.toFixed(2)} ج.م`;
+        document.getElementById('input-daily-orders').value = averageDailyOrders;
+        document.getElementById('modal-total-overheads-sum').textContent = `${totalMonthlyOverheads.toLocaleString('ar-EG')} ج.م`;
+
+        renderOverheadsList();
+        recalculateLiveCosts();
+      } catch (err) {
+        console.error('Failed to load overheads:', err);
+      }
+    }
+
+    function renderOverheadsList() {
+      const container = document.getElementById('overheads-list-container');
+      if (overheads.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 p-3 text-center">لا توجد مصاريف مسجلة حتى الآن.</p>';
+        return;
+      }
+      container.innerHTML = overheads.map(ov => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-white/5 text-xs">
+          <span class="font-bold text-white">${ov.type}</span>
+          <div class="flex items-center gap-3">
+            <span class="font-black text-amber-300">${Number(ov.monthlyAmount).toLocaleString('ar-EG')} ج.م</span>
+            <button onclick="handleDeleteOverhead('${ov.id}')" class="text-slate-500 hover:text-rose-400 transition-colors">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadInventory() {
+      try {
+        const res = await apiFetch('/api/v1/inventory');
+        inventoryItems = res.items || [];
+      } catch (err) {
+        console.error('Failed to load inventory items:', err);
+      }
+    }
+
+    async function loadMenuItemsAndRecipes() {
+      try {
+        // Load recipes
+        const resRecipes = await apiFetch('/api/v1/recipes');
+        allRecipes = resRecipes.recipes || [];
+        
+        // Also fetch restaurant menu to populate select box
+        const resRest = await apiFetch('/api/v1/restaurants/my-restaurant');
+        const restaurant = resRest.restaurant;
+        allMenuItems = [];
+        if (restaurant && restaurant.menuCategories) {
+          restaurant.menuCategories.forEach(cat => {
+            if (cat.items) {
+              cat.items.forEach(itm => {
+                allMenuItems.push({ ...itm, categoryName: cat.name });
+              });
+            }
+          });
+        }
+
+        document.getElementById('stat-menu-items-count').textContent = allMenuItems.length;
+        document.getElementById('stat-recipes-count').textContent = allRecipes.length;
+
+        // Populate dropdown
+        const select = document.getElementById('menu-item-select');
+        select.innerHTML = '<option value="">-- اضغط لاختيار الصنف من المنيو --</option>' + 
+          allMenuItems.map(item => {
+            const hasRecipe = allRecipes.some(r => r.productId === item.id);
+            const tag = hasRecipe ? '🧪 (مُسجل له وصفة)' : '';
+            return `<option value="${item.id}">${item.name} - ${item.price} ج.م ${tag}</option>`;
+          }).join('');
+
+        renderAllRecipesTable();
+      } catch (err) {
+        console.error('Failed to load menu & recipes:', err);
+      }
+    }
+
+    function onMenuItemSelected() {
+      const productId = document.getElementById('menu-item-select').value;
+      if (!productId) {
+        selectedMenuItem = null;
+        currentIngredients = [];
+        document.getElementById('selected-item-price-badge').classList.add('hidden');
+        document.getElementById('selected-item-category').value = '';
+        renderIngredientRows();
+        recalculateLiveCosts();
+        return;
+      }
+
+      selectedMenuItem = allMenuItems.find(i => i.id === productId);
+      if (!selectedMenuItem) return;
+
+      document.getElementById('selected-item-price-badge').classList.remove('hidden');
+      document.getElementById('selected-item-price-badge').textContent = `سعر البيع: ${selectedMenuItem.price} ج.م`;
+      document.getElementById('selected-item-category').value = selectedMenuItem.categoryName || 'عام';
+
+      // Check if recipe already exists
+      const existing = allRecipes.find(r => r.productId === productId);
+      if (existing && existing.ingredients && existing.ingredients.length > 0) {
+        currentIngredients = existing.ingredients.map(ing => ({
+          inventoryItemId: ing.inventoryItemId,
+          quantityUsed: Number(ing.quantityUsed)
+        }));
+      } else {
+        // default empty with 1 initial ingredient
+        currentIngredients = [{ inventoryItemId: (inventoryItems[0] ? inventoryItems[0].id : ''), quantityUsed: 100 }];
+      }
+
+      renderIngredientRows();
+      recalculateLiveCosts();
+    }
+
+    function addIngredientRow() {
+      if (!selectedMenuItem) {
+        alert('يرجى اختيار صنف المنيو أولاً!');
+        return;
+      }
+      currentIngredients.push({
+        inventoryItemId: inventoryItems[0] ? inventoryItems[0].id : '',
+        quantityUsed: 50
+      });
+      renderIngredientRows();
+      recalculateLiveCosts();
+    }
+
+    function removeIngredientRow(index) {
+      currentIngredients.splice(index, 1);
+      renderIngredientRows();
+      recalculateLiveCosts();
+    }
+
+    function onIngredientChange(index, field, value) {
+      if (field === 'inventoryItemId') {
+        currentIngredients[index].inventoryItemId = value;
+      } else if (field === 'quantityUsed') {
+        currentIngredients[index].quantityUsed = parseFloat(value) || 0;
+      }
+      recalculateLiveCosts();
+      updateRowCostPreview(index);
+    }
+
+    function updateRowCostPreview(index) {
+      const ing = currentIngredients[index];
+      const inv = inventoryItems.find(i => i.id === ing.inventoryItemId);
+      const spanCost = document.getElementById(`row-cost-${index}`);
+      const spanUnit = document.getElementById(`row-unit-${index}`);
+      if (inv && spanCost) {
+        const cost = (ing.quantityUsed * Number(inv.pricePerUnit)).toFixed(2);
+        spanCost.textContent = `${cost} ج.م`;
+      }
+      if (inv && spanUnit) {
+        spanUnit.textContent = inv.unit;
+      }
+    }
+
+    function renderIngredientRows() {
+      const container = document.getElementById('ingredients-container');
+      if (!selectedMenuItem) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-slate-500 text-xs font-bold">
+            اختر صنفاً من المنيو أعلاه لبدء إعداد وصفته أو عرض مكوناته الحالية.
+          </div>
+        `;
+        return;
+      }
+
+      if (currentIngredients.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-slate-500 text-xs font-bold">
+            لا توجد مكونات مضافة بعد. اضغط "➕ إضافة مكون" لإضافة المواد الخام للصنف.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = currentIngredients.map((item, index) => {
+        const inv = inventoryItems.find(i => i.id === item.inventoryItemId);
+        const cost = inv ? (item.quantityUsed * Number(inv.pricePerUnit)).toFixed(2) : '0.00';
+        const unit = inv ? inv.unit : 'وحدة';
+
+        const options = inventoryItems.map(i => {
+          const sel = i.id === item.inventoryItemId ? 'selected' : '';
+          return `<option value="${i.id}" ${sel}>${i.name} (${Number(i.pricePerUnit).toFixed(3)} ج.م / ${i.unit})</option>`;
+        }).join('');
+
+        return `
+          <div class="bg-slate-950/70 p-3 rounded-xl border border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-400 mb-1">المادة الخام (بضاعة المخزون)</label>
+              <select onchange="onIngredientChange(${index}, 'inventoryItemId', this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500">
+                ${options}
+              </select>
+            </div>
+
+            <div class="w-full sm:w-36">
+              <label class="block text-[10px] font-bold text-slate-400 mb-1">
+                الكمية المستخدمة (<span id="row-unit-${index}">${unit}</span>)
+              </label>
+              <input type="number" step="any" value="${item.quantityUsed}" oninput="onIngredientChange(${index}, 'quantityUsed', this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500">
+            </div>
+
+            <div class="sm:w-28 text-left flex sm:flex-col justify-between items-center sm:items-end">
+              <span class="text-[10px] text-slate-400 font-bold">التكلفة:</span>
+              <span id="row-cost-${index}" class="text-xs font-black text-amber-300 mt-0.5">${cost} ج.م</span>
+            </div>
+
+            <button onclick="removeIngredientRow(${index})" title="حذف المكون" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-lg transition-all self-center">
+              ✕
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function recalculateLiveCosts() {
+      let directCost = 0;
+      currentIngredients.forEach(item => {
+        const inv = inventoryItems.find(i => i.id === item.inventoryItemId);
+        if (inv) {
+          directCost += (Number(item.quantityUsed) * Number(inv.pricePerUnit));
+        }
+      });
+
+      const indirectCost = indirectCostPerOrder;
+      const trueCost = directCost + indirectCost;
+      const sellingPrice = selectedMenuItem ? Number(selectedMenuItem.price) : 0;
+      const netProfit = sellingPrice - trueCost;
+      const marginPercent = sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0;
+
+      document.getElementById('calc-direct-cost').textContent = `${directCost.toFixed(2)} ج.م`;
+      document.getElementById('calc-indirect-cost').textContent = `${indirectCost.toFixed(2)} ج.م`;
+      document.getElementById('calc-true-cost').textContent = `${trueCost.toFixed(2)} ج.م`;
+      document.getElementById('calc-selling-price').textContent = `${sellingPrice.toFixed(2)} ج.م`;
+      
+      const profitEl = document.getElementById('calc-net-profit');
+      profitEl.textContent = `${netProfit.toFixed(2)} ج.م`;
+      if (netProfit < 0) {
+        profitEl.className = 'font-black text-base text-rose-500';
+      } else {
+        profitEl.className = 'font-black text-base text-emerald-400';
+      }
+
+      const marginEl = document.getElementById('calc-margin-percent');
+      const barEl = document.getElementById('margin-progress-bar');
+      const warningEl = document.getElementById('low-margin-warning');
+      const healthyEl = document.getElementById('healthy-margin-badge');
+
+      marginEl.textContent = `${marginPercent.toFixed(1)}%`;
+      barEl.style.width = `${Math.max(0, Math.min(100, marginPercent))}%`;
+
+      if (selectedMenuItem && sellingPrice > 0) {
+        if (marginPercent < 30) {
+          marginEl.className = 'text-xl font-black text-rose-500';
+          barEl.className = 'bg-rose-500 h-full rounded-full transition-all duration-500';
+          warningEl.classList.remove('hidden');
+          healthyEl.classList.add('hidden');
+        } else {
+          marginEl.className = 'text-xl font-black text-emerald-400';
+          barEl.className = 'bg-emerald-500 h-full rounded-full transition-all duration-500';
+          warningEl.classList.add('hidden');
+          healthyEl.classList.remove('hidden');
+        }
+      } else {
+        warningEl.classList.add('hidden');
+        healthyEl.classList.add('hidden');
+      }
+    }
+
+    async function saveRecipe() {
+      if (!selectedMenuItem) {
+        alert('اختر صنف المنيو أولاً!');
+        return;
+      }
+      if (currentIngredients.length === 0) {
+        alert('أضف مكوناً واحداً على الأقل للوصفة!');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-recipe');
+      btn.disabled = true;
+      btn.innerHTML = 'جاري الحفظ... ⏳';
+
+      try {
+        const body = {
+          productId: selectedMenuItem.id,
+          ingredients: currentIngredients.map(i => ({
+            inventoryItemId: i.inventoryItemId,
+            quantityUsed: Number(i.quantityUsed)
+          }))
+        };
+
+        await apiFetch('/api/v1/recipes', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+
+        alert('تم حفظ وتحديث وصفة الصنف بنجاح! 🔥');
+        await loadMenuItemsAndRecipes();
+      } catch (err) {
+        alert('خطأ أثناء الحفظ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span> <span>حفظ وتحديث الوصفة</span>';
+      }
+    }
+
+    function clearCurrentRecipe() {
+      if (!confirm('هل تريد تفريغ المكونات الحالية؟')) return;
+      currentIngredients = [];
+      renderIngredientRows();
+      recalculateLiveCosts();
+    }
+
+    function renderAllRecipesTable() {
+      const tbody = document.getElementById('all-recipes-table-body');
+      document.getElementById('recipes-table-summary').textContent = `إجمالي ${allRecipes.length} وصفة مسجلة`;
+
+      if (allRecipes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="p-8 text-center text-slate-500 font-bold">
+              لا توجد وصفات مسجلة بعد. اختر صنفاً وأضف مكوناته لحفظ أول وصفة.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = allRecipes.map(r => {
+        const product = r.product;
+        const name = product ? product.name : 'صنف غير معروف';
+        const sellingPrice = product ? Number(product.price) : 0;
+        const directCost = Number(r.directCost) || 0;
+        const indirectCost = Number(r.indirectCost) || 0;
+        const trueCost = Number(r.trueCost) || (directCost + indirectCost);
+        const netProfit = Number(r.netProfit) || (sellingPrice - trueCost);
+        const marginPercent = Number(r.profitMarginPercent) || (sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0);
+
+        const isLowMargin = marginPercent < 30;
+        const marginBadge = isLowMargin 
+          ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30">
+               ⚠️ ${marginPercent.toFixed(1)}% (منخفض)
+             </span>`
+          : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+               ✅ ${marginPercent.toFixed(1)}%
+             </span>`;
+
+        return `
+          <tr class="hover:bg-white/[0.02] transition-colors">
+            <td class="p-3.5 font-black text-white">
+              <div class="flex items-center gap-2">
+                <span>🍔</span>
+                <span>${name}</span>
+              </div>
+            </td>
+            <td class="p-3.5 font-bold text-slate-200">${sellingPrice.toFixed(2)} ج.م</td>
+            <td class="p-3.5 font-semibold text-slate-300">${directCost.toFixed(2)} ج.م</td>
+            <td class="p-3.5 font-semibold text-blue-300">${indirectCost.toFixed(2)} ج.م</td>
+            <td class="p-3.5 font-black text-amber-300">${trueCost.toFixed(2)} ج.م</td>
+            <td class="p-3.5 font-black ${netProfit < 0 ? 'text-rose-500' : 'text-emerald-400'}">
+              ${netProfit.toFixed(2)} ج.م
+            </td>
+            <td class="p-3.5">${marginBadge}</td>
+            <td class="p-3.5 text-center">
+              <button 
+                onclick="loadRecipeIntoEditor('${r.productId}')"
+                title="تعديل الوصفة"
+                class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 text-orange-400 border border-orange-500/20 transition-all">
+                ✏️ تعديل
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function loadRecipeIntoEditor(productId) {
+      document.getElementById('menu-item-select').value = productId;
+      onMenuItemSelected();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Overhead Modal Handlers
+    function openOverheadsModal() {
+      document.getElementById('overheads-modal').classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function handleCreateOverhead(e) {
+      e.preventDefault();
+      try {
+        const body = {
+          type: document.getElementById('overhead-type').value,
+          monthlyAmount: parseFloat(document.getElementById('overhead-amount').value)
+        };
+        await apiFetch('/api/v1/overheads', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        document.getElementById('overhead-type').value = '';
+        document.getElementById('overhead-amount').value = '';
+        await loadOverheads();
+        await loadMenuItemsAndRecipes();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      }
+    }
+
+    async function handleDeleteOverhead(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) return;
+      try {
+        await apiFetch(`/api/v1/overheads/${id}`, { method: 'DELETE' });
+        await loadOverheads();
+        await loadMenuItemsAndRecipes();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      }
+    }
+
+    async function saveDailyOrders() {
+      try {
+        const val = parseInt(document.getElementById('input-daily-orders').value) || 80;
+        await apiFetch('/api/v1/overheads/daily-orders', {
+          method: 'PUT',
+          body: JSON.stringify({ averageDailyOrders: val })
+        });
+        alert('تم تحديث متوسط الطلبات اليومي بنجاح!');
+        await loadOverheads();
+        await loadMenuItemsAndRecipes();
+      } catch (err) {
+        alert('خطأ: ' + err.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

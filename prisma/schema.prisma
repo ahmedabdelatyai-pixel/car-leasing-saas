@@ -47,18 +47,22 @@ model Restaurant {
   estimatedTime   String?     @default("30 - 45 دقيقة") @map("estimated_time") @db.VarChar(50)
   allowDelivery   Boolean     @default(true) @map("allow_delivery")
   allowTakeaway   Boolean     @default(true) @map("allow_takeaway")
-  receiptFooter   String?     @default("شكراً لاختياركم مطعم ضجة! 🔥") @map("receipt_footer") @db.VarChar(255)
-  isOpen          Boolean     @default(true) @map("is_open")
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
+  receiptFooter      String?              @default("شكراً لاختياركم مطعم ضجة! 🔥") @map("receipt_footer") @db.VarChar(255)
+  isOpen             Boolean              @default(true) @map("is_open")
+  averageDailyOrders Int                  @default(80) @map("average_daily_orders")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
 
   // Relations
-  users           User[]
-  categories      Category[]
-  menuItems       MenuItem[]
-  orders          Order[]
-  captains        Captain[]
-  dailyClosures   DailyClosure[]
+  users              User[]
+  categories         Category[]
+  menuItems          MenuItem[]
+  orders             Order[]
+  captains           Captain[]
+  dailyClosures      DailyClosure[]
+  inventoryItems     InventoryItem[]
+  recipes            Recipe[]
+  overheads          RestaurantOverhead[]
 
   @@map("restaurants")
 }
@@ -111,6 +115,7 @@ model MenuItem {
   restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
+  recipe       Recipe?
 
   @@index([restaurantId])
   @@index([categoryId])
@@ -205,5 +210,73 @@ model DailyClosure {
   @@index([restaurantId])
   @@index([closureDate])
   @@map("daily_closures")
+}
+
+model InventoryItem {
+  id                     String             @id @default(uuid()) @db.Uuid
+  restaurantId           String             @map("restaurant_id") @db.Uuid
+  name                   String             @db.VarChar(150)
+  unit                   String             @default("جرام") @db.VarChar(50)
+  totalQuantityPurchased Decimal            @default(0.00) @map("total_quantity_purchased") @db.Decimal(12, 2)
+  totalPricePaid         Decimal            @default(0.00) @map("total_price_paid") @db.Decimal(12, 2)
+  pricePerUnit           Decimal            @default(0.00) @map("price_per_unit") @db.Decimal(12, 4)
+  currentStock           Decimal            @default(0.00) @map("current_stock") @db.Decimal(12, 2)
+  minStockAlert          Decimal            @default(10.00) @map("min_stock_alert") @db.Decimal(12, 2)
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  restaurant             Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  recipeIngredients      RecipeIngredient[]
+
+  @@index([restaurantId])
+  @@map("inventory_items")
+}
+
+model Recipe {
+  id           String             @id @default(uuid()) @db.Uuid
+  restaurantId String             @map("restaurant_id") @db.Uuid
+  productId    String             @unique @map("product_id") @db.Uuid
+  notes        String?            @db.Text
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredients  RecipeIngredient[]
+
+  @@index([restaurantId])
+  @@index([productId])
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id              String        @id @default(uuid()) @db.Uuid
+  recipeId        String        @map("recipe_id") @db.Uuid
+  inventoryItemId String        @map("inventory_item_id") @db.Uuid
+  quantityUsed    Decimal       @map("quantity_used") @db.Decimal(12, 2)
+  cost            Decimal       @default(0.00) @db.Decimal(12, 4)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  recipe          Recipe        @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([inventoryItemId])
+  @@map("recipe_ingredients")
+}
+
+model RestaurantOverhead {
+  id            String     @id @default(uuid()) @db.Uuid
+  restaurantId  String     @map("restaurant_id") @db.Uuid
+  type          String     @db.VarChar(150)
+  monthlyAmount Decimal    @map("monthly_amount") @db.Decimal(12, 2)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@map("restaurant_overheads")
 }
 

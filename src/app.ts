@@ -30,6 +30,12 @@ app.get('/order', (req, res) => {
 app.get('/restaurant-dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dajja_dashboard.html'));
 });
+app.get(['/inventory', '/stock'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/inventory.html'));
+});
+app.get(['/recipes', '/costing'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/recipes.html'));
+});
 
 // Default Health-Check Endpoint
 app.get('/health', (req, res) => {

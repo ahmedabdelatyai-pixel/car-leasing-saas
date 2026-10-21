@@ -4,6 +4,9 @@ import { RestaurantController } from '../controllers/restaurant.controller';
 import { OrderController } from '../controllers/order.controller';
 import { CaptainController } from '../controllers/captain.controller';
 import { ReportController } from '../controllers/report.controller';
+import { InventoryController } from '../controllers/inventory.controller';
+import { RecipeController } from '../controllers/recipe.controller';
+import { OverheadController } from '../controllers/overhead.controller';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 import { Role } from '@prisma/client';
@@ -208,6 +211,113 @@ router.get(
   authenticateToken,
   authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
   ReportController.getPeriodReport
+);
+
+// ==========================================
+// 8. INVENTORY MANAGEMENT (المخزون والمشتريات)
+// ==========================================
+router.get(
+  '/inventory',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  InventoryController.getInventory
+);
+
+router.post(
+  '/inventory',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  InventoryController.createInventoryItem
+);
+
+router.post(
+  '/inventory/:id/restock',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  InventoryController.restockItem
+);
+
+router.put(
+  '/inventory/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  InventoryController.updateInventoryItem
+);
+
+router.delete(
+  '/inventory/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  InventoryController.deleteInventoryItem
+);
+
+// ==========================================
+// 9. RECIPES & FOOD COSTING (الوصفات وحساب التكلفة)
+// ==========================================
+router.get(
+  '/recipes',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  RecipeController.getRecipes
+);
+
+router.get(
+  '/recipes/product/:productId',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  RecipeController.getRecipeByProductId
+);
+
+router.post(
+  '/recipes',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  RecipeController.saveRecipe
+);
+
+router.delete(
+  '/recipes/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  RecipeController.deleteRecipe
+);
+
+// ==========================================
+// 10. OVERHEAD EXPENSES (المصاريف الشهرية والتشغيلية)
+// ==========================================
+router.get(
+  '/overheads',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  OverheadController.getOverheads
+);
+
+router.post(
+  '/overheads',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  OverheadController.createOverhead
+);
+
+router.put(
+  '/overheads/daily-orders',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  OverheadController.updateDailyOrdersEstimate
+);
+
+router.put(
+  '/overheads/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  OverheadController.updateOverhead
+);
+
+router.delete(
+  '/overheads/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  OverheadController.deleteOverhead
 );
 
 export default router;

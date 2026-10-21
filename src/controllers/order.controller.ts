@@ -121,6 +121,32 @@ export class OrderController {
         }
       });
 
+      // Auto-deduct inventory based on recipes
+      try {
+        for (const itm of newOrder.items) {
+          const recipe = await prisma.recipe.findUnique({
+            where: { productId: itm.menuItemId },
+            include: { ingredients: true }
+          });
+          if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
+            const orderQty = Number(itm.quantity) || 1;
+            for (const ing of recipe.ingredients) {
+              const deduction = Number(ing.quantityUsed) * orderQty;
+              if (deduction > 0) {
+                await prisma.inventoryItem.update({
+                  where: { id: ing.inventoryItemId },
+                  data: {
+                    currentStock: { decrement: deduction }
+                  }
+                });
+              }
+            }
+          }
+        }
+      } catch (stockErr) {
+        console.error('Failed to deduct inventory for order:', stockErr);
+      }
+
       return res.status(201).json({
         message: 'Order created successfully! 🔥',
         order: newOrder
