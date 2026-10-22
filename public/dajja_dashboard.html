@@ -1184,6 +1184,10 @@
             <input type="checkbox" id="receipt-include-kitchen" checked class="w-4 h-4 accent-black rounded">
             <span>تضمين بون المطبخ للشيف 👨‍🍳</span>
           </label>
+          <label class="flex items-center gap-1.5 text-[11px] text-gray-800 font-bold cursor-pointer select-none" title="فصل الفاتورة عن بون المطبخ كصفحتين منفصلتين أو طباعتهما متصلين">
+            <input type="checkbox" id="receipt-cut-page" checked class="w-4 h-4 accent-black rounded">
+            <span>قص / صفحة منفصلة ✂️</span>
+          </label>
         </div>
         <div class="grid grid-cols-2 gap-2 pt-1">
           <button onclick="executeThermalReceiptPrint('BOTH')" class="h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95 col-span-2">
@@ -2949,6 +2953,7 @@
       const showLogo = document.getElementById('receipt-show-logo')?.checked !== false;
       const includeKitchen = (mode === 'KITCHEN') || (mode === 'BOTH' && (document.getElementById('receipt-include-kitchen')?.checked !== false));
       const includeCustomer = (mode === 'CUSTOMER') || (mode === 'BOTH');
+      const separatePage = (mode === 'BOTH') && (document.getElementById('receipt-cut-page')?.checked !== false);
       const orderDate = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
       const orderTime = new Date(order.createdAt || Date.now()).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
       const isDelivery = order.orderType === 'DELIVERY';
@@ -3106,15 +3111,18 @@
           </div>
         ` : '';
 
-        const tearSeparator = includeCustomer ? `
-          <div style="page-break-before: always; margin-top: 15px; padding-top: 10px; border-top: 2px dashed #000; text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 1px;">
+        // If continuous mode on single roll (not separate page), add a dashed tear line
+        const continuousSeparator = (includeCustomer && !separatePage) ? `
+          <div style="border-top: 2px dashed #000; margin: 12px 0 8px 0; padding-top: 6px; text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 1px;">
             ✂️ - - - - - - قص هنا (توزيعه المطبخ) - - - - - - ✂️
           </div>
         ` : '';
 
+        const pageBreakClass = (includeCustomer && separatePage) ? 'page-break-ticket' : '';
+
         kitchenSectionHtml = `
-          ${tearSeparator}
-          <div class="kitchen-ticket" style="padding-top: 6px; text-align: center;">
+          <div class="kitchen-ticket ${pageBreakClass}" style="text-align: center;">
+            ${continuousSeparator}
             <div style="border: 2px solid #000; padding: 5px; margin-bottom: 6px; background: #000; color: #fff;">
               <div style="font-size: 16px; font-weight: 900; letter-spacing: 0.5px;">👨‍🍳 بون المطبخ (تذكرة الشيف)</div>
               <div style="font-size: 12px; font-weight: 800; margin-top: 2px;">
@@ -3185,16 +3193,33 @@
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            body {
+            html, body {
               width: 72mm;
               max-width: 72mm;
-              margin: 0 auto;
-              padding: 2mm 1mm 4mm 1mm;
+              margin: 0 auto !important;
+              padding: 0 !important;
               font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
               font-size: 11px;
               line-height: 1.25;
               color: #000000;
               background: #ffffff !important;
+            }
+            .customer-receipt {
+              width: 72mm;
+              padding: 2mm 1mm 4mm 1mm;
+              box-sizing: border-box;
+              page-break-after: auto;
+              break-after: auto;
+            }
+            .kitchen-ticket {
+              width: 72mm;
+              padding: 2mm 1mm 4mm 1mm;
+              box-sizing: border-box;
+            }
+            .page-break-ticket {
+              page-break-before: always !important;
+              break-before: page !important;
+              margin-top: 0 !important;
             }
             .dashed { border-bottom: 1.5px dashed #000; margin: 4px 0; }
             .solid { border-bottom: 2px solid #000; margin: 4px 0; }
@@ -3208,15 +3233,8 @@
             }
             table { width: 100%; border-collapse: collapse; margin: 4px 0; }
             th { border-bottom: 1.5px solid #000; font-size: 11px; font-weight: 900; padding: 3px 0; }
+            tr { page-break-inside: avoid; break-inside: avoid; }
             .flex-between { display: flex; justify-content: space-between; align-items: center; }
-            @media print {
-              .customer-receipt {
-                page-break-after: auto;
-              }
-              .kitchen-ticket {
-                page-break-before: always;
-              }
-            }
           </style>
         </head>
         <body>
