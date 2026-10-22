@@ -1175,22 +1175,33 @@
 
       <!-- ACTIONS (NO PRINT) -->
       <div class="space-y-2 pt-2 border-t no-print">
-        <div class="flex items-center justify-between px-1">
+        <div class="flex items-center justify-between px-1 flex-wrap gap-2">
           <label class="flex items-center gap-1.5 text-[11px] text-gray-800 font-bold cursor-pointer select-none">
             <input type="checkbox" id="receipt-show-logo" checked class="w-4 h-4 accent-black rounded">
-            <span>طباعة اللوجو في الفاتورة</span>
+            <span>طباعة اللوجو</span>
           </label>
-          <span class="text-[10px] text-gray-500 font-mono">طابعة 80mm</span>
+          <label class="flex items-center gap-1.5 text-[11px] text-gray-800 font-bold cursor-pointer select-none">
+            <input type="checkbox" id="receipt-include-kitchen" checked class="w-4 h-4 accent-black rounded">
+            <span>تضمين بون المطبخ للشيف 👨‍🍳</span>
+          </label>
         </div>
-        <div class="flex gap-2">
-          <button onclick="executeThermalReceiptPrint()" class="flex-1 h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95">
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="executeThermalReceiptPrint('BOTH')" class="h-10 bg-black hover:bg-gray-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg active:scale-95 col-span-2">
             <span>🖨️</span>
-            <span>طباعة الفاتورة</span>
+            <span>طباعة الفاتورة + بون المطبخ معاً</span>
           </button>
-          <button onclick="closeReceiptModal()" class="flex-1 h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all">
-            إغلاق
+          <button onclick="executeThermalReceiptPrint('KITCHEN')" class="h-9 bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-black rounded-xl transition-all flex items-center justify-center gap-1 shadow">
+            <span>👨‍🍳</span>
+            <span>بون المطبخ فقط</span>
+          </button>
+          <button onclick="executeThermalReceiptPrint('CUSTOMER')" class="h-9 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-1">
+            <span>🧾</span>
+            <span>فاتورة العميل فقط</span>
           </button>
         </div>
+        <button onclick="closeReceiptModal()" class="w-full h-8 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold rounded-xl transition-all mt-1">
+          إغلاق
+        </button>
       </div>
 
     </div>
@@ -1782,6 +1793,7 @@
               ` : ''}
 
               <button onclick="printOrderReceipt('${o.id}')" class="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg text-[10px] font-bold transition-all">بون 🖨️</button>
+              <button onclick="printKitchenTicketOnly('${o.id}')" title="طباعة بون المطبخ للشيف فقط" class="px-2 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 rounded-lg text-[10px] font-black transition-all">👨‍🍳 المطبخ</button>
               ${o.status !== 'DELIVERED' ? `
                 <button onclick="cancelOrder('${o.id}')" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-[10px] font-bold transition-all">إلغاء ✕</button>
               ` : ''}
@@ -2921,58 +2933,236 @@
       }, 350);
     }
 
-    function executeThermalReceiptPrint() {
+    function printKitchenTicketOnly(orderId) {
+      const order = (allOrders || []).find(o => o.id === orderId) || activeReceiptOrder;
+      if (!order) return;
+      activeReceiptOrder = order;
+      executeThermalReceiptPrint('KITCHEN');
+    }
+
+    function executeThermalReceiptPrint(mode = 'BOTH') {
       if (!activeReceiptOrder) {
         window.print();
         return;
       }
       const order = activeReceiptOrder;
       const showLogo = document.getElementById('receipt-show-logo')?.checked !== false;
+      const includeKitchen = (mode === 'KITCHEN') || (mode === 'BOTH' && (document.getElementById('receipt-include-kitchen')?.checked !== false));
+      const includeCustomer = (mode === 'CUSTOMER') || (mode === 'BOTH');
       const orderDate = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
+      const orderTime = new Date(order.createdAt || Date.now()).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
       const isDelivery = order.orderType === 'DELIVERY';
 
-      const itemsRows = (order.items || []).map(it => {
-        const uPrice = it.unitPrice || Math.round(it.totalPrice / it.quantity);
-        return `
-          <tr>
-            <td style="text-align: right; font-weight: 700; padding: 2.5px 0;">${it.name}</td>
-            <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${it.quantity}</td>
-            <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${uPrice}</td>
-            <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2.5px 0;">${it.totalPrice}</td>
-          </tr>
+      // 1. CUSTOMER RECEIPT SECTION (فاتورة العميل)
+      let customerSectionHtml = '';
+      if (includeCustomer) {
+        const itemsRows = (order.items || []).map(it => {
+          const uPrice = it.unitPrice || Math.round(it.totalPrice / it.quantity);
+          return `
+            <tr>
+              <td style="text-align: right; font-weight: 700; padding: 2.5px 0;">${it.name}</td>
+              <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${it.quantity}</td>
+              <td style="text-align: center; font-family: monospace; padding: 2.5px 0;">${uPrice}</td>
+              <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2.5px 0;">${it.totalPrice}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const logoSection = showLogo ? `
+          <div style="text-align: center; margin-bottom: 2px;">
+            <img src="/dajja_logo_thermal.png" style="width: 44mm; height: 44mm; object-fit: contain; margin: 0 auto; display: block;" />
+          </div>
+        ` : '';
+
+        const notesSection = (order.notes && order.notes.trim()) ? `
+          <div style="border: 1px dashed #000; padding: 3px 4px; margin: 4px 0; font-size: 10px; background: #fff;">
+            <strong>ملاحظات العميل:</strong> ${order.notes}
+          </div>
+        ` : '';
+
+        const addressSection = isDelivery && order.deliveryAddress ? `
+          <div style="border: 1px solid #000; padding: 3px 4px; margin: 4px 0; font-size: 10.5px; background: #fff;">
+            <strong>عنوان التوصيل:</strong> ${order.deliveryAddress}
+          </div>
+        ` : '';
+
+        const deliveryFeeRow = isDelivery ? `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+            <span>خدمة التوصيل:</span>
+            <span style="font-family: monospace; font-weight: bold;">${order.deliveryFee || 0} ج.م</span>
+          </div>
+        ` : '';
+
+        let barcodeSvg = '';
+        const bcEl = document.getElementById('receipt-barcode');
+        if (bcEl) {
+          barcodeSvg = bcEl.outerHTML;
+        }
+
+        customerSectionHtml = `
+          <div class="customer-receipt">
+            ${logoSection}
+            <div style="text-align: center;">
+              <div style="font-size: 18px; font-weight: 900; line-height: 1.1;">مطعم ضـجـة 🔥</div>
+              <div style="font-size: 12px; font-weight: 800; margin-top: 1px;">للمشويات والسندوتشات</div>
+              <div style="font-size: 10px; font-weight: 700;">إدارة: مصطفى أبو مليكة</div>
+              <div style="font-size: 9px; margin-top: 1px;">ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه</div>
+              <div style="font-size: 11px; font-weight: 900; font-family: monospace; margin-top: 2px;">📞 01210783175 - 01272022986</div>
+            </div>
+
+            <div class="type-banner">
+              ${isDelivery ? '🛵 طلب دليفري (توصيل للمنزل)' : '🥡 طلب تيك واي (استلام من الفرع)'}
+            </div>
+
+            <div class="dashed"></div>
+
+            <div style="font-size: 11px; font-weight: bold; line-height: 1.35;">
+              <div class="flex-between">
+                <span>رقم الفاتورة:</span>
+                <span style="font-size: 14px; font-weight: 900; font-family: monospace;">${order.orderNumber}</span>
+              </div>
+              <div class="flex-between">
+                <span>التاريخ:</span>
+                <span style="font-family: monospace; font-size: 10px;">${orderDate}</span>
+              </div>
+              <div class="flex-between">
+                <span>العميل:</span>
+                <span>${order.customerName || 'عميل نقدي'}</span>
+              </div>
+              <div class="flex-between">
+                <span>الهاتف:</span>
+                <span style="font-family: monospace;">${order.customerPhone || '-'}</span>
+              </div>
+            </div>
+
+            ${addressSection}
+            ${notesSection}
+
+            <div class="dashed"></div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: right; width: 44%;">الصنف</th>
+                  <th style="text-align: center; width: 14%;">الكمية</th>
+                  <th style="text-align: center; width: 20%;">السعر</th>
+                  <th style="text-align: left; width: 22%;">الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsRows}
+              </tbody>
+            </table>
+
+            <div class="dashed"></div>
+
+            <div style="font-size: 12px; font-weight: bold; line-height: 1.4;">
+              <div class="flex-between">
+                <span>المجموع الفرعي:</span>
+                <span style="font-family: monospace;">${order.subtotal} ج.م</span>
+              </div>
+              ${deliveryFeeRow}
+              <div class="flex-between" style="border-top: 2px solid #000; padding-top: 4px; margin-top: 2px; font-size: 15px; font-weight: 900;">
+                <span>الإجمالي المطلوب:</span>
+                <span style="font-family: monospace; font-size: 16px;">${order.totalAmount} ج.م</span>
+              </div>
+            </div>
+
+            <div class="dashed"></div>
+
+            <div style="text-align: center; margin-top: 3px;">
+              <div style="display: flex; justify-content: center; margin: 3px 0;">
+                ${barcodeSvg}
+              </div>
+              <div style="font-size: 11px; font-weight: 900;">شكراً لاختياركم مطعم ضجة! 🔥</div>
+              <div style="font-size: 10px; font-weight: 700;">الأكل طعمه حكاية ❤️</div>
+              <div style="font-size: 8px; margin-top: 2px;">نظام كاشير مطعم ضجة الذكي</div>
+            </div>
+          </div>
         `;
-      }).join('');
+      }
 
-      const logoSection = showLogo ? `
-        <div style="text-align: center; margin-bottom: 2px;">
-          <img src="/dajja_logo_thermal.png" style="width: 44mm; height: 44mm; object-fit: contain; margin: 0 auto; display: block;" />
-        </div>
-      ` : '';
+      // 2. KITCHEN TICKET / CHEF'S SLIP SECTION (توزيعه المطبخ للشيف)
+      let kitchenSectionHtml = '';
+      if (includeKitchen) {
+        const kitchenItemsRows = (order.items || []).map(it => `
+          <tr style="border-bottom: 1.5px dashed #000;">
+            <td style="text-align: center; padding: 6px 0; vertical-align: middle; width: 25%;">
+              <span style="display: inline-block; font-size: 18px; font-weight: 900; font-family: monospace; border: 2.5px solid #000; border-radius: 6px; padding: 2px 8px; min-width: 32px; background: #000; color: #fff;">
+                ${it.quantity}
+              </span>
+            </td>
+            <td style="text-align: right; font-size: 14px; font-weight: 900; padding: 6px 4px; line-height: 1.35; width: 75%;">
+              <div>${it.name}</div>
+              ${it.notes ? `<div style="font-size: 11px; font-weight: bold; color: #000; margin-top: 2px; background: #eee; padding: 2px 4px; border-radius: 4px;">⚠️ ${it.notes}</div>` : ''}
+            </td>
+          </tr>
+        `).join('');
 
-      const notesSection = (order.notes && order.notes.trim()) ? `
-        <div style="border: 1px dashed #000; padding: 3px 4px; margin: 4px 0; font-size: 10px; background: #fff;">
-          <strong>ملاحظات العميل:</strong> ${order.notes}
-        </div>
-      ` : '';
+        const kitchenNotes = (order.notes && order.notes.trim()) ? `
+          <div style="border: 2px solid #000; padding: 5px; margin: 6px 0; font-size: 12px; font-weight: 900; background: #fff; text-align: right;">
+            ⚡ ملاحظات خاصة للشيف: <br>
+            <span style="font-size: 13px; text-decoration: underline;">${order.notes}</span>
+          </div>
+        ` : '';
 
-      const addressSection = isDelivery && order.deliveryAddress ? `
-        <div style="border: 1px solid #000; padding: 3px 4px; margin: 4px 0; font-size: 10.5px; background: #fff;">
-          <strong>عنوان التوصيل:</strong> ${order.deliveryAddress}
-        </div>
-      ` : '';
+        const tearSeparator = includeCustomer ? `
+          <div style="page-break-before: always; margin-top: 15px; padding-top: 10px; border-top: 2px dashed #000; text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 1px;">
+            ✂️ - - - - - - قص هنا (توزيعه المطبخ) - - - - - - ✂️
+          </div>
+        ` : '';
 
-      const deliveryFeeRow = isDelivery ? `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-          <span>خدمة التوصيل:</span>
-          <span style="font-family: monospace; font-weight: bold;">${order.deliveryFee || 0} ج.م</span>
-        </div>
-      ` : '';
+        kitchenSectionHtml = `
+          ${tearSeparator}
+          <div class="kitchen-ticket" style="padding-top: 6px; text-align: center;">
+            <div style="border: 2px solid #000; padding: 5px; margin-bottom: 6px; background: #000; color: #fff;">
+              <div style="font-size: 16px; font-weight: 900; letter-spacing: 0.5px;">👨‍🍳 بون المطبخ (تذكرة الشيف)</div>
+              <div style="font-size: 12px; font-weight: 800; margin-top: 2px;">
+                ${isDelivery ? '🛵 طلب دليفري (توصيل)' : '🥡 طلب تيك واي (استلام)'}
+              </div>
+            </div>
 
-      // Barcode SVG
-      let barcodeSvg = '';
-      const bcEl = document.getElementById('receipt-barcode');
-      if (bcEl) {
-        barcodeSvg = bcEl.outerHTML;
+            <!-- BIG ORDER NUMBER BOX -->
+            <div style="border: 3px solid #000; padding: 6px; margin: 6px 0; text-align: center; background: #f2f2f2;">
+              <div style="font-size: 11px; font-weight: 900;">رقم الأوردر:</div>
+              <div style="font-size: 26px; font-weight: 900; font-family: monospace; letter-spacing: 2px; line-height: 1.1;">#${order.orderNumber}</div>
+            </div>
+
+            <!-- CUSTOMER NAME & TIME -->
+            <div style="text-align: right; font-size: 12px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 6px; line-height: 1.5;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>👤 اسم العميل:</span>
+                <span style="font-size: 14px; font-weight: 900;">${order.customerName || 'عميل نقدي'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>⏰ وقت الطلب:</span>
+                <span style="font-family: monospace; font-size: 11px;">${orderTime} (${orderDate.split(' ')[0]})</span>
+              </div>
+            </div>
+
+            ${kitchenNotes}
+
+            <!-- ITEMS FOR PREPARATION (NO PRICES) -->
+            <table style="width: 100%; border-collapse: collapse; margin: 6px 0;">
+              <thead>
+                <tr style="border-bottom: 2px solid #000; background: #ddd;">
+                  <th style="width: 25%; text-align: center; font-size: 12px; font-weight: 900; padding: 4px 0;">العدد</th>
+                  <th style="width: 75%; text-align: right; font-size: 12px; font-weight: 900; padding: 4px 4px;">الصنف المطلوب تجهيزه</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${kitchenItemsRows}
+              </tbody>
+            </table>
+
+            <div style="border-top: 2px dashed #000; padding-top: 8px; margin-top: 8px; font-size: 11px; font-weight: 900; text-align: center;">
+              <div>⚠️ تنبيه: يُرجى الالتزام بملاحظات التحضير وسرعة التسليم</div>
+              <div style="margin-top: 6px; border: 1.5px solid #000; padding: 4px; display: inline-block; font-size: 11px; font-weight: 900;">
+                جاهز للمراجعة والتسليم [ &nbsp;&nbsp;&nbsp;&nbsp; ]
+              </div>
+            </div>
+          </div>
+        `;
       }
 
       const receiptDoc = `
@@ -2980,7 +3170,7 @@
         <html lang="ar" dir="rtl">
         <head>
           <meta charset="utf-8">
-          <title>فاتورة ${order.orderNumber}</title>
+          <title>${order.orderNumber}</title>
           <style>
             @page {
               size: 80mm auto;
@@ -3019,86 +3209,19 @@
             table { width: 100%; border-collapse: collapse; margin: 4px 0; }
             th { border-bottom: 1.5px solid #000; font-size: 11px; font-weight: 900; padding: 3px 0; }
             .flex-between { display: flex; justify-content: space-between; align-items: center; }
+            @media print {
+              .customer-receipt {
+                page-break-after: auto;
+              }
+              .kitchen-ticket {
+                page-break-before: always;
+              }
+            }
           </style>
         </head>
         <body>
-          ${logoSection}
-          <div style="text-align: center;">
-            <div style="font-size: 18px; font-weight: 900; line-height: 1.1;">مطعم ضـجـة 🔥</div>
-            <div style="font-size: 12px; font-weight: 800; margin-top: 1px;">للمشويات والسندوتشات</div>
-            <div style="font-size: 10px; font-weight: 700;">إدارة: مصطفى أبو مليكة</div>
-            <div style="font-size: 9px; margin-top: 1px;">ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه</div>
-            <div style="font-size: 11px; font-weight: 900; font-family: monospace; margin-top: 2px;">📞 01210783175 - 01272022986</div>
-          </div>
-
-          <div class="type-banner">
-            ${isDelivery ? '🛵 طلب دليفري (توصيل للمنزل)' : '🥡 طلب تيك واي (استلام من الفرع)'}
-          </div>
-
-          <div class="dashed"></div>
-
-          <div style="font-size: 11px; font-weight: bold; line-height: 1.35;">
-            <div class="flex-between">
-              <span>رقم الفاتورة:</span>
-              <span style="font-size: 14px; font-weight: 900; font-family: monospace;">${order.orderNumber}</span>
-            </div>
-            <div class="flex-between">
-              <span>التاريخ:</span>
-              <span style="font-family: monospace; font-size: 10px;">${orderDate}</span>
-            </div>
-            <div class="flex-between">
-              <span>العميل:</span>
-              <span>${order.customerName || 'عميل نقدي'}</span>
-            </div>
-            <div class="flex-between">
-              <span>الهاتف:</span>
-              <span style="font-family: monospace;">${order.customerPhone || '-'}</span>
-            </div>
-          </div>
-
-          ${addressSection}
-          ${notesSection}
-
-          <div class="dashed"></div>
-
-          <table>
-            <thead>
-              <tr>
-                <th style="text-align: right; width: 44%;">الصنف</th>
-                <th style="text-align: center; width: 14%;">الكمية</th>
-                <th style="text-align: center; width: 20%;">السعر</th>
-                <th style="text-align: left; width: 22%;">الإجمالي</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsRows}
-            </tbody>
-          </table>
-
-          <div class="dashed"></div>
-
-          <div style="font-size: 12px; font-weight: bold; line-height: 1.4;">
-            <div class="flex-between">
-              <span>المجموع الفرعي:</span>
-              <span style="font-family: monospace;">${order.subtotal} ج.م</span>
-            </div>
-            ${deliveryFeeRow}
-            <div class="flex-between" style="border-top: 2px solid #000; padding-top: 4px; margin-top: 2px; font-size: 15px; font-weight: 900;">
-              <span>الإجمالي المطلوب:</span>
-              <span style="font-family: monospace; font-size: 16px;">${order.totalAmount} ج.م</span>
-            </div>
-          </div>
-
-          <div class="dashed"></div>
-
-          <div style="text-align: center; margin-top: 3px;">
-            <div style="display: flex; justify-content: center; margin: 3px 0;">
-              ${barcodeSvg}
-            </div>
-            <div style="font-size: 11px; font-weight: 900;">شكراً لاختياركم مطعم ضجة! 🔥</div>
-            <div style="font-size: 10px; font-weight: 700;">الأكل طعمه حكاية ❤️</div>
-            <div style="font-size: 8px; margin-top: 2px;">نظام كاشير مطعم ضجة الذكي</div>
-          </div>
+          ${customerSectionHtml}
+          ${kitchenSectionHtml}
         </body>
         </html>
       `;
