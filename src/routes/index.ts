@@ -7,6 +7,7 @@ import { ReportController } from '../controllers/report.controller';
 import { InventoryController } from '../controllers/inventory.controller';
 import { RecipeController } from '../controllers/recipe.controller';
 import { OverheadController } from '../controllers/overhead.controller';
+import { CustomerController } from '../controllers/customer.controller';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 import { Role } from '@prisma/client';
@@ -135,6 +136,30 @@ router.delete(
   authenticateToken,
   authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
   OrderController.deleteOrder
+);
+
+// ==========================================
+// 4.1 CUSTOMER CRM & PHONE MEMORY
+// ==========================================
+router.get(
+  '/customers/lookup',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  CustomerController.lookupCustomer
+);
+
+router.get(
+  '/customers',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  CustomerController.getCustomers
+);
+
+router.get(
+  '/customers/:phone/history',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  CustomerController.getCustomerHistory
 );
 
 // ==========================================

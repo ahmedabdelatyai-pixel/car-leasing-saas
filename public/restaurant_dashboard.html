@@ -178,6 +178,9 @@
     <button onclick="switchTab('captains')" id="tab-btn-captains" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
       <span>🛵</span> كباتن الدليفري
     </button>
+    <button onclick="switchTab('customers')" id="tab-btn-customers" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+      <span>👥</span> دليل العملاء والذاكرة (<span id="count-registered-customers" class="font-mono">0</span>)
+    </button>
     <a href="/inventory" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-all">
       <span>📦</span> المخزون والبضاعة
     </a>
@@ -242,16 +245,40 @@
             </button>
           </div>
 
-          <!-- Customer Details -->
-          <div class="space-y-2 bg-black/20 p-3 rounded-2xl border border-white/5 text-xs">
-            <div class="grid grid-cols-2 gap-2">
-              <input type="text" id="pos-cust-name" placeholder="اسم العميل (اختياري)" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none">
-              <input type="tel" id="pos-cust-phone" placeholder="رقم الهاتف" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] font-mono focus:outline-none">
+          <!-- Customer Details with Memory Engine -->
+          <div class="space-y-2 bg-black/20 p-3 rounded-2xl border border-white/5 text-xs relative">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                <span>👤</span>
+                <span>بيانات العميل (البحث بالهاتف):</span>
+              </span>
+              <span id="pos-cust-status" class="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
+                <span>🧠</span>
+                <span>الذاكرة الذكية نشطة</span>
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 relative">
+              <div class="relative">
+                <input type="tel" id="pos-cust-phone" oninput="handlePosPhoneInput(this.value)" placeholder="رقم الهاتف 📞" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] font-mono focus:outline-none focus:border-orange-500 transition-all">
+                <span id="pos-phone-spinner" class="hidden absolute left-2 top-2 text-[10px] animate-spin">⏳</span>
+              </div>
+              <input type="text" id="pos-cust-name" oninput="handlePosNameInput(this.value)" placeholder="اسم العميل" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
+            </div>
+
+            <!-- Customer Search / Suggestions Dropdown -->
+            <div id="pos-customer-suggestions" class="hidden absolute top-16 left-3 right-3 z-50 bg-[#1e293b] border border-orange-500/40 rounded-xl shadow-2xl p-1.5 space-y-1 max-h-56 overflow-y-auto custom-scrollbar">
+              <!-- Dynamically populated suggestions -->
+            </div>
+
+            <!-- Customer Memory Badge / Loyalty Indicator -->
+            <div id="pos-customer-badge" class="hidden p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-black/60 border border-emerald-500/30 text-[11px] text-emerald-300 transition-all">
+              <!-- Dynamically populated badge -->
             </div>
 
             <!-- Delivery fields (shown if delivery) -->
             <div id="pos-delivery-fields" class="space-y-2 hidden pt-1">
-              <input type="text" id="pos-delivery-addr" placeholder="عنوان التوصيل بالتفصيل 📍" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none">
+              <input type="text" id="pos-delivery-addr" placeholder="عنوان التوصيل بالتفصيل 📍" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
               <select id="pos-select-captain" class="w-full h-8 px-2.5 rounded-lg bg-black/60 border border-white/10 text-slate-300 text-[11px] focus:outline-none">
                 <option value="">اختر كابتن التوصيل (اختياري)</option>
               </select>
@@ -660,6 +687,49 @@
       </div>
 
       <div id="captains-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 5.5: CUSTOMERS DIRECTORY PANE (سجل العملاء والذاكرة)
+         ============================================== -->
+    <section id="pane-customers" class="space-y-4 hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-orange-950/40 via-black to-black p-4 rounded-3xl border border-white/5">
+        <div>
+          <h2 class="text-sm font-black text-white flex items-center gap-2">
+            <span>👥</span>
+            <span>دليل وذاكرة العملاء المسجلين</span>
+          </h2>
+          <p class="text-[11px] text-slate-400">قاعدة بيانات العملاء المسجلين بأرقام هواتفهم، طلباتهم السابقة، وعناوين التوصيل</p>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <input type="text" id="cust-dir-search" oninput="searchCustomersDirectory(this.value)" placeholder="بحث بالاسم أو الهاتف أو العنوان 🔍" class="w-full sm:w-64 h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-orange-500">
+        </div>
+      </div>
+
+      <!-- Stats Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">إجمالي العملاء المسجلين</span>
+          <span id="stat-total-customers" class="text-lg font-black text-white font-mono">0</span>
+        </div>
+        <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">إجمالي مبيعات العملاء</span>
+          <span id="stat-customers-spent" class="text-lg font-black text-emerald-400 font-mono">0 ج.م</span>
+        </div>
+        <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">متوسط طلبات العميل</span>
+          <span id="stat-avg-orders" class="text-lg font-black text-amber-400 font-mono">0</span>
+        </div>
+        <div class="bg-black/40 border border-white/5 p-3 rounded-2xl">
+          <span class="text-[10px] text-slate-400 block font-bold">عملاء الدليفري</span>
+          <span id="stat-delivery-customers" class="text-lg font-black text-orange-400 font-mono">0</span>
+        </div>
+      </div>
+
+      <!-- Customers Cards Grid -->
+      <div id="customers-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <!-- populated dynamically -->
       </div>
     </section>
@@ -1408,7 +1478,7 @@
         b.className = "nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
       });
 
-      ['pos', 'orders', 'menu', 'reports', 'captains', 'settings'].forEach(p => {
+      ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'settings'].forEach(p => {
         const el = document.getElementById(`pane-${p}`);
         if (el) el.classList.add('hidden');
       });
@@ -1428,6 +1498,7 @@
         loadCurrentShiftSummary();
       }
       if (tab === 'captains') loadCaptains();
+      if (tab === 'customers') loadCustomersDirectory();
       if (tab === 'settings') {
         loadSettingsData();
         loadUserProfile();
@@ -1642,6 +1713,302 @@
       }
     }
 
+    // ==============================================
+    // 2.1 CUSTOMER MEMORY & CRM ENGINE (ذاكرة العملاء الذكية)
+    // ==============================================
+    let customerLookupTimer = null;
+    let activeCustomerProfile = null;
+    let registeredCustomersList = [];
+
+    async function handlePosPhoneInput(val) {
+      clearTimeout(customerLookupTimer);
+      const cleanVal = (val || '').trim();
+      const spinner = document.getElementById('pos-phone-spinner');
+      const suggestions = document.getElementById('pos-customer-suggestions');
+
+      if (cleanVal.length < 3) {
+        if (spinner) spinner.classList.add('hidden');
+        if (suggestions) suggestions.classList.add('hidden');
+        if (!cleanVal) clearCustomerMemoryBadge();
+        return;
+      }
+
+      if (spinner) spinner.classList.remove('hidden');
+
+      customerLookupTimer = setTimeout(async () => {
+        try {
+          const res = await apiFetch(`/api/v1/customers/lookup?phone=${encodeURIComponent(cleanVal)}`);
+          if (spinner) spinner.classList.add('hidden');
+
+          const cleanDigits = cleanVal.replace(/[\s-]/g, '');
+          if (res.customer && (res.customer.phone === cleanDigits || res.customer.phone.endsWith(cleanDigits))) {
+            // Exact match found!
+            selectCustomerProfile(res.customer);
+          } else if (res.matches && res.matches.length > 0) {
+            // Multiple matches -> show suggestions
+            renderCustomerSuggestions(res.matches);
+          } else {
+            if (suggestions) suggestions.classList.add('hidden');
+            clearCustomerMemoryBadge();
+          }
+        } catch (err) {
+          if (spinner) spinner.classList.add('hidden');
+          console.error('Customer lookup error:', err);
+        }
+      }, 200);
+    }
+
+    async function handlePosNameInput(val) {
+      clearTimeout(customerLookupTimer);
+      const cleanVal = (val || '').trim();
+      const suggestions = document.getElementById('pos-customer-suggestions');
+
+      const phoneInput = document.getElementById('pos-cust-phone');
+      if (cleanVal.length < 3 || (phoneInput && phoneInput.value.trim().length >= 5)) {
+        return;
+      }
+
+      customerLookupTimer = setTimeout(async () => {
+        try {
+          const res = await apiFetch(`/api/v1/customers/lookup?q=${encodeURIComponent(cleanVal)}`);
+          if (res.matches && res.matches.length > 0) {
+            renderCustomerSuggestions(res.matches);
+          } else {
+            if (suggestions) suggestions.classList.add('hidden');
+          }
+        } catch (err) {
+          console.error('Customer lookup error:', err);
+        }
+      }, 250);
+    }
+
+    function renderCustomerSuggestions(matches) {
+      const suggestions = document.getElementById('pos-customer-suggestions');
+      if (!suggestions) return;
+
+      if (!matches || matches.length === 0) {
+        suggestions.classList.add('hidden');
+        return;
+      }
+
+      suggestions.innerHTML = matches.map((c, idx) => `
+        <div onclick='selectCustomerProfileByIndex(${idx})' class="p-2 rounded-lg bg-white/5 hover:bg-orange-600/20 hover:border-orange-500/40 border border-white/5 cursor-pointer transition-all flex items-center justify-between gap-2">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="font-black text-white text-xs">${c.name}</span>
+              <span class="text-[10px] text-orange-400 font-mono font-bold">${c.phone}</span>
+            </div>
+            ${c.address ? `<div class="text-[10px] text-slate-300 truncate max-w-[200px]">📍 ${c.address}</div>` : ''}
+          </div>
+          <div class="text-left shrink-0">
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold font-mono">
+              ${c.totalOrders} ${c.totalOrders > 1 ? 'طلبات' : 'طلب'}
+            </span>
+          </div>
+        </div>
+      `).join('');
+
+      window._latestCustomerMatches = matches;
+      suggestions.classList.remove('hidden');
+    }
+
+    function selectCustomerProfileByIndex(idx) {
+      if (window._latestCustomerMatches && window._latestCustomerMatches[idx]) {
+        selectCustomerProfile(window._latestCustomerMatches[idx]);
+      }
+    }
+
+    function selectCustomerProfile(cust) {
+      if (!cust) return;
+      activeCustomerProfile = cust;
+
+      const nameInput = document.getElementById('pos-cust-name');
+      const phoneInput = document.getElementById('pos-cust-phone');
+      const addrInput = document.getElementById('pos-delivery-addr');
+      const notesInput = document.getElementById('pos-order-notes');
+      const suggestions = document.getElementById('pos-customer-suggestions');
+      const badge = document.getElementById('pos-customer-badge');
+
+      if (nameInput) nameInput.value = cust.name || '';
+      if (phoneInput) phoneInput.value = cust.phone || '';
+      if (addrInput && cust.address) addrInput.value = cust.address;
+      if (notesInput && cust.notes && !notesInput.value) {
+        notesInput.placeholder = `آخر ملاحظة للشيف: ${cust.notes}`;
+      }
+
+      if (suggestions) suggestions.classList.add('hidden');
+
+      // Subtle emerald glow to confirm data retrieval
+      [nameInput, phoneInput, addrInput].forEach(el => {
+        if (el) {
+          el.classList.add('border-emerald-500', 'bg-emerald-950/20');
+          setTimeout(() => el.classList.remove('border-emerald-500', 'bg-emerald-950/20'), 1200);
+        }
+      });
+
+      // Show memory badge
+      if (badge) {
+        badge.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-sm">✨</span>
+                <span class="font-black text-white text-xs">${cust.name}</span>
+                <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                  🔥 ${cust.totalOrders} ${cust.totalOrders > 1 ? 'طلبات سابقة' : 'طلب سابق'}
+                </span>
+                <span class="text-[10px] text-slate-300 font-mono">(${cust.totalSpent} ج.م)</span>
+              </div>
+              ${cust.address ? `<div class="text-[10.5px] text-slate-300 flex items-center gap-1">📍 <span>${cust.address}</span></div>` : ''}
+              ${cust.favoriteItems && cust.favoriteItems.length ? `
+                <div class="text-[10px] text-amber-300/90 flex items-center gap-1 flex-wrap">
+                  <span>❤️ يفضل:</span>
+                  <span class="font-bold">${cust.favoriteItems.join(' • ')}</span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              ${cust.address && posOrderType === 'TAKEAWAY' ? `
+                <button type="button" onclick="setPosOrderType('DELIVERY')" title="تحويل الطلب لدليفري بعنوان العميل" class="px-2 py-1 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-black transition-all shadow">
+                  🛵 دليفري
+                </button>
+              ` : ''}
+              <button type="button" onclick="clearCustomerMemoryBadge()" title="إخفاء تفاصيل العميل" class="p-1 text-slate-400 hover:text-white text-xs">
+                ✕
+              </button>
+            </div>
+          </div>
+        `;
+        badge.classList.remove('hidden');
+      }
+    }
+
+    function clearCustomerMemoryBadge() {
+      activeCustomerProfile = null;
+      const badge = document.getElementById('pos-customer-badge');
+      if (badge) badge.classList.add('hidden');
+      const suggestions = document.getElementById('pos-customer-suggestions');
+      if (suggestions) suggestions.classList.add('hidden');
+    }
+
+    function clearCustomerMemorySelection() {
+      clearCustomerMemoryBadge();
+      const nameInput = document.getElementById('pos-cust-name');
+      const phoneInput = document.getElementById('pos-cust-phone');
+      const addrInput = document.getElementById('pos-delivery-addr');
+      if (nameInput) nameInput.value = '';
+      if (phoneInput) phoneInput.value = '';
+      if (addrInput) addrInput.value = '';
+    }
+
+    // ==============================================
+    // 2.2 CUSTOMERS DIRECTORY TAB (دليل العملاء المسجلين)
+    // ==============================================
+    async function loadCustomersDirectory(searchQuery = '') {
+      try {
+        const url = searchQuery 
+          ? `/api/v1/customers?search=${encodeURIComponent(searchQuery)}`
+          : `/api/v1/customers`;
+        const res = await apiFetch(url);
+        registeredCustomersList = res.customers || [];
+
+        // Update counts in header tab
+        const countBadge = document.getElementById('count-registered-customers');
+        if (countBadge) countBadge.innerText = registeredCustomersList.length;
+
+        // Update stat counters
+        const totalCustEl = document.getElementById('stat-total-customers');
+        const spentCustEl = document.getElementById('stat-customers-spent');
+        const avgOrdersEl = document.getElementById('stat-avg-orders');
+        const deliveryCustEl = document.getElementById('stat-delivery-customers');
+
+        const totalSpent = registeredCustomersList.reduce((acc, c) => acc + (c.totalSpent || 0), 0);
+        const totalOrders = registeredCustomersList.reduce((acc, c) => acc + (c.totalOrders || 0), 0);
+        const deliveryCount = registeredCustomersList.filter(c => c.address).length;
+        const avg = registeredCustomersList.length ? (totalOrders / registeredCustomersList.length).toFixed(1) : 0;
+
+        if (totalCustEl) totalCustEl.innerText = registeredCustomersList.length;
+        if (spentCustEl) spentCustEl.innerText = totalSpent.toLocaleString('ar-EG') + ' ج.م';
+        if (avgOrdersEl) avgOrdersEl.innerText = avg;
+        if (deliveryCustEl) deliveryCustEl.innerText = deliveryCount;
+
+        renderCustomersCards(registeredCustomersList);
+      } catch (err) {
+        console.error('Failed to load customers directory:', err);
+      }
+    }
+
+    function searchCustomersDirectory(val) {
+      clearTimeout(customerLookupTimer);
+      customerLookupTimer = setTimeout(() => {
+        loadCustomersDirectory(val);
+      }, 250);
+    }
+
+    function renderCustomersCards(list) {
+      const grid = document.getElementById('customers-cards-grid');
+      if (!grid) return;
+
+      if (!list || list.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-500 text-xs">
+            لم يتم العثور على عملاء مسجلين بهذا البحث 🔍
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = list.map(c => `
+        <div class="bg-black/40 border border-white/5 hover:border-orange-500/30 rounded-2xl p-4 transition-all space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-0.5">
+              <h4 class="text-sm font-black text-white flex items-center gap-1.5">
+                <span>👤</span>
+                <span>${c.name}</span>
+              </h4>
+              <a href="tel:${c.phone}" class="text-xs text-orange-400 font-mono font-bold hover:underline block">
+                📞 ${c.phone}
+              </a>
+            </div>
+            <span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-black">
+              ${c.totalOrders} ${c.totalOrders > 1 ? 'طلبات' : 'طلب'}
+            </span>
+          </div>
+
+          ${c.address ? `
+            <div class="text-[11px] text-slate-300 bg-white/5 p-2 rounded-xl border border-white/5">
+              <span class="text-slate-400 font-bold block text-[10px]">📍 عنوان التوصيل:</span>
+              <span>${c.address}</span>
+            </div>
+          ` : `
+            <div class="text-[10px] text-slate-500 italic">عميل تيك واي (استلام من الفرع)</div>
+          `}
+
+          ${c.favoriteItems && c.favoriteItems.length ? `
+            <div class="text-[10px] text-amber-300">
+              <span class="text-slate-400">الوجبات المفضلة:</span>
+              <span class="font-bold">${c.favoriteItems.join(' • ')}</span>
+            </div>
+          ` : ''}
+
+          <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+            <span class="text-slate-400 font-mono">الإجمالي: <strong class="text-white">${c.totalSpent} ج.م</strong></span>
+            <button onclick="startOrderForCustomer('${c.phone}')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1">
+              <span>🛒</span>
+              <span>ضرب أوردر</span>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function startOrderForCustomer(phone) {
+      const cust = registeredCustomersList.find(c => c.phone === phone);
+      if (!cust) return;
+      switchTab('pos');
+      selectCustomerProfile(cust);
+    }
+
     async function submitPosOrder(shouldPrintReceipt = true) {
       if (posCart.length === 0) {
         alert('الرجاء إضافة أصناف للأوردر أولاً!');
@@ -1681,13 +2048,12 @@
 
         const createdOrder = res.order;
         clearPosCart();
-        document.getElementById('pos-cust-name').value = '';
-        document.getElementById('pos-cust-phone').value = '';
-        document.getElementById('pos-delivery-addr').value = '';
+        clearCustomerMemorySelection();
         document.getElementById('pos-order-notes').value = '';
 
         loadLiveOrders();
         loadMenuData(); // Immediately refresh menu and live portions in POS!
+        loadCustomersDirectory(); // Refresh customers directory count!
 
         if (shouldPrintReceipt && createdOrder) {
           printOrderReceipt(createdOrder.id, createdOrder);
@@ -3456,12 +3822,23 @@
       if (btn) btn.classList.add('hidden');
     }
 
+    // Close customer suggestions dropdown on outside click
+    document.addEventListener('click', (e) => {
+      const suggestions = document.getElementById('pos-customer-suggestions');
+      const phoneInput = document.getElementById('pos-cust-phone');
+      const nameInput = document.getElementById('pos-cust-name');
+      if (suggestions && !suggestions.contains(e.target) && e.target !== phoneInput && e.target !== nameInput) {
+        suggestions.classList.add('hidden');
+      }
+    });
+
     // Initial boot
     loadLiveOrders();
     loadCaptains();
     loadMenuData();
     loadUserProfile();
     loadCurrentShiftSummary();
+    loadCustomersDirectory();
 
     // Auto-refresh live orders and shift summary every 10 seconds
     setInterval(() => {
