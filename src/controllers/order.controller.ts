@@ -122,34 +122,50 @@ export class OrderController {
       });
 
       // Auto-deduct inventory based on recipes
+      const deductedSummary: any[] = [];
       try {
         for (const itm of newOrder.items) {
+          if (!itm.menuItemId) continue;
+
           const recipe = await prisma.recipe.findUnique({
             where: { productId: itm.menuItemId },
-            include: { ingredients: true }
+            include: {
+              ingredients: {
+                include: { inventoryItem: true }
+              }
+            }
           });
+
           if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
             const orderQty = Number(itm.quantity) || 1;
             for (const ing of recipe.ingredients) {
               const deduction = Number(ing.quantityUsed) * orderQty;
-              if (deduction > 0) {
-                await prisma.inventoryItem.update({
+              if (deduction > 0 && ing.inventoryItemId) {
+                const updatedItem = await prisma.inventoryItem.update({
                   where: { id: ing.inventoryItemId },
                   data: {
                     currentStock: { decrement: deduction }
                   }
                 });
+
+                deductedSummary.push({
+                  ingredientName: ing.inventoryItem?.name || 'مكون',
+                  unit: ing.inventoryItem?.unit || 'جرام',
+                  deductedAmount: deduction,
+                  remainingStock: Number(updatedItem.currentStock)
+                });
               }
             }
           }
         }
-      } catch (stockErr) {
+      } catch (stockErr: any) {
         console.error('Failed to deduct inventory for order:', stockErr);
       }
 
       return res.status(201).json({
         message: 'Order created successfully! 🔥',
-        order: newOrder
+        order: newOrder,
+        deductedInventory: deductedSummary
       });
     } catch (err: any) {
       return res.status(500).json({ error: 'Failed to create order', message: err.message });

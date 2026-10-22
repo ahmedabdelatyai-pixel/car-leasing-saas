@@ -1672,11 +1672,12 @@
         document.getElementById('pos-order-notes').value = '';
 
         loadLiveOrders();
+        loadMenuData(); // Immediately refresh menu and live portions in POS!
 
         if (shouldPrintReceipt && createdOrder) {
           printOrderReceipt(createdOrder.id, createdOrder);
         } else {
-          alert(`تم تأكيد الطلب بنجاح برقم: ${createdOrder.orderNumber} 🔥 وتم إرساله للمطبخ!`);
+          alert(`تم تأكيد الطلب بنجاح برقم: ${createdOrder.orderNumber} 🔥 وخصم المكونات من المخزون!`);
         }
 
       } catch (err) {

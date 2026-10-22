@@ -161,10 +161,10 @@
             <tr class="bg-slate-950/60 border-b border-white/5 text-[11px] font-black text-slate-400 uppercase tracking-wider">
               <th class="p-3.5">اسم الصنف</th>
               <th class="p-3.5">الوحدة</th>
-              <th class="p-3.5">الكمية المشتراة</th>
+              <th class="p-3.5">إجمالي المشتريات (الفاتورة)</th>
               <th class="p-3.5">إجمالي المدفوع</th>
-              <th class="p-3.5 text-amber-300">سعر الوحدة (احسبها)</th>
-              <th class="p-3.5">المخزون الحالي</th>
+              <th class="p-3.5 text-amber-300">سعر الوحدة</th>
+              <th class="p-3.5 text-emerald-400">المخزون الحالي المتبقي (ينقص مع الأوردرات 📉)</th>
               <th class="p-3.5">حد التنبيه</th>
               <th class="p-3.5">الحالة</th>
               <th class="p-3.5 text-center">إجراءات</th>
@@ -472,9 +472,13 @@
             </td>
             <td class="p-3.5">
               <div class="${stockHighlight}">
-                <span>${Number(item.currentStock).toLocaleString('ar-EG')}</span>
+                <span class="text-sm font-black">${Number(item.currentStock).toLocaleString('ar-EG')}</span>
                 <span class="text-[10px] text-slate-400 font-normal">${item.unit}</span>
               </div>
+              ${(() => {
+                const consumed = Math.max(0, Number(item.totalQuantityPurchased) - Number(item.currentStock));
+                return consumed > 0 ? `<div class="text-[10px] text-orange-400 font-bold mt-0.5">📉 خُصم للأوردرات: ${consumed.toLocaleString('ar-EG')} ${item.unit}</div>` : '';
+              })()}
             </td>
             <td class="p-3.5 text-slate-400 font-medium">${Number(item.minStockAlert).toLocaleString('ar-EG')} ${item.unit}</td>
             <td class="p-3.5">${statusBadge}</td>
@@ -633,6 +637,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', loadInventory);
+    window.addEventListener('focus', loadInventory);
+    setInterval(loadInventory, 10000); // Auto-refresh stock every 10 seconds
   </script>
 </body>
 </html>
