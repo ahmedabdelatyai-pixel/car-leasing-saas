@@ -287,40 +287,87 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT ITEM -->
+  <!-- MODAL: EDIT ITEM (تعديل كامل بيانات الصنف) -->
   <div id="edit-item-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl">
       <div class="flex items-center justify-between border-b border-white/5 pb-3">
         <h3 class="text-base font-black text-white flex items-center gap-2">
-          <span>✏️</span> <span>تعديل بيانات الصنف</span>
+          <span>✏️</span> <span>تعديل كافة بيانات صنف المخزون</span>
         </h3>
         <button onclick="closeModal('edit-item-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
 
       <form id="edit-item-form" onsubmit="handleEditSubmit(event)" class="space-y-4">
         <input type="hidden" id="edit-item-id">
+        
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">اسم الصنف</label>
-          <input type="text" id="edit-name" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          <label class="block text-xs font-bold text-slate-300 mb-1">اسم الصنف / الخامة</label>
+          <input type="text" id="edit-name" required placeholder="ادخل اسم الصنف" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">الوحدة</label>
-          <input type="text" id="edit-unit" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
-        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">الرصيد الحالي</label>
-            <input type="number" step="any" id="edit-current-stock" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+            <label class="block text-xs font-bold text-slate-300 mb-1">وحدة القياس</label>
+            <div class="flex gap-1.5">
+              <select id="edit-unit-select" onchange="onEditUnitSelect(this.value)" class="w-28 bg-slate-950 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+                <option value="جرام">جرام</option>
+                <option value="كيلو">كيلو</option>
+                <option value="قطعة">قطعة</option>
+                <option value="رغيف">رغيف</option>
+                <option value="علبة">علبة</option>
+                <option value="لتر">لتر</option>
+                <option value="custom">أخرى...</option>
+              </select>
+              <input type="text" id="edit-unit" required placeholder="الوحدة" class="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+            </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">حد التنبيه</label>
-            <input type="number" step="any" id="edit-min-alert" required class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+            <label class="block text-xs font-bold text-slate-300 mb-1">حد التنبيه للنواقص</label>
+            <input type="number" step="any" id="edit-min-alert" required placeholder="مثلاً: 10" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+        </div>
+
+        <!-- Stock and Invoice Financial Details -->
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-white/5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <span>💰</span> <span>بيانات الفاتورة والأسعار:</span>
+            </span>
+            <span class="text-[10px] text-slate-400">سعر الوحدة يُحسب تلقائياً أو يُعدل يدوياً</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">إجمالي الكمية المشتراة (الفاتورة)</label>
+              <input type="number" step="any" id="edit-total-qty" oninput="calculateEditUnitPreview()" required class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-orange-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">إجمالي المبلغ المدفوع (ج.م)</label>
+              <input type="number" step="any" id="edit-total-paid" oninput="calculateEditUnitPreview()" required class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-orange-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-amber-300 mb-1">سعر الوحدة الواحدة (ج.م)</label>
+              <input type="number" step="any" id="edit-price-per-unit" required class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold font-mono focus:outline-none focus:border-amber-400">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-emerald-400 mb-1">المخزون الفعلي الحالي المتبقي</label>
+              <input type="number" step="any" id="edit-current-stock" required class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-emerald-300 font-bold font-mono focus:outline-none focus:border-emerald-400">
+            </div>
+          </div>
+          
+          <div class="text-[10px] text-slate-400 bg-white/5 p-2 rounded-lg leading-relaxed">
+            ℹ️ عند تعديل سعر الوحدة، سيقوم السيستم تلقائياً بتحديث تكلفة هذا المكون في جميع وصفات المنيو المرتبطة به.
           </div>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" onclick="closeModal('edit-item-modal')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
-          <button type="submit" class="px-5 py-2 text-xs font-black bg-orange-500 text-white rounded-xl shadow-lg hover:brightness-110">حفظ التعديلات</button>
+          <button type="button" onclick="closeModal('edit-item-modal')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-all">إلغاء</button>
+          <button type="submit" id="btn-submit-edit" class="px-5 py-2 text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl shadow-lg glow-orange hover:brightness-110 transition-all flex items-center gap-1.5">
+            <span>💾</span> <span>حفظ كافة التعديلات</span>
+          </button>
         </div>
       </form>
     </div>
@@ -491,10 +538,10 @@
                   <span>➕</span> <span>توريد</span>
                 </button>
                 <button 
-                  onclick="openEditModal('${item.id}', '${item.name}', '${item.unit}', ${item.currentStock}, ${item.minStockAlert})"
-                  title="تعديل الصنف"
-                  class="px-2 py-1 text-[11px] font-bold rounded-lg bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-all">
-                  ✏️
+                  onclick="openEditModalById('${item.id}')"
+                  title="تعديل كافة بيانات الصنف"
+                  class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-orange-500/20 text-slate-300 hover:text-orange-400 border border-white/5 hover:border-orange-500/30 transition-all flex items-center gap-1">
+                  <span>✏️</span> <span>تعديل</span>
                 </button>
                 <button 
                   onclick="handleDeleteItem('${item.id}', '${item.name}')"
@@ -538,13 +585,46 @@
       document.getElementById('restock-modal').classList.remove('hidden');
     }
 
-    function openEditModal(id, name, unit, currentStock, minAlert) {
-      document.getElementById('edit-item-id').value = id;
-      document.getElementById('edit-name').value = name;
-      document.getElementById('edit-unit').value = unit;
-      document.getElementById('edit-current-stock').value = currentStock;
-      document.getElementById('edit-min-alert').value = minAlert;
+    function openEditModalById(id) {
+      const item = inventoryItems.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('edit-item-id').value = item.id;
+      document.getElementById('edit-name').value = item.name || '';
+      document.getElementById('edit-unit').value = item.unit || 'جرام';
+
+      // Set unit select dropdown
+      const unitSelect = document.getElementById('edit-unit-select');
+      const standardUnits = ['جرام', 'كيلو', 'قطعة', 'رغيف', 'علبة', 'لتر'];
+      if (standardUnits.includes(item.unit)) {
+        unitSelect.value = item.unit;
+      } else {
+        unitSelect.value = 'custom';
+      }
+
+      document.getElementById('edit-min-alert').value = item.minStockAlert;
+      document.getElementById('edit-total-qty').value = item.totalQuantityPurchased;
+      document.getElementById('edit-total-paid').value = item.totalPricePaid;
+      document.getElementById('edit-price-per-unit').value = item.pricePerUnit;
+      document.getElementById('edit-current-stock').value = item.currentStock;
+
       document.getElementById('edit-item-modal').classList.remove('hidden');
+    }
+
+    function onEditUnitSelect(val) {
+      if (val !== 'custom') {
+        document.getElementById('edit-unit').value = val;
+      } else {
+        document.getElementById('edit-unit').focus();
+      }
+    }
+
+    function calculateEditUnitPreview() {
+      const qty = parseFloat(document.getElementById('edit-total-qty').value) || 0;
+      const price = parseFloat(document.getElementById('edit-total-paid').value) || 0;
+      if (qty > 0 && price > 0) {
+        document.getElementById('edit-price-per-unit').value = (price / qty).toFixed(4);
+      }
     }
 
     function closeModal(id) {
@@ -608,10 +688,17 @@
     async function handleEditSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('edit-item-id').value;
+      const btn = document.getElementById('btn-submit-edit');
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+
       try {
         const body = {
-          name: document.getElementById('edit-name').value,
-          unit: document.getElementById('edit-unit').value,
+          name: document.getElementById('edit-name').value.trim(),
+          unit: document.getElementById('edit-unit').value.trim(),
+          totalQuantityPurchased: parseFloat(document.getElementById('edit-total-qty').value),
+          totalPricePaid: parseFloat(document.getElementById('edit-total-paid').value),
+          pricePerUnit: parseFloat(document.getElementById('edit-price-per-unit').value),
           currentStock: parseFloat(document.getElementById('edit-current-stock').value),
           minStockAlert: parseFloat(document.getElementById('edit-min-alert').value)
         };
@@ -622,7 +709,10 @@
         closeModal('edit-item-modal');
         await loadInventory();
       } catch (err) {
-        alert('خطأ: ' + err.message);
+        alert('خطأ أثناء حفظ التعديل: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span> <span>حفظ كافة التعديلات</span>';
       }
     }
 

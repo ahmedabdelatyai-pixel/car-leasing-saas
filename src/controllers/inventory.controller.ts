@@ -1,4 +1,4 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 
 export class InventoryController {
@@ -154,7 +154,7 @@ export class InventoryController {
   static async updateInventoryItem(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { name, unit, totalQuantityPurchased, totalPricePaid, currentStock, minStockAlert } = req.body;
+      const { name, unit, totalQuantityPurchased, totalPricePaid, pricePerUnit, currentStock, minStockAlert } = req.body;
 
       const existing = await prisma.inventoryItem.findUnique({ where: { id } });
       if (!existing) {
@@ -163,7 +163,16 @@ export class InventoryController {
 
       const qty = totalQuantityPurchased !== undefined ? Number(totalQuantityPurchased) : Number(existing.totalQuantityPurchased);
       const totalPaid = totalPricePaid !== undefined ? Number(totalPricePaid) : Number(existing.totalPricePaid);
-      const pricePerUnit = qty > 0 ? totalPaid / qty : Number(existing.pricePerUnit);
+
+      let finalPricePerUnit: number;
+      if (pricePerUnit !== undefined && Number(pricePerUnit) >= 0) {
+        finalPricePerUnit = Number(pricePerUnit);
+      } else if (qty > 0 && totalPaid > 0) {
+        finalPricePerUnit = totalPaid / qty;
+      } else {
+        finalPricePerUnit = Number(existing.pricePerUnit);
+      }
+
       const stock = currentStock !== undefined ? Number(currentStock) : Number(existing.currentStock);
       const minAlert = minStockAlert !== undefined ? Number(minStockAlert) : Number(existing.minStockAlert);
 
@@ -174,14 +183,30 @@ export class InventoryController {
           unit: unit ? unit.trim() : existing.unit,
           totalQuantityPurchased: qty,
           totalPricePaid: totalPaid,
-          pricePerUnit,
+          pricePerUnit: finalPricePerUnit,
           currentStock: stock,
           minStockAlert: minAlert
         }
       });
 
+      // Recalculate RecipeIngredient costs linked to this inventory item
+      try {
+        const ingredients = await prisma.recipeIngredient.findMany({
+          where: { inventoryItemId: id }
+        });
+        for (const ing of ingredients) {
+          const newCost = Number(ing.quantityUsed) * finalPricePerUnit;
+          await prisma.recipeIngredient.update({
+            where: { id: ing.id },
+            data: { cost: newCost }
+          });
+        }
+      } catch (ingErr) {
+        console.error('Error updating ingredient costs after inventory update:', ingErr);
+      }
+
       return res.json({
-        message: 'تم تحديث بيانات الصنف بنجاح ✅',
+        message: 'تم تحديث بيانات الصنف وتكاليف الوصفات بنجاح ✅',
         item: updated
       });
     } catch (err: any) {
