@@ -397,4 +397,18 @@ router.post(
   SuperAdminController.impersonateRestaurant
 );
 
+router.put(
+  '/super-admin/users/:id',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.updateUser
+);
+
+router.post(
+  '/super-admin/restaurants/:id/users',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.createUserForRestaurant
+);
+
 export default router;

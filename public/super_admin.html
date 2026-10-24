@@ -337,14 +337,14 @@
   </div>
 
   <!-- ==============================================
-       MODAL 2: EDIT RESTAURANT STATUS & SUBSCRIPTION
+       MODAL 2: EDIT RESTAURANT STATUS, PERMISSIONS & USERS
        ============================================== -->
-  <div id="modal-edit-status" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5">
+  <div id="modal-edit-status" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 my-8">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="text-sm font-black text-white flex items-center gap-2">
           <span>⚙️</span>
-          <span>تعديل اشتراك:</span>
+          <span>إدارة اشتراك وصلاحيات:</span>
           <span id="edit-rest-title" class="text-purple-400">...</span>
         </h3>
         <button onclick="closeEditStatusModal()" class="text-slate-400 hover:text-white">✕</button>
@@ -352,44 +352,143 @@
 
       <input type="hidden" id="edit-rest-id">
 
-      <div class="space-y-3">
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1">حالة الاشتراك</label>
-          <select id="edit-rest-status"
-                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
-            <option value="ACTIVE">نشط (فعّال) ✅</option>
-            <option value="TRIAL">فترة تجريبية ⏳</option>
-            <option value="SUSPENDED">موقوف (معلق) ⚠️</option>
-            <option value="EXPIRED">منتهي الصلاحية ❌</option>
-          </select>
+      <div class="space-y-4">
+        <!-- Section A: Subscription & Plan -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <h4 class="text-xs font-black text-purple-400 flex items-center gap-1.5">
+            <span>💳</span> حالة الاشتراك والباقة
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">حالة الاشتراك</label>
+              <select id="edit-rest-status"
+                      class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="ACTIVE">نشط (فعّال) ✅</option>
+                <option value="TRIAL">فترة تجريبية ⏳</option>
+                <option value="SUSPENDED">موقوف (معلق) ⚠️</option>
+                <option value="EXPIRED">منتهي الصلاحية ❌</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">باقة الاشتراك</label>
+              <select id="edit-rest-plan" onchange="syncFeaturesWithPlan()"
+                      class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="PREMIUM">👑 VIP الشاملة (جميع الميزات)</option>
+                <option value="PRO">⚡ PRO الاحترافية (كاشير + مخزون)</option>
+                <option value="BASIC">🛒 BASIC الأساسية (كاشير فقط)</option>
+                <option value="CUSTOM">🛠️ باقة مخصصة</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">تاريخ انتهاء الاشتراك</label>
+              <input type="date" id="edit-rest-expires"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">ملاحظات إدارية</label>
+            <input type="text" id="edit-rest-notes" placeholder="ملاحظات الحساب..."
+                   class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+          </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1">باقة الاشتراك</label>
-          <select id="edit-rest-plan"
-                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
-            <option value="PREMIUM">PREMIUM (شاملة كاشير ومخزون وQR ونقاط)</option>
-            <option value="PRO">PRO (كاشير ومخزون)</option>
-            <option value="BASIC">BASIC (كاشير فقط)</option>
-          </select>
+        <!-- Section B: Granular Feature Permissions -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+              <span>🎛️</span> الصلاحيات والميزات المفعلة للمطعم
+            </h4>
+            <span class="text-[10px] text-slate-500">اختر الميزات المتاحة لهذا العميل</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5" id="features-checkboxes-grid">
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-pos" value="POS" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>🛒 الكاشير (POS)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-menu" value="MENU" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>🍔 قائمة الطعام</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-reports" value="REPORTS" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>📊 تقارير الأرباح</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-captains" value="CAPTAINS" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>🛵 كباتن الدليفري</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-customers" value="CUSTOMERS" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>👥 دليل العملاء</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-qr" value="QR" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>📱 كود الـ QR والصالة</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-inventory" value="INVENTORY" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>📦 المخزون والبضاعة</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-recipes" value="RECIPES" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>🧪 الوصفات والتسعير</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 cursor-pointer text-xs">
+              <input type="checkbox" id="feat-loyalty" value="LOYALTY" onchange="onManualFeatureToggle()" class="feature-checkbox accent-purple-600 rounded">
+              <span>🎁 نقاط الولاء</span>
+            </label>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1">تاريخ انتهاء الاشتراك</label>
-          <input type="date" id="edit-rest-expires"
-                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
-        </div>
+        <!-- Section C: Staff Users & Roles -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-black text-emerald-400 flex items-center gap-1.5">
+              <span>👥</span> مستخدمو المطعم وصلاحياتهم
+            </h4>
+            <button type="button" onclick="showAddStaffForm()"
+                    class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold flex items-center gap-1">
+              <span>➕</span>
+              <span>إضافة موظف للمطعم</span>
+            </button>
+          </div>
 
-        <div>
-          <label class="block text-[11px] font-bold text-slate-300 mb-1">ملاحظات إدارية</label>
-          <textarea id="edit-rest-notes" rows="2" placeholder="تم الدفع عبر فودافون كاش..."
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"></textarea>
+          <!-- Add Staff Form Inline (Hidden by default) -->
+          <div id="inline-add-staff-form" class="hidden bg-slate-900/90 border border-emerald-500/30 rounded-xl p-3 space-y-2">
+            <div class="text-[11px] font-bold text-emerald-400">إضافة مستخدم جديد لهذا المطعم:</div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <input type="text" id="new-staff-name" placeholder="اسم الموظف" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <input type="email" id="new-staff-email" placeholder="البريد الإلكتروني" dir="ltr" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <input type="text" id="new-staff-password" placeholder="كلمة المرور" dir="ltr" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <select id="new-staff-role" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                <option value="RESTAURANT_ADMIN">مدير مطعم</option>
+                <option value="CASHIER" selected>كاشير</option>
+                <option value="KITCHEN">مطبخ / شيف</option>
+              </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" onclick="hideAddStaffForm()" class="text-[10px] text-slate-400 px-2 py-1">إلغاء</button>
+              <button type="button" onclick="submitAddNewStaff()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1 rounded-lg">إضافة الحساب ✅</button>
+            </div>
+          </div>
+
+          <!-- Existing Users List -->
+          <div id="edit-rest-users-list" class="space-y-2">
+            <!-- Dynamic Users Rendered Here -->
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-2">
+      <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
         <button onclick="closeEditStatusModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
-        <button onclick="saveRestaurantStatus()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md transition-all">حفظ التغييرات</button>
+        <button onclick="saveRestaurantStatus()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center gap-1.5">
+          <span>حفظ التعديلات والصلاحيات</span>
+          <span>💾</span>
+        </button>
       </div>
     </div>
   </div>
@@ -745,7 +844,42 @@
       }
     }
 
-    // 7. Edit Status Modal
+    // 7. Edit Status, Permissions & Users Modal
+    function syncFeaturesWithPlan() {
+      const plan = document.getElementById('edit-rest-plan').value;
+      const allBoxes = document.querySelectorAll('.feature-checkbox');
+      
+      let enabledList = [];
+      if (plan === 'PREMIUM') {
+        enabledList = ['POS', 'MENU', 'REPORTS', 'CAPTAINS', 'CUSTOMERS', 'QR', 'INVENTORY', 'RECIPES', 'LOYALTY'];
+      } else if (plan === 'PRO') {
+        enabledList = ['POS', 'MENU', 'REPORTS', 'CAPTAINS', 'CUSTOMERS', 'INVENTORY', 'RECIPES'];
+      } else if (plan === 'BASIC') {
+        enabledList = ['POS', 'MENU', 'CAPTAINS'];
+      }
+
+      if (plan !== 'CUSTOM') {
+        allBoxes.forEach(cb => {
+          cb.checked = enabledList.includes(cb.value);
+        });
+      }
+    }
+
+    function onManualFeatureToggle() {
+      const planSelect = document.getElementById('edit-rest-plan');
+      const checkedVals = Array.from(document.querySelectorAll('.feature-checkbox:checked')).map(cb => cb.value);
+      
+      // Auto-detect standard plans
+      const isPremium = ['POS', 'MENU', 'REPORTS', 'CAPTAINS', 'CUSTOMERS', 'QR', 'INVENTORY', 'RECIPES', 'LOYALTY'].every(f => checkedVals.includes(f)) && checkedVals.length === 9;
+      const isPro = ['POS', 'MENU', 'REPORTS', 'CAPTAINS', 'CUSTOMERS', 'INVENTORY', 'RECIPES'].every(f => checkedVals.includes(f)) && checkedVals.length === 7;
+      const isBasic = ['POS', 'MENU', 'CAPTAINS'].every(f => checkedVals.includes(f)) && checkedVals.length === 3;
+
+      if (isPremium) planSelect.value = 'PREMIUM';
+      else if (isPro) planSelect.value = 'PRO';
+      else if (isBasic) planSelect.value = 'BASIC';
+      else planSelect.value = 'CUSTOM';
+    }
+
     function openEditStatusModal(id) {
       const r = allRestaurants.find(x => x.id === id);
       if (!r) return;
@@ -763,11 +897,104 @@
         document.getElementById('edit-rest-expires').value = '';
       }
 
+      // Populate Feature Checkboxes
+      const currentFeatures = (r.enabledFeatures || 'POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY').split(',');
+      document.querySelectorAll('.feature-checkbox').forEach(cb => {
+        cb.checked = currentFeatures.includes(cb.value);
+      });
+
+      // Populate Users List
+      renderEditModalUsers(r);
+
+      hideAddStaffForm();
       document.getElementById('modal-edit-status').classList.remove('hidden');
+    }
+
+    function renderEditModalUsers(r) {
+      const usersContainer = document.getElementById('edit-rest-users-list');
+      const users = r.users || (r.owner ? [r.owner] : []);
+
+      if (users.length === 0) {
+        usersContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-2">لا يوجد مستخدمين مسجلين لهذا المطعم حتى الآن</div>';
+        return;
+      }
+
+      usersContainer.innerHTML = users.map(u => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold text-white flex items-center gap-2">
+              <span>👤</span>
+              <span>${u.fullName || 'بدون اسم'}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${u.email}</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">تاريخ الإنشاء: ${new Date(u.createdAt).toLocaleDateString('ar-EG')}</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div>
+              <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">الصلاحية والرتبة</label>
+              <select class="user-role-select bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-500" data-user-id="${u.id}">
+                <option value="RESTAURANT_ADMIN" ${u.role === 'RESTAURANT_ADMIN' ? 'selected' : ''}>مدير مطعم 👑</option>
+                <option value="CASHIER" ${u.role === 'CASHIER' ? 'selected' : ''}>كاشير 🛒</option>
+                <option value="KITCHEN" ${u.role === 'KITCHEN' ? 'selected' : ''}>مطبخ / شيف 👨‍🍳</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">تغيير كلمة المرور</label>
+              <input type="text" placeholder="تعيين كلمة سر جديدة..." dir="ltr"
+                     class="user-pass-input bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 w-32"
+                     data-user-id="${u.id}">
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
 
     function closeEditStatusModal() {
       document.getElementById('modal-edit-status').classList.add('hidden');
+    }
+
+    function showAddStaffForm() {
+      document.getElementById('inline-add-staff-form').classList.remove('hidden');
+    }
+
+    function hideAddStaffForm() {
+      document.getElementById('inline-add-staff-form').classList.add('hidden');
+      document.getElementById('new-staff-name').value = '';
+      document.getElementById('new-staff-email').value = '';
+      document.getElementById('new-staff-password').value = '';
+    }
+
+    async function submitAddNewStaff() {
+      const restId = document.getElementById('edit-rest-id').value;
+      const fullName = document.getElementById('new-staff-name').value.trim();
+      const email = document.getElementById('new-staff-email').value.trim();
+      const password = document.getElementById('new-staff-password').value.trim();
+      const role = document.getElementById('new-staff-role').value;
+
+      if (!email || !password) {
+        alert('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/super-admin/restaurants/${restId}/users`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ fullName, email, password, role })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل إضافة الموظف');
+
+        alert('تمت إضافة المستخدم بنجاح! 🎉');
+        hideAddStaffForm();
+        await loadRestaurants();
+        const updatedRest = allRestaurants.find(x => x.id === restId);
+        if (updatedRest) renderEditModalUsers(updatedRest);
+      } catch (err) {
+        alert(err.message);
+      }
     }
 
     async function saveRestaurantStatus() {
@@ -777,6 +1004,21 @@
       const expires = document.getElementById('edit-rest-expires').value;
       const notes = document.getElementById('edit-rest-notes').value;
 
+      // Collect checked features
+      const checkedFeatures = Array.from(document.querySelectorAll('.feature-checkbox:checked')).map(cb => cb.value).join(',');
+
+      // Collect user updates
+      const userUpdates = Array.from(document.querySelectorAll('.user-role-select')).map(sel => {
+        const userId = sel.getAttribute('data-user-id');
+        const passInput = document.querySelector(`.user-pass-input[data-user-id="${userId}"]`);
+        const password = passInput ? passInput.value.trim() : '';
+        return {
+          id: userId,
+          role: sel.value,
+          password: password || undefined
+        };
+      });
+
       try {
         const res = await fetch(`/api/v1/super-admin/restaurants/${id}/status`, {
           method: 'PUT',
@@ -784,14 +1026,16 @@
           body: JSON.stringify({
             subscriptionStatus: status,
             subscriptionPlan: plan,
+            enabledFeatures: checkedFeatures,
             ...(expires && { subscriptionExpiresAt: expires }),
-            notes
+            notes,
+            userUpdates
           })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'فشل التحديث');
 
-        alert('تم تحديث حالة الاشتراك بنجاح! ✅');
+        alert('تم تحديث إعدادات وصلاحيات المطعم والمستخدمين بنجاح! ✅');
         closeEditStatusModal();
         loadPlatformStats();
         loadRestaurants();

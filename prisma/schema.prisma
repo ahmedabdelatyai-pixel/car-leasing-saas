@@ -65,6 +65,7 @@ model Restaurant {
   subscriptionStatus String               @default("ACTIVE") @map("subscription_status") @db.VarChar(50)
   subscriptionPlan   String               @default("PREMIUM") @map("subscription_plan") @db.VarChar(50)
   subscriptionExpiresAt DateTime?         @map("subscription_expires_at")
+  enabledFeatures    String?              @default("POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY") @map("enabled_features") @db.Text
   notes              String?              @db.Text
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")

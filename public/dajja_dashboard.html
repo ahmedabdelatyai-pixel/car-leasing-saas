@@ -168,8 +168,14 @@
       <div onclick="switchTab('settings')" title="تعديل بيانات الحساب" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 cursor-pointer transition-all">
         <div class="w-7 h-7 rounded-lg bg-orange-600/20 text-orange-400 flex items-center justify-center text-xs font-bold font-mono">👤</div>
         <div class="text-right">
-          <span id="header-user-name" class="text-xs font-bold text-white block leading-tight">مدير مطعم ضجة</span>
-          <span id="header-user-email" class="text-[9px] text-slate-400 block font-mono">admin@dajja.com</span>
+          <div class="flex items-center gap-1.5">
+            <span id="header-user-name" class="text-xs font-bold text-white block leading-tight">مدير مطعم ضجة</span>
+            <span id="header-user-role-badge" class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">👑 مدير</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span id="header-user-email" class="text-[9px] text-slate-400 block font-mono">admin@dajja.com</span>
+            <span id="header-plan-badge" class="hidden text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">باقة PREMIUM</span>
+          </div>
         </div>
       </div>
       <button id="btn-install-dash" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
@@ -190,6 +196,12 @@
       </button>
     </div>
   </header>
+
+  <!-- SUSPENDED OR EXPIRED SUBSCRIPTION BANNER -->
+  <div id="subscription-status-banner" class="hidden bg-rose-600/90 border-b border-rose-500 text-white px-4 py-2.5 text-center text-xs font-black shadow-lg flex items-center justify-center gap-2">
+    <span>⚠️</span>
+    <span id="subscription-status-banner-text">تنبيه: حساب هذا المطعم معلق حالياً من قبل إدارة المنصة. يرجى سداد الاشتراك أو التواصل مع الإدارة لإعادة التفعيل.</span>
+  </div>
 
   <!-- NAVIGATION TABS -->
   <div class="bg-[#111827]/80 border-b border-white/5 px-4 sm:px-6 flex gap-1 sm:gap-2 overflow-x-auto custom-scrollbar">
@@ -214,10 +226,10 @@
     <button onclick="switchTab('qr')" id="tab-btn-qr" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-all">
       <span>📱</span> كود QR والمنيو الذكي
     </button>
-    <a href="/inventory" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-all">
+    <a href="/inventory" id="nav-link-inventory" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-all">
       <span>📦</span> المخزون والبضاعة
     </a>
-    <a href="/recipes" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-emerald-400 hover:text-emerald-300 flex items-center gap-2 transition-all">
+    <a href="/recipes" id="nav-link-recipes" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-emerald-400 hover:text-emerald-300 flex items-center gap-2 transition-all">
       <span>🧪</span> الوصفات والتسعير
     </a>
     <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
@@ -949,7 +961,7 @@
       </div>
 
       <!-- 2. FULL RESTAURANT CONTROLS FORM (التحكم في كل إعدادات المطعم) -->
-      <div class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
+      <div id="card-restaurant-controls" class="bg-[#111827] border border-white/10 rounded-3xl p-6 space-y-6 shadow-2xl">
         <div class="border-b border-white/5 pb-4 flex justify-between items-center">
           <div>
             <h2 class="text-sm font-black text-white flex items-center gap-2">
@@ -1073,7 +1085,7 @@
           </div>
 
           <!-- SECTION E: إعدادات نظام نقاط الولاء والمكافآت (SaaS Loyalty Engine) -->
-          <div class="space-y-3 pt-3 border-t border-white/10">
+          <div id="section-loyalty-settings" class="space-y-3 pt-3 border-t border-white/10">
             <div class="flex justify-between items-center">
               <h4 class="text-xs font-black text-amber-400 flex items-center gap-1.5">
                 <span>🎁</span> نظام نقاط الولاء والمكافآت (تشجيع العملاء)
@@ -1149,7 +1161,7 @@
       </div>
 
       <!-- 4. END OF DAY / SHIFT CLOSURE CARD (غلق اليوم المالي) -->
-      <div class="bg-gradient-to-r from-red-950/30 via-rose-950/20 to-transparent border border-red-500/30 rounded-3xl p-6 space-y-4 shadow-xl">
+      <div id="card-shift-closure" class="bg-gradient-to-r from-red-950/30 via-rose-950/20 to-transparent border border-red-500/30 rounded-3xl p-6 space-y-4 shadow-xl">
         <div class="flex justify-between items-start">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-2xl shadow-lg">
@@ -1742,6 +1754,7 @@
     let allOrders = [];
     let currentFilter = 'ALL';
     let currentRestaurant = null;
+    let currentUser = null;
     let allCaptains = [];
     let currentReportsData = null;
 
@@ -1768,8 +1781,222 @@
       return data;
     }
 
+    // Dynamic Permission & Subscription Enforcer
+    function applySubscriptionPermissions() {
+      const rest = currentRestaurant || (currentUser && currentUser.restaurant);
+      const user = currentUser;
+
+      if (user) {
+        // 1. Update user info & role badge in top bar
+        const nameEl = document.getElementById('header-user-name');
+        if (nameEl) nameEl.innerText = user.fullName || 'مستخدم النظام';
+        
+        const emailEl = document.getElementById('header-user-email');
+        if (emailEl) emailEl.innerText = user.email || '';
+
+        const roleBadge = document.getElementById('header-user-role-badge');
+        if (roleBadge) {
+          if (user.role === 'SUPER_ADMIN') {
+            roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40';
+            roleBadge.innerText = '👑 سوبر أدمن';
+          } else if (user.role === 'RESTAURANT_ADMIN') {
+            roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            roleBadge.innerText = '⭐ مدير مطعم';
+          } else if (user.role === 'CASHIER') {
+            roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40';
+            roleBadge.innerText = '🛒 كاشير';
+          } else if (user.role === 'KITCHEN') {
+            roleBadge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+            roleBadge.innerText = '👨‍🍳 مطبخ / شيف';
+          }
+        }
+
+        // Show/hide Super Admin link
+        if (user.role === 'SUPER_ADMIN' || user.isImpersonating) {
+          const superBtn = document.getElementById('link-super-admin');
+          if (superBtn) {
+            superBtn.classList.remove('hidden');
+            superBtn.classList.add('flex');
+          }
+        }
+
+        // Role-based controls
+        const restControlsCard = document.getElementById('card-restaurant-controls');
+        const shiftClosureCard = document.getElementById('card-shift-closure');
+        const addCatBtn = document.querySelector('button[onclick="openAddCategoryModal()"]');
+        const addMenuItemBtn = document.querySelector('button[onclick="openAddMenuItemModal()"]');
+        const closeDayBtn = document.querySelector('button[onclick="openCloseDayModal()"]');
+
+        if (user.role === 'KITCHEN') {
+          // Kitchen can only see orders tab
+          ['pos', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(t => {
+            const btn = document.getElementById(`tab-btn-${t}`);
+            if (btn) btn.classList.add('hidden');
+          });
+          const invLink = document.getElementById('nav-link-inventory');
+          if (invLink) invLink.classList.add('hidden');
+          const recLink = document.getElementById('nav-link-recipes');
+          if (recLink) recLink.classList.add('hidden');
+
+          const activePane = document.querySelector('main > section:not(.hidden)');
+          if (activePane && activePane.id !== 'pane-orders') {
+            switchTab('orders');
+          }
+          return;
+        } else if (user.role === 'CASHIER') {
+          // Cashier cannot access reports, settings restaurant controls, inventory, recipes, or add/delete menu items
+          const repTab = document.getElementById('tab-btn-reports');
+          if (repTab) repTab.classList.add('hidden');
+          const invLink = document.getElementById('nav-link-inventory');
+          if (invLink) invLink.classList.add('hidden');
+          const recLink = document.getElementById('nav-link-recipes');
+          if (recLink) recLink.classList.add('hidden');
+          if (restControlsCard) restControlsCard.classList.add('hidden');
+          if (shiftClosureCard) shiftClosureCard.classList.add('hidden');
+          if (addCatBtn) addCatBtn.classList.add('hidden');
+          if (addMenuItemBtn) addMenuItemBtn.classList.add('hidden');
+          if (closeDayBtn) closeDayBtn.classList.add('hidden');
+        } else {
+          // Admin / Super Admin: show everything that is enabled
+          ['pos', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(t => {
+            const btn = document.getElementById(`tab-btn-${t}`);
+            if (btn) btn.classList.remove('hidden');
+          });
+          const invLink = document.getElementById('nav-link-inventory');
+          if (invLink) invLink.classList.remove('hidden');
+          const recLink = document.getElementById('nav-link-recipes');
+          if (recLink) recLink.classList.remove('hidden');
+          if (restControlsCard) restControlsCard.classList.remove('hidden');
+          if (shiftClosureCard) shiftClosureCard.classList.remove('hidden');
+          if (addCatBtn) addCatBtn.classList.remove('hidden');
+          if (addMenuItemBtn) addMenuItemBtn.classList.remove('hidden');
+          if (closeDayBtn) closeDayBtn.classList.remove('hidden');
+        }
+      }
+
+      // 2. Subscription Status & Features enforcement
+      if (rest) {
+        // Show Plan Badge in header
+        const planBadge = document.getElementById('header-plan-badge');
+        if (planBadge) {
+          planBadge.classList.remove('hidden');
+          const planName = rest.subscriptionPlan || 'PREMIUM';
+          planBadge.innerText = `باقة ${planName}`;
+        }
+
+        // Check subscription suspension/expiration
+        const banner = document.getElementById('subscription-status-banner');
+        const bannerText = document.getElementById('subscription-status-banner-text');
+        if (rest.subscriptionStatus === 'SUSPENDED') {
+          if (banner && bannerText) {
+            banner.classList.remove('hidden');
+            bannerText.innerText = '⚠️ حساب هذا المطعم معلق حالياً من قبل إدارة المنصة. يرجى سداد الاشتراك أو التواصل مع الإدارة لإعادة التفعيل.';
+          }
+        } else if (rest.subscriptionStatus === 'EXPIRED') {
+          if (banner && bannerText) {
+            banner.classList.remove('hidden');
+            bannerText.innerText = '⌛ انتهت فترة اشتراك هذا المطعم. يرجى تجديد الاشتراك للاستمرار بالاستفادة من جميع الميزات.';
+          }
+        } else {
+          if (banner) banner.classList.add('hidden');
+        }
+
+        // Parse enabled features
+        const rawFeatures = rest.enabledFeatures || 'POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY';
+        const features = rawFeatures.split(',').map(f => f.trim().toUpperCase());
+
+        const featureTabMap = [
+          { id: 'tab-btn-pos', feature: 'POS', name: 'الكاشير وضرب الأوردر' },
+          { id: 'tab-btn-menu', feature: 'MENU', name: 'قائمة الطعام والمنيو' },
+          { id: 'tab-btn-reports', feature: 'REPORTS', name: 'التقارير والأرباح' },
+          { id: 'tab-btn-captains', feature: 'CAPTAINS', name: 'كباتن الدليفري' },
+          { id: 'tab-btn-customers', feature: 'CUSTOMERS', name: 'دليل العملاء' },
+          { id: 'tab-btn-qr', feature: 'QR', name: 'كود QR والمنيو الذكي' },
+          { id: 'nav-link-inventory', feature: 'INVENTORY', name: 'المخزون والبضاعة', isLink: true },
+          { id: 'nav-link-recipes', feature: 'RECIPES', name: 'الوصفات والتسعير', isLink: true }
+        ];
+
+        featureTabMap.forEach(item => {
+          const el = document.getElementById(item.id);
+          if (!el) return;
+          const isEnabled = features.includes(item.feature);
+
+          if (!isEnabled) {
+            el.classList.add('opacity-40');
+            el.setAttribute('data-disabled-feature', item.name);
+            if (!el.querySelector('.lock-badge')) {
+              const span = document.createElement('span');
+              span.className = 'lock-badge text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1 py-0.2 rounded font-mono';
+              span.innerText = '🔒 مقفل';
+              el.appendChild(span);
+            }
+            if (item.isLink) {
+              el.onclick = (e) => {
+                e.preventDefault();
+                alert(`🔒 ميزة "${item.name}" غير مفعلة في باقة اشتراك مطعمك (${rest.subscriptionPlan || 'الحالية'}).\nيرجى التواصل مع إدارة منصة ضجة لترقية الباقة وتفعيل الميزة.`);
+              };
+            }
+          } else {
+            el.classList.remove('opacity-40');
+            el.removeAttribute('data-disabled-feature');
+            const lock = el.querySelector('.lock-badge');
+            if (lock) lock.remove();
+            if (item.isLink) {
+              el.onclick = null;
+            }
+          }
+        });
+
+        // Check Loyalty feature
+        const hasLoyalty = features.includes('LOYALTY');
+        const loyaltySection = document.getElementById('section-loyalty-settings');
+        if (loyaltySection) {
+          if (!hasLoyalty) {
+            loyaltySection.classList.add('opacity-40');
+            const chk = document.getElementById('set-loyalty-enabled');
+            if (chk) chk.disabled = true;
+          } else {
+            loyaltySection.classList.remove('opacity-40');
+            const chk = document.getElementById('set-loyalty-enabled');
+            if (chk) chk.disabled = false;
+          }
+        }
+      }
+    }
+
     // 1. Tab Switcher
     function switchTab(tab) {
+      // 1. Role verification
+      if (currentUser) {
+        if (currentUser.role === 'KITCHEN' && tab !== 'orders') {
+          alert('👨‍🍳 حساب المطبخ والشيف مخصص فقط لمتابعة وتنفيذ الطلبات الحية.');
+          return;
+        }
+        if (currentUser.role === 'CASHIER' && (tab === 'reports' || tab === 'settings')) {
+          alert('🛒 حساب الكاشير غير مصرح له بالدخول لهذا القسم.');
+          return;
+        }
+      }
+
+      // 2. Feature verification
+      const rest = currentRestaurant || (currentUser && currentUser.restaurant);
+      if (rest && rest.enabledFeatures) {
+        const features = rest.enabledFeatures.split(',').map(f => f.trim().toUpperCase());
+        const featureNames = {
+          pos: { key: 'POS', name: 'كاشير المبيعات' },
+          menu: { key: 'MENU', name: 'إدارة المنيو' },
+          reports: { key: 'REPORTS', name: 'التقارير والأرباح' },
+          captains: { key: 'CAPTAINS', name: 'كباتن الدليفري' },
+          customers: { key: 'CUSTOMERS', name: 'دليل العملاء' },
+          qr: { key: 'QR', name: 'كود QR والمنيو الذكي' }
+        };
+        const feat = featureNames[tab];
+        if (feat && !features.includes(feat.key)) {
+          alert(`🔒 ميزة "${feat.name}" غير مفعلة في باقة اشتراك هذا المطعم (${rest.subscriptionPlan || 'الأساسية'}).\nيرجى التواصل مع إدارة منصة ضجة لترقية الباقة وتفعيل الميزة.`);
+          return;
+        }
+      }
+
       document.querySelectorAll('.nav-tab').forEach(b => {
         b.className = "nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
       });
@@ -2511,6 +2738,7 @@
       try {
         const res = await apiFetch('/api/v1/restaurant/menu');
         currentRestaurant = res;
+        applySubscriptionPermissions();
         renderDashboardMenu();
         renderPosUI();
       } catch (err) {
@@ -2581,9 +2809,11 @@
                       </button>
 
                       <div class="flex items-center gap-2">
-                        <a href="/recipes?productId=${item.id}" class="text-amber-400 font-bold hover:underline flex items-center gap-0.5"><span>🧪</span> الوصفة</a>
-                        <button onclick="editMenuItem('${item.id}')" class="text-cyan-400 font-bold hover:underline">تعديل 📝</button>
-                        <button onclick="deleteMenuItem('${item.id}')" class="text-rose-400 font-bold hover:underline">حذف 🗑️</button>
+                        ${(currentUser && currentUser.role === 'CASHIER') ? '' : `
+                          <a href="/recipes?productId=${item.id}" class="text-amber-400 font-bold hover:underline flex items-center gap-0.5"><span>🧪</span> الوصفة</a>
+                          <button onclick="editMenuItem('${item.id}')" class="text-cyan-400 font-bold hover:underline">تعديل 📝</button>
+                          <button onclick="deleteMenuItem('${item.id}')" class="text-rose-400 font-bold hover:underline">حذف 🗑️</button>
+                        `}
                       </div>
                     </div>
                   </div>
@@ -3205,6 +3435,16 @@
       try {
         const user = await apiFetch('/api/v1/auth/me');
         if (!user) return;
+        currentUser = user;
+
+        if (user.restaurant) {
+          if (!currentRestaurant) currentRestaurant = user.restaurant;
+          else {
+            currentRestaurant.subscriptionStatus = user.restaurant.subscriptionStatus;
+            currentRestaurant.subscriptionPlan = user.restaurant.subscriptionPlan;
+            currentRestaurant.enabledFeatures = user.restaurant.enabledFeatures;
+          }
+        }
 
         const nameEl = document.getElementById('profile-fullname');
         if (nameEl) nameEl.value = user.fullName || 'مدير مطعم ضجة';
@@ -3212,20 +3452,7 @@
         const emailEl = document.getElementById('profile-email');
         if (emailEl) emailEl.value = user.email || 'admin@dajja.com';
 
-        const headerName = document.getElementById('header-user-name');
-        if (headerName) headerName.innerText = user.fullName || 'مدير مطعم ضجة';
-
-        const headerEmail = document.getElementById('header-user-email');
-        if (headerEmail) headerEmail.innerText = user.email || 'admin@dajja.com';
-
-        if (user.role === 'SUPER_ADMIN' || user.isImpersonating) {
-          const superBtn = document.getElementById('link-super-admin');
-          if (superBtn) {
-            superBtn.classList.remove('hidden');
-            superBtn.classList.add('flex');
-          }
-        }
-
+        applySubscriptionPermissions();
       } catch (err) {
         console.error('Failed to load user profile:', err);
       }

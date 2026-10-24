@@ -178,7 +178,8 @@ export class AuthController {
           fullName: true,
           role: true,
           restaurantId: true,
-          createdAt: true
+          createdAt: true,
+          restaurant: true
         }
       });
 
@@ -186,7 +187,7 @@ export class AuthController {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
 
-      return res.json({ ...user, user });
+      return res.json({ ...user, user, restaurant: user.restaurant });
     } catch (err: any) {
       return res.status(500).json({ error: 'فشل جلب الملف الشخصي', message: err.message });
     }

@@ -65,9 +65,8 @@ export class SuperAdminController {
         orderBy: { createdAt: 'desc' },
         include: {
           users: {
-            where: { role: Role.RESTAURANT_ADMIN },
-            select: { id: true, email: true, fullName: true, createdAt: true },
-            take: 1
+            select: { id: true, email: true, fullName: true, role: true, createdAt: true },
+            orderBy: { createdAt: 'asc' }
           },
           _count: {
             select: {
@@ -99,9 +98,11 @@ export class SuperAdminController {
             subscriptionStatus: r.subscriptionStatus || 'ACTIVE',
             subscriptionPlan: r.subscriptionPlan || 'PREMIUM',
             subscriptionExpiresAt: r.subscriptionExpiresAt,
+            enabledFeatures: r.enabledFeatures || 'POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY',
             notes: r.notes,
             createdAt: r.createdAt,
             owner: r.users[0] || null,
+            users: r.users,
             totalOrders: r._count.orders,
             totalMenuItems: r._count.menuItems,
             totalCustomers: r._count.customers,
@@ -240,7 +241,7 @@ export class SuperAdminController {
   }
 
   /**
-   * 4. Update subscription status, plan, expiration, or active state.
+   * 4. Update subscription status, plan, expiration, enabled features, and staff users.
    */
   static async updateRestaurantStatus(req: Request, res: Response) {
     try {
@@ -249,28 +250,120 @@ export class SuperAdminController {
         subscriptionStatus,
         subscriptionPlan,
         subscriptionExpiresAt,
+        enabledFeatures,
         isOpen,
-        notes
+        notes,
+        userUpdates
       } = req.body;
+
+      let features = enabledFeatures;
+      if (!features && subscriptionPlan) {
+        if (subscriptionPlan === 'BASIC') {
+          features = 'POS,MENU,CAPTAINS';
+        } else if (subscriptionPlan === 'PRO') {
+          features = 'POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,INVENTORY,RECIPES';
+        } else if (subscriptionPlan === 'PREMIUM') {
+          features = 'POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY';
+        }
+      }
 
       const updated = await prisma.restaurant.update({
         where: { id },
         data: {
           ...(subscriptionStatus && { subscriptionStatus }),
           ...(subscriptionPlan && { subscriptionPlan }),
+          ...(features !== undefined && { enabledFeatures: features }),
           ...(subscriptionExpiresAt && { subscriptionExpiresAt: new Date(subscriptionExpiresAt) }),
           ...(isOpen !== undefined && { isOpen: Boolean(isOpen) }),
           ...(notes !== undefined && { notes })
         }
       });
 
+      // Update specific user roles, names, or passwords if provided
+      if (userUpdates && Array.isArray(userUpdates)) {
+        for (const u of userUpdates) {
+          if (u.id) {
+            const dataToUpdate: any = {};
+            if (u.role) dataToUpdate.role = u.role;
+            if (u.fullName) dataToUpdate.fullName = u.fullName.trim();
+            if (u.email) dataToUpdate.email = u.email.toLowerCase().trim();
+            if (u.password && u.password.trim()) {
+              dataToUpdate.passwordHash = await bcrypt.hash(u.password.trim(), 10);
+            }
+            if (Object.keys(dataToUpdate).length > 0) {
+              await prisma.user.update({
+                where: { id: u.id },
+                data: dataToUpdate
+              });
+            }
+          }
+        }
+      }
+
       return res.json({
-        message: 'تم تحديث حالة المطعم بنجاح',
+        message: 'تم تحديث حالة المطعم وصلاحيات الباقة والمستخدمين بنجاح',
         restaurant: updated
       });
     } catch (error: any) {
       console.error('Error updating restaurant status:', error);
-      return res.status(500).json({ error: 'Failed to update restaurant status' });
+      return res.status(500).json({ error: error.message || 'فشل تحديث حالة المطعم' });
+    }
+  }
+
+  /**
+   * Update any user's role, name, or password directly.
+   */
+  static async updateUser(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { role, fullName, password, email } = req.body;
+      const dataToUpdate: any = {};
+      if (role) dataToUpdate.role = role;
+      if (fullName) dataToUpdate.fullName = fullName.trim();
+      if (email) dataToUpdate.email = email.toLowerCase().trim();
+      if (password && password.trim()) {
+        dataToUpdate.passwordHash = await bcrypt.hash(password.trim(), 10);
+      }
+      const updated = await prisma.user.update({
+        where: { id },
+        data: dataToUpdate,
+        select: { id: true, email: true, fullName: true, role: true, restaurantId: true }
+      });
+      return res.json({ message: 'تم تحديث بيانات وصلاحيات المستخدم بنجاح', user: updated });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'فشل تحديث المستخدم' });
+    }
+  }
+
+  /**
+   * Create new staff user for a specific restaurant.
+   */
+  static async createUserForRestaurant(req: Request, res: Response) {
+    try {
+      const { id: restaurantId } = req.params;
+      const { email, password, fullName, role } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبة' });
+      }
+      const cleanEmail = email.toLowerCase().trim();
+      const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
+      if (existing) {
+        return res.status(409).json({ error: 'البريد مسجل بالفعل' });
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = await prisma.user.create({
+        data: {
+          email: cleanEmail,
+          passwordHash,
+          fullName: fullName || 'موظف',
+          role: role || Role.CASHIER,
+          restaurantId
+        },
+        select: { id: true, email: true, fullName: true, role: true, restaurantId: true }
+      });
+      return res.status(201).json({ message: 'تم إضافة المستخدم بنجاح', user });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'فشل إضافة المستخدم' });
     }
   }
 
