@@ -69,18 +69,20 @@
           <span>🔐</span>
         </button>
 
-        <!-- Quick Preset Buttons -->
-        <div class="pt-2 text-center">
-          <span class="text-[10px] text-slate-500 block mb-1.5">أو تعبئة تلقائية للحسابات المصرحة:</span>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="fillAdminCreds('admin@saas.com', 'admin123')"
-                    class="bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 text-[11px] font-bold py-2 rounded-xl transition-all">
-              👑 admin@saas.com
-            </button>
-            <button type="button" onclick="fillAdminCreds('admin@dajja.com', '123456')"
-                    class="bg-slate-800 hover:bg-slate-700 text-orange-300 border border-orange-500/30 text-[11px] font-bold py-2 rounded-xl transition-all">
-              🔥 admin@dajja.com
-            </button>
+        <!-- Fast Actions & Client Switcher -->
+        <div class="pt-2 text-center space-y-2">
+          <button type="button" onclick="fillAdminCreds('admin@saas.com', 'admin123')"
+                  class="w-full bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 border border-purple-500/40 text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+            <span>👑</span>
+            <span>تعبئة بيانات مالك المنصة (admin@saas.com)</span>
+          </button>
+          
+          <div class="border-t border-slate-800/80 pt-2">
+            <a href="/dashboard"
+               class="w-full bg-slate-800/60 hover:bg-slate-800 text-orange-400 border border-orange-500/20 text-xs font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-2">
+              <span>🏪</span>
+              <span>الانتقال للوحة تحكم مطعم ضجة (العميل الأول)</span>
+            </a>
           </div>
         </div>
       </form>
@@ -441,7 +443,7 @@
           localStorage.removeItem('user');
           const errorBox = document.getElementById('login-error');
           if (errorBox) {
-            errorBox.innerText = 'يرجى تسجيل الدخول بحساب السوبر أدمن (admin@saas.com أو admin@dajja.com)';
+            errorBox.innerHTML = 'هذا الحساب خاص بـ <strong>مطعم ضجة (عميل)</strong>.<br>لتسجيل دخول مالك المنصة، استخدم: <strong class="font-mono text-purple-300">admin@saas.com</strong> / <strong class="font-mono text-purple-300">admin123</strong><br><a href="/dashboard" class="underline text-orange-400 mt-1 block font-bold">🏪 أو اضغط هنا للانتقال إلى لوحة تحكم مطعم ضجة</a>';
             errorBox.classList.remove('hidden');
           }
           showLoginModal();
@@ -491,7 +493,7 @@
         }
 
         if (data.user?.role !== 'SUPER_ADMIN') {
-          throw new Error('هذا الحساب ليس مسجلاً كـ Super Admin للمنصة');
+          throw new Error('حساب (مطعم ضجة) هو حساب عميل على المنصة وليس مالك للمنصة. للدخول إلى لوحة كاشير ومنيو مطعم ضجة، يرجى فتح الرابط /dashboard.');
         }
 
         localStorage.setItem('token', data.token);
