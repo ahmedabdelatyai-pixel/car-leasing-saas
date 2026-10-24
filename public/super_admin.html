@@ -402,7 +402,7 @@
 
     // Helper: Auth Token
     function getToken() {
-      return localStorage.getItem('token') || '';
+      return localStorage.getItem('token') || localStorage.getItem('auth_token') || '';
     }
 
     // Helper: Headers
@@ -436,8 +436,9 @@
         const res = await fetch('/api/v1/auth/me', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error();
         const data = await res.json();
+        const currentUser = data.user || data;
         
-        if (data.user?.role !== 'SUPER_ADMIN') {
+        if (currentUser?.role !== 'SUPER_ADMIN') {
           // Clear non-superadmin token so user can authenticate cleanly
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -451,8 +452,8 @@
         }
 
         // Set user info
-        document.getElementById('user-display-name').innerText = data.user.fullName || 'Super Admin';
-        document.getElementById('user-display-email').innerText = data.user.email || 'admin@saas.com';
+        document.getElementById('user-display-name').innerText = currentUser.fullName || 'Super Admin';
+        document.getElementById('user-display-email').innerText = currentUser.email || 'admin@saas.com';
         document.getElementById('login-modal').classList.add('hidden');
 
         // Load Platform Data
@@ -497,7 +498,9 @@
         }
 
         localStorage.setItem('token', data.token);
+        localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
 
         document.getElementById('login-modal').classList.add('hidden');
         checkSuperAdminAuth();
@@ -678,6 +681,7 @@
 
         // Store new impersonation token
         localStorage.setItem('token', data.token);
+        localStorage.setItem('auth_token', data.token);
         
         // Redirect to dashboard
         window.location.href = data.redirectUrl || '/dashboard';

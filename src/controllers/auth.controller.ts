@@ -186,7 +186,7 @@ export class AuthController {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
 
-      return res.json(user);
+      return res.json({ ...user, user });
     } catch (err: any) {
       return res.status(500).json({ error: 'فشل جلب الملف الشخصي', message: err.message });
     }

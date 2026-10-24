@@ -110,7 +110,9 @@
         if (!res.ok) throw new Error(data.error || 'Login failed');
 
         localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('token', data.token);
         localStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.setItem('user', JSON.stringify(data.user));
 
         btn.innerHTML = 'تم الدخول بنجاح! 🎉';
         setTimeout(() => {
