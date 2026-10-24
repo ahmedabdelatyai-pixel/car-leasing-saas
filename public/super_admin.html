@@ -68,6 +68,21 @@
           <span>تسجيل الدخول إلى لوحة التحكم</span>
           <span>🔐</span>
         </button>
+
+        <!-- Quick Preset Buttons -->
+        <div class="pt-2 text-center">
+          <span class="text-[10px] text-slate-500 block mb-1.5">أو تعبئة تلقائية للحسابات المصرحة:</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="fillAdminCreds('admin@saas.com', 'admin123')"
+                    class="bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 text-[11px] font-bold py-2 rounded-xl transition-all">
+              👑 admin@saas.com
+            </button>
+            <button type="button" onclick="fillAdminCreds('admin@dajja.com', '123456')"
+                    class="bg-slate-800 hover:bg-slate-700 text-orange-300 border border-orange-500/30 text-[11px] font-bold py-2 rounded-xl transition-all">
+              🔥 admin@dajja.com
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -401,6 +416,13 @@
       checkSuperAdminAuth();
     });
 
+    function fillAdminCreds(email, password) {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = password;
+      const errorBox = document.getElementById('login-error');
+      if (errorBox) errorBox.classList.add('hidden');
+    }
+
     async function checkSuperAdminAuth() {
       const token = getToken();
       if (!token) {
@@ -414,7 +436,14 @@
         const data = await res.json();
         
         if (data.user?.role !== 'SUPER_ADMIN') {
-          alert('هذا الحساب ليس لديه صلاحية سوبر أدمن للمنصة.');
+          // Clear non-superadmin token so user can authenticate cleanly
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          const errorBox = document.getElementById('login-error');
+          if (errorBox) {
+            errorBox.innerText = 'يرجى تسجيل الدخول بحساب السوبر أدمن (admin@saas.com أو admin@dajja.com)';
+            errorBox.classList.remove('hidden');
+          }
           showLoginModal();
           return;
         }
@@ -428,6 +457,8 @@
         loadPlatformStats();
         loadRestaurants();
       } catch (e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         showLoginModal();
       }
     }
