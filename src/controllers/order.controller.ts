@@ -79,6 +79,9 @@ export class OrderController {
       }
 
       const isDelivery = (orderType === 'DELIVERY' || orderType === OrderType.DELIVERY);
+      const isDineIn = (orderType === 'DINE_IN' || orderType === OrderType.DINE_IN);
+      const finalOrderType = isDineIn ? OrderType.DINE_IN : (isDelivery ? OrderType.DELIVERY : OrderType.TAKEAWAY);
+
       const deliveryFee = isDelivery 
         ? (customDeliveryFee !== undefined ? Number(customDeliveryFee) : Number(restaurant.deliveryFee))
         : 0;
@@ -95,12 +98,62 @@ export class OrderController {
         initialStatus = OrderStatus.ON_THE_WAY;
       }
 
-      // 3. Create the order inside transaction
+      // 3. Loyalty Points Calculation (Configurable spend ratio per restaurant)
+      const requestedRedeem = Math.max(0, Number(req.body.pointsRedeemed) || 0);
+      let pointsEarned = 0;
+      let pointsRedeemed = 0;
+
+      if (restaurant.loyaltyEnabled) {
+        const spendRatio = Number(restaurant.loyaltySpendRatio) || 10;
+        // e.g. 200 EGP / 10 = 20 points, 600 EGP / 10 = 60 points
+        pointsEarned = Math.floor(totalAmount / spendRatio);
+      }
+
+      // Customer Record & Points Transaction handling
+      const IGNORED_PHONES = ['01000000000', '00000000000', '', '0'];
+      const cleanPhone = resolvedCustomerPhone.replace(/[\s-]/g, '');
+      let customerRecord: any = null;
+
+      if (cleanPhone && !IGNORED_PHONES.includes(cleanPhone)) {
+        customerRecord = await prisma.customer.findUnique({
+          where: {
+            restaurantId_phone: {
+              restaurantId: restaurant.id,
+              phone: cleanPhone
+            }
+          }
+        });
+
+        if (!customerRecord) {
+          customerRecord = await prisma.customer.create({
+            data: {
+              restaurantId: restaurant.id,
+              phone: cleanPhone,
+              name: resolvedCustomerName,
+              address: isDelivery ? (deliveryAddress || null) : null,
+              pointsBalance: 0,
+              lifetimePoints: 0,
+              totalSpent: 0,
+              totalOrders: 0
+            }
+          });
+        }
+
+        // If customer redeemed points, verify and deduct
+        if (requestedRedeem > 0 && customerRecord.pointsBalance >= requestedRedeem) {
+          pointsRedeemed = requestedRedeem;
+        }
+      }
+
+      // 4. Create the order
+      const tableNum = req.body.tableNumber ? String(req.body.tableNumber).trim() : null;
+
       const newOrder = await prisma.order.create({
         data: {
           orderNumber,
           restaurantId: restaurant.id,
-          orderType: isDelivery ? OrderType.DELIVERY : OrderType.TAKEAWAY,
+          orderType: finalOrderType,
+          tableNumber: tableNum,
           customerName: resolvedCustomerName,
           customerPhone: resolvedCustomerPhone,
           deliveryAddress: isDelivery ? (deliveryAddress || null) : null,
@@ -109,6 +162,8 @@ export class OrderController {
           subtotal,
           deliveryFee,
           totalAmount,
+          pointsEarned,
+          pointsRedeemed,
           status: initialStatus,
           paymentStatus: paymentStatus === 'PAID' ? 'PAID' : 'UNPAID',
           items: {
@@ -120,6 +175,51 @@ export class OrderController {
           captain: true
         }
       });
+
+      // Update customer balance & record point transactions
+      if (customerRecord) {
+        const netPointsChange = pointsEarned - pointsRedeemed;
+        const updatedBalance = Math.max(0, customerRecord.pointsBalance + netPointsChange);
+        const updatedLifetime = customerRecord.lifetimePoints + pointsEarned;
+
+        await prisma.customer.update({
+          where: { id: customerRecord.id },
+          data: {
+            name: resolvedCustomerName || customerRecord.name,
+            address: (isDelivery && deliveryAddress) ? deliveryAddress : customerRecord.address,
+            pointsBalance: updatedBalance,
+            lifetimePoints: updatedLifetime,
+            totalSpent: { increment: totalAmount },
+            totalOrders: { increment: 1 }
+          }
+        });
+
+        if (pointsRedeemed > 0) {
+          await prisma.pointTransaction.create({
+            data: {
+              restaurantId: restaurant.id,
+              customerId: customerRecord.id,
+              orderId: newOrder.id,
+              amount: -pointsRedeemed,
+              type: 'REDEEMED',
+              description: `استبدال مكافأة بالطلب #${orderNumber}`
+            }
+          });
+        }
+
+        if (pointsEarned > 0) {
+          await prisma.pointTransaction.create({
+            data: {
+              restaurantId: restaurant.id,
+              customerId: customerRecord.id,
+              orderId: newOrder.id,
+              amount: pointsEarned,
+              type: 'EARNED',
+              description: `نقاط مكتسبة من الطلب #${orderNumber} (${totalAmount} ج.م)`
+            }
+          });
+        }
+      }
 
       // Auto-deduct inventory based on recipes
       const deductedSummary: any[] = [];

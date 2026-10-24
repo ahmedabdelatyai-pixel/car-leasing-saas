@@ -267,7 +267,10 @@ export class RestaurantController {
         allowTakeaway,
         receiptFooter,
         isOpen,
-        logoUrl
+        logoUrl,
+        loyaltyEnabled,
+        loyaltySpendRatio,
+        loyaltyMinRedeem
       } = req.body;
 
       const updated = await prisma.restaurant.update({
@@ -285,7 +288,10 @@ export class RestaurantController {
           allowTakeaway: allowTakeaway !== undefined ? Boolean(allowTakeaway) : undefined,
           receiptFooter: receiptFooter !== undefined ? receiptFooter.trim() : undefined,
           isOpen: isOpen !== undefined ? Boolean(isOpen) : undefined,
-          logoUrl: logoUrl !== undefined ? logoUrl : undefined
+          logoUrl: logoUrl !== undefined ? logoUrl : undefined,
+          loyaltyEnabled: loyaltyEnabled !== undefined ? Boolean(loyaltyEnabled) : undefined,
+          loyaltySpendRatio: loyaltySpendRatio !== undefined ? Number(loyaltySpendRatio) : undefined,
+          loyaltyMinRedeem: loyaltyMinRedeem !== undefined ? Number(loyaltyMinRedeem) : undefined
         }
       });
 
@@ -328,7 +334,7 @@ export class RestaurantController {
   static async createMenuItem(req: Request, res: Response) {
     try {
       const restaurant = await RestaurantController.getOrCreateRestaurant();
-      const { categoryId, name, description, price, imageUrl, badge, isAvailable } = req.body;
+      const { categoryId, name, description, price, imageUrl, badge, isAvailable, pointsCost } = req.body;
 
       if (!categoryId || !name || price === undefined) {
         return res.status(400).json({ error: 'Missing required item details: categoryId, name, price' });
@@ -343,7 +349,8 @@ export class RestaurantController {
           price: Number(price),
           imageUrl: imageUrl || null,
           badge: badge || null,
-          isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true
+          isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
+          pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : 0
         }
       });
 
@@ -359,7 +366,7 @@ export class RestaurantController {
   static async updateMenuItem(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { name, description, price, imageUrl, badge, isAvailable, categoryId } = req.body;
+      const { name, description, price, imageUrl, badge, isAvailable, categoryId, pointsCost } = req.body;
 
       const updated = await prisma.menuItem.update({
         where: { id },
@@ -370,7 +377,8 @@ export class RestaurantController {
           imageUrl: imageUrl !== undefined ? imageUrl : undefined,
           badge: badge !== undefined ? badge : undefined,
           isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined,
-          categoryId: categoryId || undefined
+          categoryId: categoryId || undefined,
+          pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : undefined
         }
       });
 

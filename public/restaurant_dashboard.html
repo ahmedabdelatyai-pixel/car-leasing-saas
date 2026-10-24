@@ -14,6 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="كاشير ضجة">
   
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
   <style>
@@ -117,6 +118,31 @@
         background: #ffffff !important;
         color: #000000 !important;
       }
+      /* QR Thermal Sticker Printing */
+      #print-qr-thermal-modal:not(.hidden),
+      #print-qr-thermal-modal:not(.hidden) * {
+        visibility: visible;
+      }
+      #print-qr-thermal-modal:not(.hidden) {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        display: block !important;
+      }
+      #thermal-qr-card {
+        width: 76mm !important;
+        max-width: 76mm !important;
+        margin: 0 auto !important;
+        padding: 2mm 2.5mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
     }
   </style>
 </head>
@@ -180,6 +206,9 @@
     </button>
     <button onclick="switchTab('customers')" id="tab-btn-customers" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
       <span>👥</span> دليل العملاء والذاكرة (<span id="count-registered-customers" class="font-mono">0</span>)
+    </button>
+    <button onclick="switchTab('qr')" id="tab-btn-qr" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-all">
+      <span>📱</span> كود QR والمنيو الذكي
     </button>
     <a href="/inventory" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-all">
       <span>📦</span> المخزون والبضاعة
@@ -735,6 +764,146 @@
     </section>
 
     <!-- ==============================================
+         TAB: SMART QR CODE & TABLE GENERATOR (مولد كود QR)
+         ============================================== -->
+    <section id="pane-qr" class="space-y-6 hidden max-w-5xl mx-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-purple-950/40 via-black to-black p-4 rounded-3xl border border-white/5">
+        <div>
+          <h2 class="text-sm font-black text-white flex items-center gap-2">
+            <span>📱</span>
+            <span>مولد كود QR الذكي للمطعم وطاولات الصالة</span>
+          </h2>
+          <p class="text-[11px] text-slate-400">اطبع كود QR عالي الجودة للعلب والأكياس لزيادة طلبات الأونلاين، أو كود مخصص لكل طاولة لطلب الزبائن من مكانهم</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="downloadQrHighRes()" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all">
+            <span>📥</span>
+            <span>تحميل صورة PNG (دقة فائقة)</span>
+          </button>
+          <button onclick="openQrThermalModal()" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all">
+            <span>🖨️</span>
+            <span>طباعة حرارية (80mm)</span>
+          </button>
+          <button onclick="printQrTableStand()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all">
+            <span>🏷️</span>
+            <span>طباعة كارت طاولة (A5)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls & Preview Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Configuration Controls (5 cols) -->
+        <div class="lg:col-span-5 bg-black/40 border border-white/10 rounded-3xl p-5 space-y-4">
+          <h3 class="text-xs font-black text-slate-200 border-b border-white/10 pb-2 flex items-center gap-2">
+            <span>⚙️</span> تخصيص كود الـ QR
+          </h3>
+
+          <!-- Mode Picker -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] text-slate-400 block font-bold">نوع الاستخدام المطلوب</label>
+            <div class="grid grid-cols-2 gap-2 bg-black/60 p-1 rounded-2xl border border-white/5">
+              <button type="button" id="qr-mode-general" onclick="setQrMode('GENERAL')" class="py-2 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md">
+                📦 أونلاين عام (علب وأكياس)
+              </button>
+              <button type="button" id="qr-mode-table" onclick="setQrMode('TABLE')" class="py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white">
+                🍽️ طاولة صالة (ترابيزة)
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Number Selector (Only if mode is TABLE) -->
+          <div id="qr-table-select-group" class="hidden space-y-1.5">
+            <label class="text-[11px] text-slate-400 block font-bold">رقم الطاولة في الصالة</label>
+            <div class="flex items-center gap-2">
+              <input type="number" id="qr-table-num" min="1" max="100" value="1" oninput="regenerateQr()" class="w-24 h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono font-bold text-center text-sm focus:outline-none focus:border-purple-500">
+              <span class="text-xs text-slate-400">طاولة رقم</span>
+              <div class="flex-1 flex gap-1 overflow-x-auto custom-scrollbar py-1">
+                <button type="button" onclick="setQrTableNumber(1)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">1</button>
+                <button type="button" onclick="setQrTableNumber(2)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">2</button>
+                <button type="button" onclick="setQrTableNumber(3)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">3</button>
+                <button type="button" onclick="setQrTableNumber(4)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">4</button>
+                <button type="button" onclick="setQrTableNumber(5)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">5</button>
+                <button type="button" onclick="setQrTableNumber(10)" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono font-bold text-slate-300">10</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Call to action headline -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] text-slate-400 block font-bold">عبارة الحث على المسح (العنوان)</label>
+            <input type="text" id="qr-headline" value="امسح واطلب من مكانك واكسب نقاط وهدايا فورية! 🔥" oninput="regenerateQrPreviewText()" class="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500">
+          </div>
+
+          <!-- Subheadline -->
+          <div class="space-y-1.5">
+            <label class="text-[11px] text-slate-400 block font-bold">العبارة الفرعية (مكافأة الزبون)</label>
+            <input type="text" id="qr-subheadline" value="كل 10 جنيه في أوردرك بتتحول لنقطة في محفظتك 🎁" oninput="regenerateQrPreviewText()" class="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500">
+          </div>
+
+          <!-- Generated Link display -->
+          <div class="space-y-1.5 pt-2 border-t border-white/10">
+            <label class="text-[11px] text-slate-400 block font-bold">الرابط المباشر المشفر في الكود</label>
+            <div class="flex items-center gap-2 bg-black/60 p-2 rounded-xl border border-white/10">
+              <input type="text" id="qr-target-url" readonly class="flex-1 bg-transparent text-[11px] text-purple-400 font-mono font-bold select-all focus:outline-none">
+              <button onclick="copyQrTargetUrl()" class="px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white rounded-lg text-[10px] font-bold transition-all">نسخ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Live Mockup & Preview Card (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col items-center">
+          
+          <!-- Mockup Frame (Table Acrylic Stand Style) -->
+          <div id="acrylic-stand-mockup" class="w-full max-w-sm bg-gradient-to-b from-[#18181b] to-[#09090b] border-2 border-purple-500/40 rounded-3xl p-6 text-center space-y-4 shadow-2xl relative overflow-hidden">
+            <!-- Decorative Glow -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-600/20 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-orange-600/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="space-y-1.5 relative z-10">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-black border-2 border-orange-500/50 overflow-hidden shadow-lg p-0.5">
+                <img id="qr-mockup-logo" src="/dajja_logo.jpg" class="w-full h-full object-cover rounded-xl">
+              </div>
+              <h3 id="qr-mockup-rest-name" class="text-base font-black text-white">مطعم ضجة 🔥</h3>
+              <p id="qr-mockup-headline" class="text-xs font-black text-amber-400">امسح واطلب من مكانك واكسب نقاط وهدايا فورية! 🔥</p>
+            </div>
+
+            <!-- Table Number Pill (if active) -->
+            <div id="qr-mockup-table-pill" class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-black font-mono">
+              <span>📍</span>
+              <span id="qr-mockup-table-text">طاولة رقم 1</span>
+            </div>
+
+            <!-- QR Code Canvas Display Box -->
+            <div class="bg-white p-4 rounded-2xl shadow-xl inline-block mx-auto relative border-4 border-slate-900">
+              <div id="qrcode-canvas-container" class="w-48 h-48 flex items-center justify-center">
+                <!-- QR Code generated here via JavaScript -->
+              </div>
+            </div>
+
+            <!-- Subheadline / Reward callout -->
+            <div class="space-y-1 relative z-10 pt-1">
+              <p id="qr-mockup-subheadline" class="text-[11px] text-slate-300 font-bold">كل 10 جنيه في أوردرك بتتحول لنقطة في محفظتك 🎁</p>
+              <p class="text-[10px] text-slate-500">كاميرا الموبايل 📷 ➔ افتح الرابط ➔ استلم أوردرك سخن ومقرمش!</p>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons in preview -->
+          <div class="flex flex-wrap gap-2 justify-center mt-4">
+            <button onclick="downloadQrHighRes()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
+              <span>🖼️</span> حفظ كصورة PNG
+            </button>
+            <button onclick="openQrThermalModal()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-orange-400 hover:text-white transition-all flex items-center gap-1.5">
+              <span>🖨️</span> معاينة الطباعة الحرارية
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==============================================
          TAB 6: RESTAURANT SETTINGS PANE
          ============================================== -->
     <section id="pane-settings" class="max-w-3xl mx-auto space-y-6 hidden">
@@ -896,6 +1065,38 @@
             <div class="space-y-1">
               <label class="text-[10px] text-slate-400 block font-semibold">رسالة تذييل الفاتورة للعميل</label>
               <input type="text" id="set-receipt-footer" placeholder="شكراً لاختياركم مطعم ضجة! 🔥 نتشرف بخدمتكم دائماً" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+            </div>
+          </div>
+
+          <!-- SECTION E: إعدادات نظام نقاط الولاء والمكافآت (SaaS Loyalty Engine) -->
+          <div class="space-y-3 pt-3 border-t border-white/10">
+            <div class="flex justify-between items-center">
+              <h4 class="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                <span>🎁</span> نظام نقاط الولاء والمكافآت (تشجيع العملاء)
+              </h4>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="set-loyalty-enabled" checked class="w-4 h-4 accent-amber-500 rounded">
+                <span class="text-xs font-bold text-white">تفعيل نظام النقاط</span>
+              </label>
+            </div>
+
+            <p class="text-[11px] text-slate-400">تحكم كامل في معادلة كسب النقاط: حدد كم جنيه يدفعها العميل ليكسب نقطة واحدة، والحد الأدنى للنقاط لبدء الاستبدال.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">معدل احتساب النقاط (كم جنيه = 1 نقطة)</label>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="set-loyalty-spend-ratio" min="1" max="1000" value="10" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-amber-400 font-mono font-bold focus:outline-none">
+                  <span class="text-xs text-slate-400 whitespace-nowrap">ج.م لكل نقطة</span>
+                </div>
+                <span class="text-[10px] text-slate-500 block">مثال: إذا كانت 10، فأوردر بـ 200 ج.م يكسب 20 نقطة، وأوردر بـ 600 ج.م يكسب 60 نقطة.</span>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">الحد الأدنى للنقاط لبدء الاستبدال</label>
+                <input type="number" id="set-loyalty-min-redeem" min="0" max="1000" value="30" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+                <span class="text-[10px] text-slate-500 block">الحد الأدنى الذي يملكه العميل ليتمكن من طلب وجبة مجانية.</span>
+              </div>
             </div>
           </div>
 
@@ -1071,10 +1272,15 @@
           <textarea id="item-desc" rows="2" placeholder="المكونات والتفاصيل..." class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none"></textarea>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 items-center">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
           <div class="space-y-1">
             <label class="text-[10px] text-slate-400 block font-semibold">بادج مميز (اختياري)</label>
             <input type="text" id="item-badge" placeholder="الأكثر مبيعاً 🔥" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[10px] text-amber-400 block font-semibold">🎁 استبدال بالنقاط (مكافأة)</label>
+            <input type="number" id="item-points-cost" min="0" placeholder="0 = غير متاح كهدية" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-amber-500/30 text-amber-400 font-mono font-bold focus:outline-none">
           </div>
 
           <div class="pt-4 flex items-center gap-2">
@@ -1440,6 +1646,92 @@
     </div>
   </div>
 
+  <!-- ADJUST CUSTOMER POINTS MODAL -->
+  <div id="adjust-points-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all">
+    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="text-sm font-black text-white flex items-center gap-2">
+          <span>🎁</span> تعديل وإهداء نقاط ولاء
+        </h3>
+        <button onclick="closeAdjustPointsModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="bg-black/40 p-3 rounded-2xl border border-white/5 space-y-1 text-xs">
+        <div class="flex justify-between text-slate-400">
+          <span>العميل:</span>
+          <span id="adj-cust-name" class="font-bold text-white">عميل</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>رقم الهاتف:</span>
+          <span id="adj-cust-phone" class="font-mono text-orange-400 font-bold">01xxxxxxxxx</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>الرصيد الحالي:</span>
+          <span id="adj-current-points" class="font-mono text-amber-400 font-black text-sm">0 نقطة</span>
+        </div>
+      </div>
+
+      <form onsubmit="submitAdjustPoints(event)" class="space-y-3">
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">نوع العملية</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white/5 border border-white/10 cursor-pointer text-xs font-bold text-emerald-400">
+              <input type="radio" name="adj-type" value="ADD" checked class="accent-emerald-500">
+              <span>➕ إضافة نقاط (هدية)</span>
+            </label>
+            <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white/5 border border-white/10 cursor-pointer text-xs font-bold text-rose-400">
+              <input type="radio" name="adj-type" value="SUB" class="accent-rose-500">
+              <span>➖ خصم نقاط</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">عدد النقاط *</label>
+          <input type="number" id="adj-points-amount" min="1" max="10000" required placeholder="مثال: 50" class="w-full h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono font-bold text-sm focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">سبب التعديل</label>
+          <input type="text" id="adj-points-reason" placeholder="مثال: هدية عميل مميز، تعويض تأخير" class="w-full h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500">
+        </div>
+
+        <button type="submit" id="btn-submit-adj-points" class="w-full h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
+          <span>حفظ وتحديث رصيد العميل 💾</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- THERMAL QR PRINT MODAL (80MM) -->
+  <div id="print-qr-thermal-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-white text-black p-4 rounded-2xl max-w-xs w-full shadow-2xl space-y-3 no-print-modal-container">
+      <div class="flex justify-between items-center no-print border-b pb-2">
+        <h4 class="text-xs font-bold text-slate-800">معاينة استيكر حراري (80mm)</h4>
+        <button onclick="closeQrThermalModal()" class="text-slate-500 text-sm">✕</button>
+      </div>
+
+      <div id="thermal-qr-card" class="bg-white text-black p-3 text-center space-y-2 font-mono">
+        <h3 class="text-base font-black tracking-tight" id="thermal-qr-rest-name">مطعم ضجة 🔥</h3>
+        <p class="text-[11px] font-bold" id="thermal-qr-type-title">امسح واطلب أونلاين</p>
+        <div id="thermal-qr-container" class="flex justify-center py-2">
+          <!-- QR image rendered here -->
+        </div>
+        <p class="text-[10px] font-bold" id="thermal-qr-callout">واكسب نقاط وهدايا مع كل أوردر 🎁</p>
+        <p class="text-[9px] text-slate-600 pt-1 border-t border-dashed border-slate-400">طعم يعمل ضجة! 🔥 نتشرف بخدمتكم</p>
+      </div>
+
+      <div class="no-print pt-2 flex gap-2">
+        <button onclick="window.print()" class="flex-1 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-xl shadow-md">
+          🖨️ طباعة الآن
+        </button>
+        <button onclick="closeQrThermalModal()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT ENGINE -->
   <script>
     const token = localStorage.getItem('auth_token') || 'mock_token_key';
@@ -1478,7 +1770,7 @@
         b.className = "nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
       });
 
-      ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'settings'].forEach(p => {
+      ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(p => {
         const el = document.getElementById(`pane-${p}`);
         if (el) el.classList.add('hidden');
       });
@@ -1499,6 +1791,7 @@
       }
       if (tab === 'captains') loadCaptains();
       if (tab === 'customers') loadCustomersDirectory();
+      if (tab === 'qr') renderQrDashboard();
       if (tab === 'settings') {
         loadSettingsData();
         loadUserProfile();
@@ -1992,11 +2285,20 @@
           ` : ''}
 
           <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
-            <span class="text-slate-400 font-mono">الإجمالي: <strong class="text-white">${c.totalSpent} ج.م</strong></span>
-            <button onclick="startOrderForCustomer('${c.phone}')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1">
-              <span>🛒</span>
-              <span>ضرب أوردر</span>
-            </button>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-slate-400 font-mono">الإجمالي: <strong class="text-white">${c.totalSpent} ج.م</strong></span>
+              <span class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold font-mono">🎁 ${c.pointsBalance || 0} نقطة</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openAdjustPointsModal('${c.phone}', '${c.name.replace(/'/g, "\\'")}', ${c.pointsBalance || 0})" class="px-2 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1" title="تعديل أو إهداء نقاط ولاء">
+                <span>🎁</span>
+                <span>نقاط</span>
+              </button>
+              <button onclick="startOrderForCustomer('${c.phone}')" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1">
+                <span>🛒</span>
+                <span>طلب</span>
+              </button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -2327,6 +2629,7 @@
       document.getElementById('item-price').value = '';
       document.getElementById('item-desc').value = '';
       document.getElementById('item-badge').value = '';
+      document.getElementById('item-points-cost').value = '0';
       document.getElementById('item-img').value = '';
       document.getElementById('item-img-preview').src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
       document.getElementById('item-available').checked = true;
@@ -2353,6 +2656,7 @@
       document.getElementById('item-price').value = foundItem.price;
       document.getElementById('item-desc').value = foundItem.description || '';
       document.getElementById('item-badge').value = foundItem.badge || '';
+      document.getElementById('item-points-cost').value = foundItem.pointsCost || 0;
       document.getElementById('item-img').value = foundItem.imageUrl || '';
       document.getElementById('item-img-preview').src = foundItem.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
       document.getElementById('item-available').checked = foundItem.isAvailable !== false;
@@ -2389,6 +2693,7 @@
       const price = Number(document.getElementById('item-price').value);
       const description = document.getElementById('item-desc').value.trim();
       const badge = document.getElementById('item-badge').value.trim();
+      const pointsCost = Number(document.getElementById('item-points-cost').value) || 0;
       const imageUrl = document.getElementById('item-img').value.trim();
       const isAvailable = document.getElementById('item-available').checked;
 
@@ -2400,12 +2705,12 @@
         if (id) {
           await apiFetch(`/api/v1/restaurant/menu-items/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({ categoryId, name, price, description, badge, imageUrl, isAvailable })
+            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable })
           });
         } else {
           await apiFetch('/api/v1/restaurant/menu-items', {
             method: 'POST',
-            body: JSON.stringify({ categoryId, name, price, description, badge, imageUrl, isAvailable })
+            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable })
           });
         }
         closeMenuItemModal();
@@ -3084,6 +3389,14 @@
         document.getElementById('set-estimated-time').value = res.estimatedTime || '30 - 45 دقيقة';
         document.getElementById('set-receipt-footer').value = res.receiptFooter || 'شكراً لاختياركم مطعم ضجة! 🔥 نتشرف بخدمتكم دائماً';
 
+        // Loyalty Settings
+        const loyaltyCheck = document.getElementById('set-loyalty-enabled');
+        if (loyaltyCheck) loyaltyCheck.checked = res.loyaltyEnabled !== false;
+        const loyaltyRatio = document.getElementById('set-loyalty-spend-ratio');
+        if (loyaltyRatio) loyaltyRatio.value = res.loyaltySpendRatio !== undefined ? Number(res.loyaltySpendRatio) : 10;
+        const loyaltyMin = document.getElementById('set-loyalty-min-redeem');
+        if (loyaltyMin) loyaltyMin.value = res.loyaltyMinRedeem !== undefined ? Number(res.loyaltyMinRedeem) : 30;
+
       } catch (err) {
         console.error('Settings error:', err);
       }
@@ -3129,7 +3442,10 @@
         receiptFooter: document.getElementById('set-receipt-footer').value.trim(),
         isOpen: document.getElementById('set-is-open').checked,
         allowDelivery: document.getElementById('set-allow-delivery').checked,
-        allowTakeaway: document.getElementById('set-allow-takeaway').checked
+        allowTakeaway: document.getElementById('set-allow-takeaway').checked,
+        loyaltyEnabled: document.getElementById('set-loyalty-enabled')?.checked ?? true,
+        loyaltySpendRatio: Number(document.getElementById('set-loyalty-spend-ratio')?.value || 10),
+        loyaltyMinRedeem: Number(document.getElementById('set-loyalty-min-redeem')?.value || 30)
       };
 
       try {
@@ -3830,7 +4146,313 @@
       if (suggestions && !suggestions.contains(e.target) && e.target !== phoneInput && e.target !== nameInput) {
         suggestions.classList.add('hidden');
       }
-    });
+    // ==============================================
+    // QR CODE GENERATOR & SMART TABLE LOGIC
+    // ==============================================
+    let currentQrMode = 'GENERAL'; // 'GENERAL' or 'TABLE'
+    let currentQrTableNum = 1;
+
+    function renderQrDashboard() {
+      const restName = currentRestaurant?.name || 'مطعم ضجة 🔥';
+      const logoUrl = currentRestaurant?.logoUrl || '/dajja_logo.jpg';
+      
+      const mockupRestName = document.getElementById('qr-mockup-rest-name');
+      const mockupLogo = document.getElementById('qr-mockup-logo');
+      if (mockupRestName) mockupRestName.innerText = restName;
+      if (mockupLogo && logoUrl) mockupLogo.src = logoUrl;
+
+      regenerateQr();
+    }
+
+    function setQrMode(mode) {
+      currentQrMode = mode;
+      const btnGeneral = document.getElementById('qr-mode-general');
+      const btnTable = document.getElementById('qr-mode-table');
+      const tableGroup = document.getElementById('qr-table-select-group');
+      const mockupTablePill = document.getElementById('qr-mockup-table-pill');
+
+      const activeClass = "py-2 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md";
+      const inactiveClass = "py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white";
+
+      if (mode === 'GENERAL') {
+        if (btnGeneral) btnGeneral.className = activeClass;
+        if (btnTable) btnTable.className = inactiveClass;
+        if (tableGroup) tableGroup.classList.add('hidden');
+        if (mockupTablePill) mockupTablePill.classList.add('hidden');
+      } else {
+        if (btnTable) btnTable.className = activeClass;
+        if (btnGeneral) btnGeneral.className = inactiveClass;
+        if (tableGroup) tableGroup.classList.remove('hidden');
+        if (mockupTablePill) mockupTablePill.classList.remove('hidden');
+      }
+
+      regenerateQr();
+    }
+
+    function setQrTableNumber(num) {
+      currentQrTableNum = num;
+      const input = document.getElementById('qr-table-num');
+      if (input) input.value = num;
+      regenerateQr();
+    }
+
+    function getQrTargetUrl() {
+      const baseUrl = window.location.origin;
+      if (currentQrMode === 'GENERAL') {
+        return `${baseUrl}/order.html`;
+      } else {
+        const num = document.getElementById('qr-table-num')?.value || currentQrTableNum || 1;
+        return `${baseUrl}/order.html?table=${encodeURIComponent(num)}&type=DINE_IN`;
+      }
+    }
+
+    function regenerateQr() {
+      const url = getQrTargetUrl();
+      const targetInput = document.getElementById('qr-target-url');
+      if (targetInput) targetInput.value = url;
+
+      const num = document.getElementById('qr-table-num')?.value || 1;
+      const mockupTableText = document.getElementById('qr-mockup-table-text');
+      if (mockupTableText) mockupTableText.innerText = `طاولة رقم ${num}`;
+
+      const container = document.getElementById('qrcode-canvas-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(container, {
+          text: url,
+          width: 180,
+          height: 180,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        const qrImg = document.createElement('img');
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&margin=4`;
+        qrImg.className = 'w-44 h-44 object-contain';
+        container.appendChild(qrImg);
+      }
+    }
+
+    function regenerateQrPreviewText() {
+      const headline = document.getElementById('qr-headline')?.value || '';
+      const subheadline = document.getElementById('qr-subheadline')?.value || '';
+
+      const mockupHeadline = document.getElementById('qr-mockup-headline');
+      const mockupSub = document.getElementById('qr-mockup-subheadline');
+
+      if (mockupHeadline) mockupHeadline.innerText = headline;
+      if (mockupSub) mockupSub.innerText = subheadline;
+    }
+
+    function copyQrTargetUrl() {
+      const url = getQrTargetUrl();
+      navigator.clipboard.writeText(url).then(() => {
+        alert('تم نسخ رابط الـ QR كود بنجاح! 📋');
+      });
+    }
+
+    function downloadQrHighRes() {
+      const url = getQrTargetUrl();
+      const restName = currentRestaurant?.name || 'مطعم ضجة';
+      const num = document.getElementById('qr-table-num')?.value || 1;
+      const modeLabel = currentQrMode === 'TABLE' ? `طاولة-${num}` : 'أونلاين-عام';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 1000, 1000);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        ctx.drawImage(img, 100, 100, 800, 800);
+
+        ctx.fillStyle = "#ea580c";
+        ctx.font = "bold 38px 'Cairo', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(restName, 500, 65);
+
+        ctx.fillStyle = "#1e293b";
+        ctx.font = "bold 28px 'Cairo', sans-serif";
+        const footerText = currentQrMode === 'TABLE' 
+          ? `امسح واطلب من مكانك - طاولة رقم ${num} 🔥` 
+          : 'امسح واطلب أونلاين دليفري وتيك واي واكسب نقاط! 🎁';
+        ctx.fillText(footerText, 500, 955);
+
+        const a = document.createElement('a');
+        a.download = `QR-${restName}-${modeLabel}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      };
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(url)}&margin=1`;
+    }
+
+    function openQrThermalModal() {
+      const url = getQrTargetUrl();
+      const restName = currentRestaurant?.name || 'مطعم ضجة 🔥';
+      const num = document.getElementById('qr-table-num')?.value || 1;
+
+      document.getElementById('thermal-qr-rest-name').innerText = restName;
+      document.getElementById('thermal-qr-type-title').innerText = currentQrMode === 'TABLE' ? `طلب صالة - طاولة رقم ${num} 🍽️` : 'اطلب أونلاين دليفري وتيك واي 🛵';
+
+      const container = document.getElementById('thermal-qr-container');
+      container.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}&margin=2`;
+      img.className = 'w-48 h-48 mx-auto';
+      container.appendChild(img);
+
+      document.getElementById('print-qr-thermal-modal').classList.remove('hidden');
+      document.getElementById('print-qr-thermal-modal').classList.add('flex');
+    }
+
+    function closeQrThermalModal() {
+      document.getElementById('print-qr-thermal-modal').classList.add('hidden');
+      document.getElementById('print-qr-thermal-modal').classList.remove('flex');
+    }
+
+    function printQrTableStand() {
+      const url = getQrTargetUrl();
+      const restName = currentRestaurant?.name || 'مطعم ضجة 🔥';
+      const num = document.getElementById('qr-table-num')?.value || 1;
+      const headline = document.getElementById('qr-headline')?.value || 'امسح واطلب من مكانك واكسب نقاط وهدايا فورية! 🔥';
+      const sub = document.getElementById('qr-subheadline')?.value || 'كل 10 جنيه في أوردرك بتتحول لنقطة في محفظتك 🎁';
+
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>كارت طاولة - ${restName}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+          <style>
+            @page { size: A5 portrait; margin: 8mm; }
+            body {
+              font-family: 'Cairo', sans-serif;
+              margin: 0;
+              padding: 20px;
+              background: #0f172a;
+              color: #ffffff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 90vh;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .card {
+              width: 100%;
+              max-width: 420px;
+              border: 4px solid #ea580c;
+              border-radius: 28px;
+              padding: 24px;
+              text-align: center;
+              background: #0b0f19;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            h1 { font-size: 26px; margin: 0 0 6px 0; color: #ffffff; }
+            h2 { font-size: 16px; margin: 0 0 14px 0; color: #fbbf24; }
+            .table-badge {
+              display: inline-block;
+              background: #ea580c;
+              color: #ffffff;
+              font-size: 18px;
+              font-weight: 900;
+              padding: 6px 20px;
+              border-radius: 20px;
+              margin-bottom: 16px;
+            }
+            .qr-box {
+              background: #ffffff;
+              padding: 16px;
+              border-radius: 20px;
+              display: inline-block;
+              margin: 0 auto 16px auto;
+            }
+            .qr-box img { width: 220px; height: 220px; display: block; }
+            p { font-size: 13px; color: #cbd5e1; margin: 6px 0; font-weight: bold; }
+            .callout { font-size: 12px; color: #34d399; font-weight: 800; }
+          </style>
+        </head>
+        <body onload="window.print(); window.close();">
+          <div class="card">
+            <h1>${restName}</h1>
+            <h2>${headline}</h2>
+            ${currentQrMode === 'TABLE' ? '<div class="table-badge">📍 طاولة رقم ' + num + '</div>' : ''}
+            <div class="qr-box">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(url) + '&margin=1">
+            </div>
+            <p>${sub}</p>
+            <p class="callout">افتح كاميرا الموبايل 📷 ➔ امسح الكود ➔ واطلب وجبتك فوراً!</p>
+          </div>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    // Customer Loyalty Points Adjustment Modal
+    let activeAdjustPhone = null;
+
+    function openAdjustPointsModal(phone, name, currentPoints) {
+      activeAdjustPhone = phone;
+      document.getElementById('adj-cust-name').innerText = name;
+      document.getElementById('adj-cust-phone').innerText = phone;
+      document.getElementById('adj-current-points').innerText = `${currentPoints} نقطة`;
+      document.getElementById('adj-points-amount').value = '';
+      document.getElementById('adj-points-reason').value = '';
+
+      document.getElementById('adjust-points-modal').classList.remove('hidden');
+      document.getElementById('adjust-points-modal').classList.add('flex');
+    }
+
+    function closeAdjustPointsModal() {
+      document.getElementById('adjust-points-modal').classList.add('hidden');
+      document.getElementById('adjust-points-modal').classList.remove('flex');
+      activeAdjustPhone = null;
+    }
+
+    async function submitAdjustPoints(e) {
+      e.preventDefault();
+      if (!activeAdjustPhone) return;
+
+      const type = document.querySelector('input[name="adj-type"]:checked')?.value || 'ADD';
+      const rawAmount = Number(document.getElementById('adj-points-amount').value);
+      const reason = document.getElementById('adj-points-reason').value.trim();
+
+      if (!rawAmount || rawAmount <= 0) {
+        alert('أدخل عدد نقاط صالح أكبر من صفر.');
+        return;
+      }
+
+      const delta = type === 'ADD' ? rawAmount : -rawAmount;
+      const btn = document.getElementById('btn-submit-adj-points');
+      btn.disabled = true;
+      btn.innerText = 'جاري التعديل... ⏳';
+
+      try {
+        const res = await apiFetch(`/api/v1/customers/${encodeURIComponent(activeAdjustPhone)}/adjust-points`, {
+          method: 'POST',
+          body: JSON.stringify({ amount: delta, reason })
+        });
+
+        alert(`تم تعديل رصيد النقاط بنجاح! الرصيد الجديد: ${res.customer.pointsBalance} نقطة 🎁`);
+        closeAdjustPointsModal();
+        loadCustomersDirectory();
+      } catch (err) {
+        alert('فشل تعديل النقاط: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>حفظ وتحديث رصيد العميل 💾</span>';
+      }
+    }
 
     // Initial boot
     loadLiveOrders();

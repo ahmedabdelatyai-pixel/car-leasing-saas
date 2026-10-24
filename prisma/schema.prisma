@@ -18,6 +18,14 @@ enum Role {
 enum OrderType {
   TAKEAWAY
   DELIVERY
+  DINE_IN
+}
+
+enum PointTransactionType {
+  EARNED
+  REDEEMED
+  ADJUSTED
+  BONUS
 }
 
 enum OrderStatus {
@@ -50,6 +58,9 @@ model Restaurant {
   receiptFooter      String?              @default("شكراً لاختياركم مطعم ضجة! 🔥") @map("receipt_footer") @db.VarChar(255)
   isOpen             Boolean              @default(true) @map("is_open")
   averageDailyOrders Int                  @default(80) @map("average_daily_orders")
+  loyaltyEnabled     Boolean              @default(true) @map("loyalty_enabled")
+  loyaltySpendRatio  Decimal              @default(10.00) @map("loyalty_spend_ratio") @db.Decimal(10, 2)
+  loyaltyMinRedeem   Int                  @default(30) @map("loyalty_min_redeem")
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
 
@@ -63,6 +74,8 @@ model Restaurant {
   inventoryItems     InventoryItem[]
   recipes            Recipe[]
   overheads          RestaurantOverhead[]
+  customers          Customer[]
+  pointTransactions  PointTransaction[]
 
   @@map("restaurants")
 }
@@ -109,6 +122,7 @@ model MenuItem {
   imageUrl     String?     @map("image_url") @db.Text
   isAvailable  Boolean     @default(true) @map("is_available")
   badge        String?     @db.VarChar(50)
+  pointsCost   Int?        @default(0) @map("points_cost")
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
@@ -147,6 +161,9 @@ model Order {
   customerName    String        @map("customer_name") @db.VarChar(150)
   customerPhone   String        @map("customer_phone") @db.VarChar(50)
   deliveryAddress String?       @map("delivery_address") @db.Text
+  tableNumber     String?       @map("table_number") @db.VarChar(20)
+  pointsEarned    Int           @default(0) @map("points_earned")
+  pointsRedeemed  Int           @default(0) @map("points_redeemed")
   notes           String?       @db.Text
   subtotal        Decimal       @db.Decimal(10, 2)
   deliveryFee     Decimal       @default(0.00) @map("delivery_fee") @db.Decimal(10, 2)
@@ -278,5 +295,46 @@ model RestaurantOverhead {
 
   @@index([restaurantId])
   @@map("restaurant_overheads")
+}
+
+model Customer {
+  id              String             @id @default(uuid()) @db.Uuid
+  restaurantId    String             @map("restaurant_id") @db.Uuid
+  phone           String             @db.VarChar(50)
+  name            String             @default("عميل") @db.VarChar(150)
+  address         String?            @db.Text
+  notes           String?            @db.Text
+  pointsBalance   Int                @default(0) @map("points_balance")
+  lifetimePoints  Int                @default(0) @map("lifetime_points")
+  totalSpent      Decimal            @default(0.00) @map("total_spent") @db.Decimal(12, 2)
+  totalOrders     Int                @default(0) @map("total_orders")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  restaurant      Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  pointTransactions PointTransaction[]
+
+  @@unique([restaurantId, phone])
+  @@index([restaurantId])
+  @@index([phone])
+  @@map("customers")
+}
+
+model PointTransaction {
+  id           String               @id @default(uuid()) @db.Uuid
+  restaurantId String               @map("restaurant_id") @db.Uuid
+  customerId   String               @map("customer_id") @db.Uuid
+  orderId      String?              @map("order_id") @db.Uuid
+  amount       Int
+  type         PointTransactionType @default(EARNED)
+  description  String?              @db.VarChar(255)
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  restaurant   Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer     Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([customerId])
+  @@map("point_transactions")
 }
 

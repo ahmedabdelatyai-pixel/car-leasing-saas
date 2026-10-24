@@ -69,14 +69,26 @@
 
   <!-- HERO & ORDER TYPE SELECTOR -->
   <section class="p-4 space-y-4">
-    <!-- Switcher: Delivery vs Takeaway -->
+    <!-- Switcher: Delivery vs Takeaway vs Dine-in -->
     <div class="bg-black/30 p-1 rounded-2xl border border-white/10 flex gap-1">
-      <button onclick="setOrderType('DELIVERY')" id="btn-delivery" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md">
-        <span>🛵 دليفري (توصيل للمنزل)</span>
+      <button onclick="setOrderType('DELIVERY')" id="btn-delivery" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md">
+        <span>🛵 دليفري</span>
       </button>
-      <button onclick="setOrderType('TAKEAWAY')" id="btn-takeaway" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white">
-        <span>🥡 تيك واي (استلام من الفرع)</span>
+      <button onclick="setOrderType('TAKEAWAY')" id="btn-takeaway" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white">
+        <span>🥡 تيك واي</span>
       </button>
+      <button onclick="setOrderType('DINE_IN')" id="btn-dinein" class="flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white">
+        <span>🍽️ صالة (طاولة)</span>
+      </button>
+    </div>
+
+    <!-- Table Detected Banner (From QR Code) -->
+    <div id="table-active-banner" class="hidden bg-gradient-to-r from-amber-500/20 via-orange-500/10 to-transparent border border-amber-500/30 rounded-2xl p-3 flex justify-between items-center text-xs">
+      <div class="flex items-center gap-2 text-white font-bold">
+        <span class="text-xl">📍</span>
+        <span>طلبك من داخل الصالة - <span id="table-number-text" class="text-amber-400 font-black text-sm">طاولة رقم 1</span></span>
+      </div>
+      <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">طلب سريع ⚡</span>
     </div>
 
     <!-- Closed Restaurant Alert Banner (Hidden by default) -->
@@ -89,11 +101,30 @@
     <div class="bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
       <div class="flex items-center gap-2 text-slate-300">
         <span class="text-lg">⏱️</span>
-        <span>وقت التوصيل: <strong class="text-orange-400 font-bold" id="rest-time-badge">30 - 45 دقيقة</strong></span>
+        <span>وقت التجهيز والتوصيل: <strong class="text-orange-400 font-bold" id="rest-time-badge">30 - 45 دقيقة</strong></span>
       </div>
       <div class="text-slate-300">
         <span id="delivery-fee-badge">خدمة التوصيل: <strong class="text-emerald-400 font-bold" id="rest-delivery-fee">15 ج.م</strong></span>
       </div>
+    </div>
+
+    <!-- Loyalty Rewards Incentive Banner -->
+    <div id="loyalty-hero-banner" class="bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-transparent border border-orange-500/20 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-orange-600/30 border border-orange-500/40 flex items-center justify-center text-lg shrink-0">
+          🎁
+        </div>
+        <div>
+          <h4 class="text-xs font-black text-white flex items-center gap-1.5">
+            <span>برنامج نقاط ومكافآت ضجة</span>
+            <span class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded-md font-mono" id="loyalty-rate-badge">10 ج.م = 1 نقطة</span>
+          </h4>
+          <p id="loyalty-hero-sub" class="text-[11px] text-slate-300">اطلب وجبتك الآن واجمع نقاط تستبدلها بوجبات وسندوتشات مجانية!</p>
+        </div>
+      </div>
+      <button onclick="promptCheckPoints()" class="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-amber-400 whitespace-nowrap transition-all">
+        رصيد نقاطي 🔍
+      </button>
     </div>
 
     <!-- Contact & Address Quick Banner -->
@@ -171,7 +202,36 @@
 
         <div class="space-y-1">
           <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للتواصل *</label>
-          <input type="tel" id="cust-phone" required placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
+          <div class="relative">
+            <input type="tel" id="cust-phone" required oninput="handleCustomerPhoneInput(this.value)" placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
+            <span id="cust-phone-spinner" class="hidden absolute left-3 top-2.5 text-xs text-orange-400 animate-spin">⏳</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Loyalty Points Box in Checkout -->
+        <div id="checkout-loyalty-box" class="hidden bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-black p-3 rounded-2xl border border-amber-500/30 space-y-2">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+              <span>🎁</span>
+              <span class="text-xs font-bold text-white" id="cust-loyalty-name">أهلاً بك</span>
+            </div>
+            <div class="text-xs font-black text-amber-400 font-mono">
+              رصيدك: <span id="cust-points-balance">0</span> نقطة
+            </div>
+          </div>
+          <div class="text-[11px] text-emerald-400 font-bold flex items-center justify-between" id="cust-points-earn-preview">
+            <span>✨ هذا الطلب يمنحك:</span>
+            <span id="cust-earned-points-text" class="font-mono text-xs">+0 نقطة</span>
+          </div>
+          <div id="cust-redeem-options" class="hidden pt-2 border-t border-white/10 space-y-1.5">
+            <!-- populated if customer has redeemable points -->
+          </div>
+        </div>
+
+        <!-- Table Number Group (Visible for Dine-In) -->
+        <div id="table-number-group" class="hidden space-y-1">
+          <label class="text-[10px] text-slate-400 block font-semibold">رقم الطاولة في الصالة *</label>
+          <input type="number" id="cust-table-number" min="1" max="100" placeholder="مثال: 5" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
         </div>
 
         <div id="delivery-address-group" class="space-y-1">
@@ -277,9 +337,13 @@
   <script>
     // Global State
     let restaurantData = null;
-    let currentOrderType = 'DELIVERY'; // or 'TAKEAWAY'
-    let cart = []; // [{ id, name, price, quantity, imageUrl, notes }]
+    let currentOrderType = 'DELIVERY'; // 'DELIVERY', 'TAKEAWAY', 'DINE_IN'
+    let currentTableNumber = null;
+    let cart = []; // [{ id, name, price, quantity, imageUrl, notes, isReward, pointsCost }]
     let activeFilter = 'ALL';
+    let detectedCustomer = null;
+    let selectedRedeemPoints = 0;
+    let phoneLookupTimeout = null;
 
     // 1. Initialize Menu and Restaurant Info
     async function loadRestaurantMenu() {
@@ -302,6 +366,11 @@
         if (data.deliveryFee) document.getElementById('rest-delivery-fee').innerText = `${Number(data.deliveryFee)} ج.م`;
         if (data.address) document.getElementById('rest-address').innerText = data.address;
         if (data.estimatedTime) document.getElementById('rest-time-badge').innerText = data.estimatedTime;
+
+        // Loyalty config display
+        const spendRatio = Number(data.loyaltySpendRatio || 10);
+        const rateBadge = document.getElementById('loyalty-rate-badge');
+        if (rateBadge) rateBadge.innerText = `كل ${spendRatio} ج.م = 1 نقطة`;
 
         // Closed Restaurant Notice
         if (!isOpen) {
@@ -333,8 +402,23 @@
         renderCategoriesPills();
         renderMenuCards();
 
-        // Check if there is a tracking parameter in URL (?track=DJ-1042)
+        // Check URL Parameters (Table QR scanning or Order tracking)
         const params = new URLSearchParams(window.location.search);
+        
+        // Table QR scan: ?table=5 or ?type=DINE_IN
+        const tableParam = params.get('table');
+        const typeParam = params.get('type');
+        if (tableParam || typeParam === 'DINE_IN') {
+          currentTableNumber = tableParam || '1';
+          const tableBanner = document.getElementById('table-active-banner');
+          const tableText = document.getElementById('table-number-text');
+          const tableInput = document.getElementById('cust-table-number');
+          if (tableBanner) tableBanner.classList.remove('hidden');
+          if (tableText) tableText.innerText = `طاولة رقم ${currentTableNumber}`;
+          if (tableInput) tableInput.value = currentTableNumber;
+          setOrderType('DINE_IN');
+        }
+
         if (params.get('track')) {
           document.getElementById('track-order-input').value = params.get('track');
           openTrackModal();
@@ -396,8 +480,11 @@
 
         const itemsHtml = cat.items.map(item => {
           const isAvailable = (item.isAvailable !== false) && !item.isOutOfStock;
-          const badgeHtml = item.badge 
-            ? `<span class="absolute top-2 right-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md z-10">${item.badge}</span>` 
+          const pointsRewardBadge = item.pointsCost && item.pointsCost > 0
+            ? `<span class="bg-gradient-to-r from-amber-500 to-orange-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full shadow-md font-mono">🎁 ${item.pointsCost} نقطة</span>`
+            : '';
+          const regularBadge = item.badge 
+            ? `<span class="bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md">${item.badge}</span>` 
             : '';
           const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
           const inCart = cart.find(i => i.id === item.id);
@@ -415,7 +502,7 @@
             `;
           } else {
             actionBtnHtml = `
-              <button type="button" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}')" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
+              <button type="button" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${img}', ${item.pointsCost || 0})" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/30 text-orange-400 hover:text-white text-[11px] font-black transition-all flex items-center gap-1 active:scale-95">
                 <span>+ إضافة</span>
               </button>
             `;
@@ -425,7 +512,10 @@
             <div class="bg-[#111827] border ${!isAvailable ? 'border-white/5 opacity-60' : inCart ? 'border-orange-500/40 bg-orange-950/10' : 'border-white/5 hover:border-orange-500/20'} rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
               <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-black/40">
                 <img src="${img}" alt="${item.name}" class="w-full h-full object-cover">
-                ${badgeHtml}
+                <div class="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
+                  ${regularBadge}
+                  ${pointsRewardBadge}
+                </div>
                 ${!isAvailable ? `<span class="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex items-center justify-center text-[10px] font-black text-rose-400 text-center p-1">غير متوفر اليوم</span>` : ''}
               </div>
               <div class="flex-1 flex flex-col justify-between">
@@ -456,12 +546,12 @@
     }
 
     // 4. Cart Operations
-    function addToCart(id, name, price, imageUrl) {
+    function addToCart(id, name, price, imageUrl, pointsCost = 0) {
       const existing = cart.find(i => i.id === id);
       if (existing) {
         existing.quantity++;
       } else {
-        cart.push({ id, name, price: Number(price), quantity: 1, imageUrl, notes: '' });
+        cart.push({ id, name, price: Number(price), quantity: 1, imageUrl, notes: '', pointsCost });
       }
       updateCartUI();
       showQuickToast(`تم إضافة ${name} للسلة 🍔`);
@@ -491,6 +581,7 @@
       if (cart.length === 0) return;
       if (!confirm('هل أنت متأكد من تفريغ سلة الطلبات بالكامل؟')) return;
       cart = [];
+      selectedRedeemPoints = 0;
       updateCartUI();
       showQuickToast('تم تفريغ السلة بنجاح');
     }
@@ -499,7 +590,7 @@
       const totalQty = cart.reduce((acc, it) => acc + it.quantity, 0);
       const subtotal = cart.reduce((acc, it) => acc + (it.price * it.quantity), 0);
       const deliveryFee = currentOrderType === 'DELIVERY' ? Number(restaurantData?.deliveryFee || 15) : 0;
-      const total = subtotal + deliveryFee;
+      const total = Math.max(0, subtotal + deliveryFee);
 
       // Bottom bar
       const bar = document.getElementById('sticky-cart-bar');
@@ -516,6 +607,14 @@
       document.getElementById('summary-subtotal').innerText = `${subtotal} ج.م`;
       document.getElementById('summary-delivery-fee').innerText = `${deliveryFee} ج.م`;
       document.getElementById('summary-total').innerText = `${total} ج.م`;
+
+      // Update Points Earn Preview
+      const spendRatio = Number(restaurantData?.loyaltySpendRatio || 10);
+      const pointsToEarn = Math.floor(total / spendRatio);
+      const earnEl = document.getElementById('cust-earned-points-text');
+      if (earnEl) {
+        earnEl.innerText = `+${pointsToEarn} نقطة`;
+      }
 
       const container = document.getElementById('cart-items-container');
       if (cart.length === 0) {
@@ -551,32 +650,121 @@
       }
     }
 
-    // 5. Order Type Switcher
+    // 5. Order Type Switcher (Delivery vs Takeaway vs Dine-in)
     function setOrderType(type) {
       currentOrderType = type;
       const btnDelivery = document.getElementById('btn-delivery');
       const btnTakeaway = document.getElementById('btn-takeaway');
+      const btnDinein = document.getElementById('btn-dinein');
       const addrGroup = document.getElementById('delivery-address-group');
+      const tableGroup = document.getElementById('table-number-group');
       const custAddr = document.getElementById('cust-address');
+      const custTable = document.getElementById('cust-table-number');
       const feeRow = document.getElementById('summary-fee-row');
       const feeBadge = document.getElementById('delivery-fee-badge');
 
+      // Reset button styles
+      [btnDelivery, btnTakeaway, btnDinein].forEach(b => {
+        if (b) b.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white";
+      });
+
+      const activeClass = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
+
       if (type === 'DELIVERY') {
-        btnDelivery.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
-        btnTakeaway.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
-        addrGroup.classList.remove('hidden');
-        custAddr.required = true;
+        if (btnDelivery) btnDelivery.className = activeClass;
+        if (addrGroup) addrGroup.classList.remove('hidden');
+        if (tableGroup) tableGroup.classList.add('hidden');
+        if (custAddr) custAddr.required = true;
+        if (custTable) custTable.required = false;
         if (feeRow) feeRow.classList.remove('hidden');
         if (feeBadge) feeBadge.classList.remove('hidden');
+      } else if (type === 'DINE_IN') {
+        if (btnDinein) btnDinein.className = activeClass;
+        if (addrGroup) addrGroup.classList.add('hidden');
+        if (tableGroup) tableGroup.classList.remove('hidden');
+        if (custAddr) custAddr.required = false;
+        if (custTable) custTable.required = true;
+        if (feeRow) feeRow.classList.add('hidden');
+        if (feeBadge) feeBadge.classList.add('hidden');
       } else {
-        btnTakeaway.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
-        btnDelivery.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white";
-        addrGroup.classList.add('hidden');
-        custAddr.required = false;
+        // TAKEAWAY
+        if (btnTakeaway) btnTakeaway.className = activeClass;
+        if (addrGroup) addrGroup.classList.add('hidden');
+        if (tableGroup) tableGroup.classList.add('hidden');
+        if (custAddr) custAddr.required = false;
+        if (custTable) custTable.required = false;
         if (feeRow) feeRow.classList.add('hidden');
         if (feeBadge) feeBadge.classList.add('hidden');
       }
+
       updateCartUI();
+    }
+
+    // 5.1 Customer Phone Loyalty Lookup
+    function handleCustomerPhoneInput(val) {
+      const cleanPhone = val.replace(/[\s-]/g, '');
+      if (phoneLookupTimeout) clearTimeout(phoneLookupTimeout);
+
+      if (cleanPhone.length >= 10) {
+        const spinner = document.getElementById('cust-phone-spinner');
+        if (spinner) spinner.classList.remove('hidden');
+
+        phoneLookupTimeout = setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/v1/customers/public-lookup?phone=${encodeURIComponent(cleanPhone)}`);
+            const data = await res.json();
+            if (spinner) spinner.classList.add('hidden');
+
+            const loyaltyBox = document.getElementById('checkout-loyalty-box');
+            const nameInput = document.getElementById('cust-name');
+            const addrInput = document.getElementById('cust-address');
+
+            if (data.customer) {
+              detectedCustomer = data.customer;
+              if (nameInput && !nameInput.value) nameInput.value = data.customer.name;
+              if (addrInput && !addrInput.value && data.customer.address) addrInput.value = data.customer.address;
+
+              if (loyaltyBox) {
+                loyaltyBox.classList.remove('hidden');
+                document.getElementById('cust-loyalty-name').innerText = `أهلاً يا ${data.customer.name}`;
+                document.getElementById('cust-points-balance').innerText = data.customer.pointsBalance || 0;
+              }
+            } else {
+              detectedCustomer = null;
+              if (loyaltyBox) {
+                loyaltyBox.classList.remove('hidden');
+                document.getElementById('cust-loyalty-name').innerText = 'عميل جديد - مرحباً بك في عائلة ضجة 🔥';
+                document.getElementById('cust-points-balance').innerText = '0';
+              }
+            }
+          } catch (e) {
+            console.error('Phone lookup error:', e);
+            if (spinner) spinner.classList.add('hidden');
+          }
+        }, 500);
+      }
+    }
+
+    // Modal or Prompt to quickly check points
+    async function promptCheckPoints() {
+      const phone = prompt('أدخل رقم هاتفك للاستعلام عن رصيد نقاطك والمكافآت:');
+      if (!phone || phone.trim().length < 9) return;
+
+      try {
+        const clean = phone.trim().replace(/[\s-]/g, '');
+        const res = await fetch(`/api/v1/customers/public-lookup?phone=${encodeURIComponent(clean)}`);
+        const data = await res.json();
+
+        if (data.customer) {
+          const pts = data.customer.pointsBalance || 0;
+          const ratio = data.loyaltyConfig?.spendRatio || 10;
+          alert(`🎉 أهلاً ${data.customer.name}!\n\nرصيدك الحالي: ${pts} نقطة في محفظة ضجة.\nإجمالي طلباتك السابقة: ${data.customer.totalOrders} أوردر.\nكل ${ratio} جنيه تطلب بيها بتكسب 1 نقطة إضافية!`);
+        } else {
+          alert('أهلاً بك! رقمك غير مسجل بعد. بمجرد إتمام أول طلب، سيبدأ حسابك في تجميع النقاط فوراً 🎁');
+        }
+      } catch (err) {
+        alert('حدث خطأ أثناء فحص النقاط.');
+      }
     }
 
     // 6. Submit Order
@@ -587,6 +775,7 @@
       const customerName = document.getElementById('cust-name').value.trim();
       const customerPhone = document.getElementById('cust-phone').value.trim();
       const deliveryAddress = currentOrderType === 'DELIVERY' ? document.getElementById('cust-address').value.trim() : null;
+      const tableNumber = currentOrderType === 'DINE_IN' ? document.getElementById('cust-table-number').value.trim() : null;
       const notes = document.getElementById('cust-notes').value.trim();
 
       const btn = document.getElementById('btn-submit-order');
@@ -598,7 +787,9 @@
           customerName,
           customerPhone,
           orderType: currentOrderType,
+          tableNumber,
           deliveryAddress,
+          pointsRedeemed: selectedRedeemPoints,
           notes,
           items: cart.map(i => ({
             menuItemId: i.id,
@@ -617,6 +808,7 @@
 
         // Reset Cart
         cart = [];
+        selectedRedeemPoints = 0;
         updateCartUI();
         closeCartModal();
 
@@ -625,6 +817,13 @@
         openTrackModal();
         displayTrackingResult(data.order);
 
+        // Show Points Earned Notification
+        if (data.order.pointsEarned && data.order.pointsEarned > 0) {
+          setTimeout(() => {
+            alert(`🎉 مبروك! كسبت +${data.order.pointsEarned} نقطة ولاء تمت إضافتها لرصيد محفظتك برقم هاتفك!`);
+          }, 600);
+        }
+
       } catch (err) {
         alert(`عذراً: ${err.message}`);
       } finally {
@@ -632,6 +831,7 @@
         btn.innerHTML = 'تأكيد وإرسال الطلب الآن 🚀';
       }
     }
+
 
     // 7. Track Order Live
     async function fetchOrderTracking() {

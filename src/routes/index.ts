@@ -139,8 +139,14 @@ router.delete(
 );
 
 // ==========================================
-// 4.1 CUSTOMER CRM & PHONE MEMORY
+// 4.1 CUSTOMER CRM & PHONE MEMORY & LOYALTY
 // ==========================================
+// Public lookup for online ordering customer to check points
+router.get(
+  '/customers/public-lookup',
+  CustomerController.lookupCustomer
+);
+
 router.get(
   '/customers/lookup',
   authenticateToken,
@@ -160,6 +166,13 @@ router.get(
   authenticateToken,
   authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
   CustomerController.getCustomerHistory
+);
+
+router.post(
+  '/customers/:phone/adjust-points',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  CustomerController.adjustPoints
 );
 
 // ==========================================
