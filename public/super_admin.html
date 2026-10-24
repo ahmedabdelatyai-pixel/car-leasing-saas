@@ -919,36 +919,109 @@
         return;
       }
 
-      usersContainer.innerHTML = users.map(u => `
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div class="text-xs font-bold text-white flex items-center gap-2">
-              <span>👤</span>
-              <span>${u.fullName || 'بدون اسم'}</span>
-              <span class="text-[10px] text-slate-500 font-mono">${u.email}</span>
-            </div>
-            <div class="text-[10px] text-slate-400 mt-0.5">تاريخ الإنشاء: ${new Date(u.createdAt).toLocaleDateString('ar-EG')}</div>
-          </div>
+      usersContainer.innerHTML = users.map(u => {
+        const defaultRolePerms = u.role === 'CASHIER' 
+          ? 'POS,ORDERS,CAPTAINS,CUSTOMERS' 
+          : (u.role === 'KITCHEN' ? 'ORDERS' : 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS');
+        const userPerms = (u.permissions || defaultRolePerms).split(',').map(p => p.trim().toUpperCase());
 
-          <div class="flex items-center gap-2">
-            <div>
-              <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">الصلاحية والرتبة</label>
-              <select class="user-role-select bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-500" data-user-id="${u.id}">
-                <option value="RESTAURANT_ADMIN" ${u.role === 'RESTAURANT_ADMIN' ? 'selected' : ''}>مدير مطعم 👑</option>
-                <option value="CASHIER" ${u.role === 'CASHIER' ? 'selected' : ''}>كاشير 🛒</option>
-                <option value="KITCHEN" ${u.role === 'KITCHEN' ? 'selected' : ''}>مطبخ / شيف 👨‍🍳</option>
-              </select>
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-3" id="user-card-${u.id}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-2.5">
+              <div>
+                <div class="text-xs font-bold text-white flex items-center gap-2">
+                  <span>👤</span>
+                  <span>${u.fullName || 'بدون اسم'}</span>
+                  <span class="text-[10px] text-slate-500 font-mono">${u.email}</span>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">تاريخ الإنشاء: ${new Date(u.createdAt).toLocaleDateString('ar-EG')}</div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <div>
+                  <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">الصلاحية والرتبة</label>
+                  <select class="user-role-select bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-purple-300 font-bold focus:outline-none focus:border-purple-500" data-user-id="${u.id}" onchange="onUserRoleChange('${u.id}', this.value)">
+                    <option value="RESTAURANT_ADMIN" ${u.role === 'RESTAURANT_ADMIN' ? 'selected' : ''}>مدير مطعم 👑</option>
+                    <option value="CASHIER" ${u.role === 'CASHIER' ? 'selected' : ''}>كاشير 🛒</option>
+                    <option value="KITCHEN" ${u.role === 'KITCHEN' ? 'selected' : ''}>مطبخ / شيف 👨‍🍳</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">تعيين كلمة مرور</label>
+                  <input type="text" placeholder="كلمة سر جديدة..." dir="ltr"
+                         class="user-pass-input bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 w-32"
+                         data-user-id="${u.id}">
+                </div>
+              </div>
             </div>
 
+            <!-- Granular Permissions Per User -->
             <div>
-              <label class="block text-[9px] text-slate-400 mb-0.5 font-bold">تغيير كلمة المرور</label>
-              <input type="text" placeholder="تعيين كلمة سر جديدة..." dir="ltr"
-                     class="user-pass-input bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 w-32"
-                     data-user-id="${u.id}">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                  <span>🔒</span> الصلاحيات الممنوحة لهذا المستخدم:
+                </span>
+                <span class="text-[9px] text-slate-500">(يمكنك تخصيص وتعديل صلاحيات كل مستخدم بدقة)</span>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="POS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('POS') ? 'checked' : ''}>
+                  <span>🛒 كاشير POS</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="ORDERS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('ORDERS') ? 'checked' : ''}>
+                  <span>📋 متابعة الطلبات</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="CAPTAINS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('CAPTAINS') ? 'checked' : ''}>
+                  <span>🛵 كباتن دليفري</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="CUSTOMERS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('CUSTOMERS') ? 'checked' : ''}>
+                  <span>👥 دليل العملاء</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="MENU" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('MENU') ? 'checked' : ''}>
+                  <span>🍔 تعديل المنيو</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="REPORTS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('REPORTS') ? 'checked' : ''}>
+                  <span>📊 التقارير والأرباح</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="INVENTORY" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('INVENTORY') ? 'checked' : ''}>
+                  <span>📦 المخزون</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="RECIPES" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('RECIPES') ? 'checked' : ''}>
+                  <span>🧪 الوصفات والتسعير</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="SETTINGS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('SETTINGS') ? 'checked' : ''}>
+                  <span>⚙️ إعدادات المطعم</span>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    function onUserRoleChange(userId, role) {
+      const checkboxes = document.querySelectorAll(`.user-perm-checkbox[data-user-id="${userId}"]`);
+      let allowed = [];
+      if (role === 'RESTAURANT_ADMIN') {
+        allowed = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS', 'MENU', 'REPORTS', 'INVENTORY', 'RECIPES', 'SETTINGS'];
+      } else if (role === 'CASHIER') {
+        allowed = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS'];
+      } else if (role === 'KITCHEN') {
+        allowed = ['ORDERS'];
+      }
+      checkboxes.forEach(cb => {
+        cb.checked = allowed.includes(cb.value);
+      });
     }
 
     function closeEditStatusModal() {
@@ -978,11 +1051,15 @@
         return;
       }
 
+      let permissions = 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS';
+      if (role === 'CASHIER') permissions = 'POS,ORDERS,CAPTAINS,CUSTOMERS';
+      else if (role === 'KITCHEN') permissions = 'ORDERS';
+
       try {
         const res = await fetch(`/api/v1/super-admin/restaurants/${restId}/users`, {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ fullName, email, password, role })
+          body: JSON.stringify({ fullName, email, password, role, permissions })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'فشل إضافة الموظف');
@@ -1012,9 +1089,12 @@
         const userId = sel.getAttribute('data-user-id');
         const passInput = document.querySelector(`.user-pass-input[data-user-id="${userId}"]`);
         const password = passInput ? passInput.value.trim() : '';
+        const userPerms = Array.from(document.querySelectorAll(`.user-perm-checkbox[data-user-id="${userId}"]:checked`))
+                               .map(cb => cb.value).join(',');
         return {
           id: userId,
           role: sel.value,
+          permissions: userPerms,
           password: password || undefined
         };
       });

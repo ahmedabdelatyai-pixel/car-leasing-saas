@@ -9,7 +9,7 @@ import { RecipeController } from '../controllers/recipe.controller';
 import { OverheadController } from '../controllers/overhead.controller';
 import { CustomerController } from '../controllers/customer.controller';
 import { SuperAdminController } from '../controllers/superadmin.controller';
-import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
+import { authenticateToken, authorizeRoles, authorizePermission } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 import { Role } from '@prisma/client';
 import path from 'path';
@@ -80,35 +80,35 @@ router.get('/restaurant/menu', RestaurantController.getPublicMenu);
 router.put(
   '/restaurant/settings',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizePermission('SETTINGS'),
   RestaurantController.updateSettings
 );
 
 router.post(
   '/restaurant/categories',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizePermission('MENU'),
   RestaurantController.createCategory
 );
 
 router.post(
   '/restaurant/menu-items',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizePermission('MENU'),
   RestaurantController.createMenuItem
 );
 
 router.put(
   '/restaurant/menu-items/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizePermission('MENU'),
   RestaurantController.updateMenuItem
 );
 
 router.delete(
   '/restaurant/menu-items/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizePermission('MENU'),
   RestaurantController.deleteMenuItem
 );
 
@@ -213,42 +213,42 @@ router.delete(
 router.get(
   '/reports/sales',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.getSalesReport
 );
 
 router.get(
   '/reports/current-shift',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.getCurrentShiftSummary
 );
 
 router.post(
   '/reports/close-day',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.closeDay
 );
 
 router.get(
   '/reports/closures',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.getDailyClosures
 );
 
 router.get(
   '/reports/closures/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.getClosureDetails
 );
 
 router.get(
   '/reports/period',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('REPORTS'),
   ReportController.getPeriodReport
 );
 
@@ -258,35 +258,35 @@ router.get(
 router.get(
   '/inventory',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('INVENTORY'),
   InventoryController.getInventory
 );
 
 router.post(
   '/inventory',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('INVENTORY'),
   InventoryController.createInventoryItem
 );
 
 router.post(
   '/inventory/:id/restock',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('INVENTORY'),
   InventoryController.restockItem
 );
 
 router.put(
   '/inventory/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('INVENTORY'),
   InventoryController.updateInventoryItem
 );
 
 router.delete(
   '/inventory/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('INVENTORY'),
   InventoryController.deleteInventoryItem
 );
 
@@ -296,28 +296,28 @@ router.delete(
 router.get(
   '/recipes',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('RECIPES'),
   RecipeController.getRecipes
 );
 
 router.get(
   '/recipes/product/:productId',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('RECIPES'),
   RecipeController.getRecipeByProductId
 );
 
 router.post(
   '/recipes',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('RECIPES'),
   RecipeController.saveRecipe
 );
 
 router.delete(
   '/recipes/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('RECIPES'),
   RecipeController.deleteRecipe
 );
 
@@ -327,35 +327,35 @@ router.delete(
 router.get(
   '/overheads',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('SETTINGS'),
   OverheadController.getOverheads
 );
 
 router.post(
   '/overheads',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('SETTINGS'),
   OverheadController.createOverhead
 );
 
 router.put(
   '/overheads/daily-orders',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('SETTINGS'),
   OverheadController.updateDailyOrdersEstimate
 );
 
 router.put(
   '/overheads/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('SETTINGS'),
   OverheadController.updateOverhead
 );
 
 router.delete(
   '/overheads/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
+  authorizePermission('SETTINGS'),
   OverheadController.deleteOverhead
 );
 

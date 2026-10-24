@@ -67,6 +67,7 @@ export class AuthController {
           email: user.email,
           fullName: user.fullName || 'مدير مطعم ضجة',
           role: user.role,
+          permissions: user.permissions,
           restaurantId: user.restaurantId
         },
         JWT_SECRET,
@@ -81,6 +82,7 @@ export class AuthController {
           email: user.email,
           fullName: user.fullName || 'مدير مطعم ضجة',
           role: user.role,
+          permissions: user.permissions,
           restaurant: user.restaurant
         }
       });
@@ -177,6 +179,7 @@ export class AuthController {
           email: true,
           fullName: true,
           role: true,
+          permissions: true,
           restaurantId: true,
           createdAt: true,
           restaurant: true

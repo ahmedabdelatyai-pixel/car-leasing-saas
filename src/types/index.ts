@@ -4,6 +4,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: Role;
+  permissions?: string | null;
   restaurantId: string | null;
 }
 

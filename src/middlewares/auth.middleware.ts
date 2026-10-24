@@ -93,6 +93,59 @@ export const authorizeRoles = (allowedRoles: Role[]) => {
 };
 
 /**
+ * Permission-Based Access Control middleware.
+ * Checks if user has specific permission, or fallback to role rules.
+ */
+export const authorizePermission = (permission: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication required'
+      });
+    }
+
+    // SUPER_ADMIN has access to everything
+    if (req.user.role === Role.SUPER_ADMIN) {
+      return next();
+    }
+
+    // Fetch user permissions if not in payload
+    let permissions = req.user.permissions;
+    if (permissions === undefined) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { permissions: true, role: true }
+      });
+      permissions = dbUser?.permissions;
+    }
+
+    // Default permissions based on role if no explicit permissions set
+    if (!permissions) {
+      if (req.user.role === Role.RESTAURANT_ADMIN) {
+        permissions = 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS';
+      } else if (req.user.role === Role.CASHIER) {
+        permissions = 'POS,ORDERS,CAPTAINS,CUSTOMERS';
+      } else if (req.user.role === Role.KITCHEN) {
+        permissions = 'ORDERS';
+      } else {
+        permissions = '';
+      }
+    }
+
+    const permittedList = permissions.split(',').map(p => p.trim().toUpperCase());
+    if (permittedList.includes(permission.toUpperCase()) || permittedList.includes('*')) {
+      return next();
+    }
+
+    return res.status(403).json({
+      error: 'Forbidden Access',
+      message: `عذراً، هذا الحساب ليس لديه صلاحية '${permission}'. هذا القسم مقتصر على مدير المطعم أو من يمتلك هذه الصلاحية.`
+    });
+  };
+};
+
+/**
  * Ensures restaurant isolation and resolves current restaurant id.
  */
 export const enforceRestaurantContext = async (req: Request, res: Response, next: NextFunction) => {

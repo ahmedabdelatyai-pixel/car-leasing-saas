@@ -92,6 +92,7 @@ model User {
   fullName     String?     @default("مدير مطعم ضجة") @map("full_name") @db.VarChar(150)
   passwordHash String      @map("password_hash") @db.VarChar(255)
   role         Role        @default(RESTAURANT_ADMIN)
+  permissions  String?     @default("POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS") @db.Text
   restaurantId String?     @map("restaurant_id") @db.Uuid
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")

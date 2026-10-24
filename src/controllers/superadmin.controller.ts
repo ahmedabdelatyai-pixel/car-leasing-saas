@@ -65,7 +65,7 @@ export class SuperAdminController {
         orderBy: { createdAt: 'desc' },
         include: {
           users: {
-            select: { id: true, email: true, fullName: true, role: true, createdAt: true },
+            select: { id: true, email: true, fullName: true, role: true, permissions: true, createdAt: true },
             orderBy: { createdAt: 'asc' }
           },
           _count: {
@@ -193,6 +193,21 @@ export class SuperAdminController {
           fullName: ownerName || `مدير ${name}`,
           passwordHash,
           role: Role.RESTAURANT_ADMIN,
+          permissions: 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS',
+          restaurantId: restaurant.id
+        }
+      });
+
+      // Automatically Create Restaurant Cashier User
+      const cashierEmail = `cashier@${cleanSlug}.com`;
+      const cashierPasswordHash = await bcrypt.hash('123456', 10);
+      await prisma.user.create({
+        data: {
+          email: cashierEmail,
+          fullName: `كاشير ${name}`,
+          passwordHash: cashierPasswordHash,
+          role: Role.CASHIER,
+          permissions: 'POS,ORDERS,CAPTAINS,CUSTOMERS',
           restaurantId: restaurant.id
         }
       });
@@ -285,6 +300,7 @@ export class SuperAdminController {
           if (u.id) {
             const dataToUpdate: any = {};
             if (u.role) dataToUpdate.role = u.role;
+            if (u.permissions !== undefined) dataToUpdate.permissions = u.permissions;
             if (u.fullName) dataToUpdate.fullName = u.fullName.trim();
             if (u.email) dataToUpdate.email = u.email.toLowerCase().trim();
             if (u.password && u.password.trim()) {
@@ -311,14 +327,15 @@ export class SuperAdminController {
   }
 
   /**
-   * Update any user's role, name, or password directly.
+   * Update any user's role, permissions, name, or password directly.
    */
   static async updateUser(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { role, fullName, password, email } = req.body;
+      const { role, permissions, fullName, password, email } = req.body;
       const dataToUpdate: any = {};
       if (role) dataToUpdate.role = role;
+      if (permissions !== undefined) dataToUpdate.permissions = permissions;
       if (fullName) dataToUpdate.fullName = fullName.trim();
       if (email) dataToUpdate.email = email.toLowerCase().trim();
       if (password && password.trim()) {
@@ -327,7 +344,7 @@ export class SuperAdminController {
       const updated = await prisma.user.update({
         where: { id },
         data: dataToUpdate,
-        select: { id: true, email: true, fullName: true, role: true, restaurantId: true }
+        select: { id: true, email: true, fullName: true, role: true, permissions: true, restaurantId: true }
       });
       return res.json({ message: 'تم تحديث بيانات وصلاحيات المستخدم بنجاح', user: updated });
     } catch (err: any) {
@@ -341,7 +358,7 @@ export class SuperAdminController {
   static async createUserForRestaurant(req: Request, res: Response) {
     try {
       const { id: restaurantId } = req.params;
-      const { email, password, fullName, role } = req.body;
+      const { email, password, fullName, role, permissions } = req.body;
       if (!email || !password) {
         return res.status(400).json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبة' });
       }
@@ -350,6 +367,14 @@ export class SuperAdminController {
       if (existing) {
         return res.status(409).json({ error: 'البريد مسجل بالفعل' });
       }
+      
+      let userPerms = permissions;
+      if (!userPerms) {
+        if (role === Role.CASHIER) userPerms = 'POS,ORDERS,CAPTAINS,CUSTOMERS';
+        else if (role === Role.KITCHEN) userPerms = 'ORDERS';
+        else userPerms = 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS';
+      }
+
       const passwordHash = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
         data: {
@@ -357,9 +382,10 @@ export class SuperAdminController {
           passwordHash,
           fullName: fullName || 'موظف',
           role: role || Role.CASHIER,
+          permissions: userPerms,
           restaurantId
         },
-        select: { id: true, email: true, fullName: true, role: true, restaurantId: true }
+        select: { id: true, email: true, fullName: true, role: true, permissions: true, restaurantId: true }
       });
       return res.status(201).json({ message: 'تم إضافة المستخدم بنجاح', user });
     } catch (err: any) {

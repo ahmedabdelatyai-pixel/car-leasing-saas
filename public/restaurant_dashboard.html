@@ -1820,57 +1820,69 @@
           }
         }
 
-        // Role-based controls
+        // Parse User permissions
+        let userPerms = [];
+        if (user.permissions) {
+          userPerms = user.permissions.split(',').map(p => p.trim().toUpperCase());
+        } else if (user.role === 'RESTAURANT_ADMIN' || user.role === 'SUPER_ADMIN') {
+          userPerms = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS', 'MENU', 'REPORTS', 'INVENTORY', 'RECIPES', 'SETTINGS', 'QR'];
+        } else if (user.role === 'CASHIER') {
+          userPerms = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS'];
+        } else if (user.role === 'KITCHEN') {
+          userPerms = ['ORDERS'];
+        }
+
+        // Apply tab visibility based on user permissions
+        const tabPermissions = [
+          { id: 'tab-btn-pos', perm: 'POS' },
+          { id: 'tab-btn-orders', perm: 'ORDERS' },
+          { id: 'tab-btn-menu', perm: 'MENU' },
+          { id: 'tab-btn-reports', perm: 'REPORTS' },
+          { id: 'tab-btn-captains', perm: 'CAPTAINS' },
+          { id: 'tab-btn-customers', perm: 'CUSTOMERS' },
+          { id: 'tab-btn-qr', perm: 'QR' },
+          { id: 'nav-link-inventory', perm: 'INVENTORY' },
+          { id: 'nav-link-recipes', perm: 'RECIPES' },
+          { id: 'tab-btn-settings', perm: 'SETTINGS' }
+        ];
+
+        tabPermissions.forEach(tp => {
+          const el = document.getElementById(tp.id);
+          if (el) {
+            if (!userPerms.includes(tp.perm) && user.role !== 'SUPER_ADMIN') {
+              el.classList.add('hidden');
+            } else {
+              el.classList.remove('hidden');
+            }
+          }
+        });
+
+        // Hide/show action buttons inside sections based on permissions:
         const restControlsCard = document.getElementById('card-restaurant-controls');
         const shiftClosureCard = document.getElementById('card-shift-closure');
         const addCatBtn = document.querySelector('button[onclick="openAddCategoryModal()"]');
         const addMenuItemBtn = document.querySelector('button[onclick="openAddMenuItemModal()"]');
         const closeDayBtn = document.querySelector('button[onclick="openCloseDayModal()"]');
 
-        if (user.role === 'KITCHEN') {
-          // Kitchen can only see orders tab
-          ['pos', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(t => {
-            const btn = document.getElementById(`tab-btn-${t}`);
-            if (btn) btn.classList.add('hidden');
-          });
-          const invLink = document.getElementById('nav-link-inventory');
-          if (invLink) invLink.classList.add('hidden');
-          const recLink = document.getElementById('nav-link-recipes');
-          if (recLink) recLink.classList.add('hidden');
+        const canSettings = user.role === 'SUPER_ADMIN' || userPerms.includes('SETTINGS');
+        const canReports = user.role === 'SUPER_ADMIN' || userPerms.includes('REPORTS');
+        const canMenu = user.role === 'SUPER_ADMIN' || userPerms.includes('MENU');
 
-          const activePane = document.querySelector('main > section:not(.hidden)');
-          if (activePane && activePane.id !== 'pane-orders') {
-            switchTab('orders');
+        if (restControlsCard) restControlsCard.style.display = canSettings ? '' : 'none';
+        if (shiftClosureCard) shiftClosureCard.style.display = canReports ? '' : 'none';
+        if (closeDayBtn) closeDayBtn.style.display = canReports ? '' : 'none';
+        if (addCatBtn) addCatBtn.style.display = canMenu ? '' : 'none';
+        if (addMenuItemBtn) addMenuItemBtn.style.display = canMenu ? '' : 'none';
+
+        // Auto-switch to first allowed tab if current active tab is hidden or forbidden
+        const activePane = document.querySelector('main > section:not(.hidden)');
+        if (activePane) {
+          const activePaneId = activePane.id.replace('pane-', '');
+          const reqPerm = activePaneId.toUpperCase();
+          if (user.role !== 'SUPER_ADMIN' && !userPerms.includes(reqPerm) && activePaneId !== 'settings') {
+            const firstAllowed = userPerms.includes('POS') ? 'pos' : (userPerms.includes('ORDERS') ? 'orders' : 'settings');
+            switchTab(firstAllowed);
           }
-          return;
-        } else if (user.role === 'CASHIER') {
-          // Cashier cannot access reports, settings restaurant controls, inventory, recipes, or add/delete menu items
-          const repTab = document.getElementById('tab-btn-reports');
-          if (repTab) repTab.classList.add('hidden');
-          const invLink = document.getElementById('nav-link-inventory');
-          if (invLink) invLink.classList.add('hidden');
-          const recLink = document.getElementById('nav-link-recipes');
-          if (recLink) recLink.classList.add('hidden');
-          if (restControlsCard) restControlsCard.classList.add('hidden');
-          if (shiftClosureCard) shiftClosureCard.classList.add('hidden');
-          if (addCatBtn) addCatBtn.classList.add('hidden');
-          if (addMenuItemBtn) addMenuItemBtn.classList.add('hidden');
-          if (closeDayBtn) closeDayBtn.classList.add('hidden');
-        } else {
-          // Admin / Super Admin: show everything that is enabled
-          ['pos', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(t => {
-            const btn = document.getElementById(`tab-btn-${t}`);
-            if (btn) btn.classList.remove('hidden');
-          });
-          const invLink = document.getElementById('nav-link-inventory');
-          if (invLink) invLink.classList.remove('hidden');
-          const recLink = document.getElementById('nav-link-recipes');
-          if (recLink) recLink.classList.remove('hidden');
-          if (restControlsCard) restControlsCard.classList.remove('hidden');
-          if (shiftClosureCard) shiftClosureCard.classList.remove('hidden');
-          if (addCatBtn) addCatBtn.classList.remove('hidden');
-          if (addMenuItemBtn) addMenuItemBtn.classList.remove('hidden');
-          if (closeDayBtn) closeDayBtn.classList.remove('hidden');
         }
       }
 
@@ -1966,14 +1978,33 @@
 
     // 1. Tab Switcher
     function switchTab(tab) {
-      // 1. Role verification
-      if (currentUser) {
-        if (currentUser.role === 'KITCHEN' && tab !== 'orders') {
-          alert('👨‍🍳 حساب المطبخ والشيف مخصص فقط لمتابعة وتنفيذ الطلبات الحية.');
-          return;
+      // 1. User Permissions verification
+      if (currentUser && currentUser.role !== 'SUPER_ADMIN') {
+        let userPerms = [];
+        if (currentUser.permissions) {
+          userPerms = currentUser.permissions.split(',').map(p => p.trim().toUpperCase());
+        } else if (currentUser.role === 'RESTAURANT_ADMIN') {
+          userPerms = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS', 'MENU', 'REPORTS', 'INVENTORY', 'RECIPES', 'SETTINGS', 'QR'];
+        } else if (currentUser.role === 'CASHIER') {
+          userPerms = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS'];
+        } else if (currentUser.role === 'KITCHEN') {
+          userPerms = ['ORDERS'];
         }
-        if (currentUser.role === 'CASHIER' && (tab === 'reports' || tab === 'settings')) {
-          alert('🛒 حساب الكاشير غير مصرح له بالدخول لهذا القسم.');
+
+        const tabPermMap = {
+          pos: { key: 'POS', name: 'كاشير المبيعات' },
+          orders: { key: 'ORDERS', name: 'متابعة الطلبات' },
+          menu: { key: 'MENU', name: 'إدارة المنيو' },
+          reports: { key: 'REPORTS', name: 'التقارير والأرباح' },
+          captains: { key: 'CAPTAINS', name: 'كباتن الدليفري' },
+          customers: { key: 'CUSTOMERS', name: 'دليل العملاء' },
+          qr: { key: 'QR', name: 'كود QR' },
+          settings: { key: 'SETTINGS', name: 'إعدادات المطعم' }
+        };
+
+        const targetPerm = tabPermMap[tab];
+        if (targetPerm && !userPerms.includes(targetPerm.key) && tab !== 'settings') {
+          alert(`⚠️ عذراً، ليس لديك صلاحية للوصول لقسم "${targetPerm.name}". هذا القسم مخصص لمدير المطعم.`);
           return;
         }
       }
