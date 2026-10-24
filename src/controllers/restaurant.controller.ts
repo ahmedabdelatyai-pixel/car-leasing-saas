@@ -24,6 +24,7 @@ export class RestaurantController {
           orderBy: { sortOrder: 'asc' },
           include: {
             items: {
+              orderBy: { sortOrder: 'asc' },
               include: {
                 recipe: {
                   include: {
@@ -165,6 +166,7 @@ export class RestaurantController {
             orderBy: { sortOrder: 'asc' },
             include: {
               items: {
+                orderBy: { sortOrder: 'asc' },
                 include: {
                   recipe: {
                     include: {
@@ -346,7 +348,7 @@ export class RestaurantController {
   static async createMenuItem(req: Request, res: Response) {
     try {
       const restaurant = await RestaurantController.getOrCreateRestaurant();
-      const { categoryId, name, description, price, imageUrl, badge, isAvailable, pointsCost } = req.body;
+      const { categoryId, name, description, price, imageUrl, badge, isAvailable, pointsCost, sortOrder } = req.body;
 
       if (!categoryId || !name || price === undefined) {
         return res.status(400).json({ error: 'Missing required item details: categoryId, name, price' });
@@ -361,6 +363,7 @@ export class RestaurantController {
           price: Number(price),
           imageUrl: imageUrl || null,
           badge: badge || null,
+          sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
           isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
           pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : 0
         }
@@ -378,7 +381,7 @@ export class RestaurantController {
   static async updateMenuItem(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { name, description, price, imageUrl, badge, isAvailable, categoryId, pointsCost } = req.body;
+      const { name, description, price, imageUrl, badge, isAvailable, categoryId, pointsCost, sortOrder } = req.body;
 
       const updated = await prisma.menuItem.update({
         where: { id },
@@ -388,6 +391,7 @@ export class RestaurantController {
           price: price !== undefined ? Number(price) : undefined,
           imageUrl: imageUrl !== undefined ? imageUrl : undefined,
           badge: badge !== undefined ? badge : undefined,
+          sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
           isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined,
           categoryId: categoryId || undefined,
           pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : undefined
