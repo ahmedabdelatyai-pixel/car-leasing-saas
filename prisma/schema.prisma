@@ -61,6 +61,11 @@ model Restaurant {
   loyaltyEnabled     Boolean              @default(true) @map("loyalty_enabled")
   loyaltySpendRatio  Decimal              @default(10.00) @map("loyalty_spend_ratio") @db.Decimal(10, 2)
   loyaltyMinRedeem   Int                  @default(30) @map("loyalty_min_redeem")
+  slug               String?              @unique @db.VarChar(100)
+  subscriptionStatus String               @default("ACTIVE") @map("subscription_status") @db.VarChar(50)
+  subscriptionPlan   String               @default("PREMIUM") @map("subscription_plan") @db.VarChar(50)
+  subscriptionExpiresAt DateTime?         @map("subscription_expires_at")
+  notes              String?              @db.Text
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
 

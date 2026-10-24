@@ -28,6 +28,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Application Routing
 app.use('/api/v1', router);
 
+// Serve Super Admin SaaS Portal
+app.get(['/super-admin', '/admin'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/super_admin.html'));
+});
+
 // Serve Dajja Restaurant portal HTML pages
 app.get(['/dajja', '/dajja-dashboard', '/dashboard'], (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dajja_dashboard.html'));

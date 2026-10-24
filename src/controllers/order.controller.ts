@@ -34,8 +34,20 @@ export class OrderController {
         return res.status(400).json({ error: 'Missing required items list.' });
       }
 
-      // 1. Get restaurant for delivery fee and validation
-      const restaurant = await prisma.restaurant.findFirst();
+      // 1. Fetch all menu items referenced in the order
+      const itemIds = items.map((it: any) => it.menuItemId);
+      const dbItems = await prisma.menuItem.findMany({
+        where: { id: { in: itemIds } }
+      });
+
+      const dbItemsMap = new Map(dbItems.map(i => [i.id, i]));
+
+      // 2. Resolve restaurant for delivery fee and validation
+      const targetRestId = (req as any).user?.restaurantId || req.body.restaurantId || (dbItems[0] ? dbItems[0].restaurantId : null);
+      let restaurant = targetRestId
+        ? await prisma.restaurant.findUnique({ where: { id: targetRestId } })
+        : await prisma.restaurant.findFirst();
+
       if (!restaurant) {
         return res.status(500).json({ error: 'Restaurant configuration not found.' });
       }
@@ -43,14 +55,6 @@ export class OrderController {
       // Default name/phone for fast walk-in cashier orders
       const resolvedCustomerName = customerName?.trim() || (orderType === 'DELIVERY' ? 'عميل دليفري' : 'عميل تيك واي');
       const resolvedCustomerPhone = customerPhone?.trim() || '01000000000';
-
-      // 2. Fetch all menu items referenced in the order
-      const itemIds = items.map((it: any) => it.menuItemId);
-      const dbItems = await prisma.menuItem.findMany({
-        where: { id: { in: itemIds } }
-      });
-
-      const dbItemsMap = new Map(dbItems.map(i => [i.id, i]));
 
       let subtotal = 0;
       const orderItemsData: any[] = [];

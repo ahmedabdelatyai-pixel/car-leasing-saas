@@ -348,7 +348,10 @@
     // 1. Initialize Menu and Restaurant Info
     async function loadRestaurantMenu() {
       try {
-        const res = await fetch('/api/v1/restaurant/menu');
+        const urlParams = new URLSearchParams(window.location.search);
+        const restTarget = urlParams.get('restaurant') || urlParams.get('r') || urlParams.get('restaurantId') || '';
+        const fetchUrl = restTarget ? `/api/v1/restaurant/menu?restaurant=${encodeURIComponent(restTarget)}` : '/api/v1/restaurant/menu';
+        const res = await fetch(fetchUrl);
         const data = await res.json();
         restaurantData = data;
 

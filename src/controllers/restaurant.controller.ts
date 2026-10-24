@@ -5,8 +5,19 @@ export class RestaurantController {
   /**
    * Helper to get or auto-initialize Dajja restaurant record.
    */
-  private static async getOrCreateRestaurant() {
+  private static async getOrCreateRestaurant(targetIdentifier?: string): Promise<any> {
+    let whereClause: any = undefined;
+    if (targetIdentifier && targetIdentifier !== 'default') {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetIdentifier);
+      if (isUuid) {
+        whereClause = { id: targetIdentifier };
+      } else {
+        whereClause = { slug: targetIdentifier };
+      }
+    }
+
     let restaurant = await prisma.restaurant.findFirst({
+      ...(whereClause && { where: whereClause }),
       include: {
         overheads: true,
         categories: {
@@ -180,7 +191,8 @@ export class RestaurantController {
    */
   static async getPublicMenu(req: Request, res: Response) {
     try {
-      const restaurant = await RestaurantController.getOrCreateRestaurant();
+      const target = (req.query.restaurant || req.query.restaurantId || req.query.slug || req.headers['x-restaurant-id']) as string | undefined;
+      const restaurant = await RestaurantController.getOrCreateRestaurant(target);
 
       const totalOverheads = (restaurant.overheads || []).reduce(
         (acc: number, curr: any) => acc + Number(curr.monthlyAmount || 0), 0

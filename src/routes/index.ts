@@ -8,6 +8,7 @@ import { InventoryController } from '../controllers/inventory.controller';
 import { RecipeController } from '../controllers/recipe.controller';
 import { OverheadController } from '../controllers/overhead.controller';
 import { CustomerController } from '../controllers/customer.controller';
+import { SuperAdminController } from '../controllers/superadmin.controller';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 import { Role } from '@prisma/client';
@@ -356,6 +357,44 @@ router.delete(
   authenticateToken,
   authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
   OverheadController.deleteOverhead
+);
+
+// ==========================================
+// 10. SUPER ADMIN (SAAS PLATFORM MANAGEMENT)
+// ==========================================
+router.get(
+  '/super-admin/stats',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.getPlatformStats
+);
+
+router.get(
+  '/super-admin/restaurants',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.listRestaurants
+);
+
+router.post(
+  '/super-admin/restaurants',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.createRestaurant
+);
+
+router.put(
+  '/super-admin/restaurants/:id/status',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.updateRestaurantStatus
+);
+
+router.post(
+  '/super-admin/restaurants/:id/impersonate',
+  authenticateToken,
+  authorizeRoles([Role.SUPER_ADMIN]),
+  SuperAdminController.impersonateRestaurant
 );
 
 export default router;

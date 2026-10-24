@@ -1,901 +1,767 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>بوابة المالك - مدير النظام الموحد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم السوبر أدمن المركزية | SaaS Platform Management</title>
   
-  <!-- Cairo & Outfit fonts -->
+  <!-- Cairo Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700;800;900&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS v3 via CDN -->
-  <script src="https://cdn.tailwindcss.com/3.4.15"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Cairo', 'Outfit', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
-
   <style>
     body {
-      background-image: linear-gradient(to bottom, rgba(3, 5, 10, 0.9), rgba(5, 8, 17, 0.97)), url('bg.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
+      font-family: 'Cairo', sans-serif;
     }
-
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
     }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(6, 182, 212, 0.2);
-      border-radius: 10px;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
     }
-
-    .glass-card {
-      background: rgba(15, 23, 42, 0.45);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .glass-input {
-      background: rgba(5, 8, 17, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .glass-input:focus {
-      border-color: #06b6d4;
-      box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
-    }
-
-    /* Glow effect on click/selection */
-    .glow-selection {
-      border-color: #06b6d4;
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
-      background: rgba(6, 182, 212, 0.05);
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .panel-active {
-      display: flex;
-      animation: slideIn 0.35s ease-out forwards;
-    }
-
-    /* Toast notification animations */
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .toast-anim {
-      animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
   </style>
 </head>
-<body class="text-slate-100 font-sans min-h-screen flex justify-center items-center overflow-y-auto relative py-4 sm:py-10">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-purple-600 selection:text-white">
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toast-container" class="absolute top-6 left-6 right-6 z-50 flex flex-col gap-3 max-w-[380px] mx-auto pointer-events-none"></div>
-
-  <!-- MOBILE-FIRST SMARTPHONE SHELL WRAPPER -->
-  <main id="app-shell" class="w-full max-w-[440px] min-h-screen sm:min-h-0 sm:h-[820px] bg-[#050811]/90 backdrop-blur-3xl sm:border sm:border-white/10 sm:rounded-[40px] sm:shadow-[0_45px_90px_rgba(0,0,0,0.95),0_0_0_12px_rgba(255,255,255,0.015)] flex flex-col relative overflow-hidden z-10">
-    
-    <!-- Mobile Header -->
-    <header class="h-16 shrink-0 border-b border-white/5 bg-[#050811]/80 backdrop-blur-md px-6 flex justify-between items-center z-40">
-      <div class="flex items-center gap-2">
-        <span class="text-2xl">👑</span>
-        <div class="leading-none">
-          <h1 class="text-sm font-black text-slate-200">بوابة المالك</h1>
-          <p id="owner-email-sub" class="text-[9px] text-cyan-400 font-bold mt-0.5">super@saas.com</p>
-        </div>
+  <!-- ==============================================
+       LOGIN OVERLAY (If not logged in as SUPER_ADMIN)
+       ============================================== -->
+  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-center">
+      <div class="w-16 h-16 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg shadow-purple-500/20">
+        👑
       </div>
-      <div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
-        <div class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse"></div>
-        <span class="text-[9px] font-bold text-amber-400">مالك النظام</span>
-      </div>
-    </header>
-
-    <!-- Scrollable content area -->
-    <div id="scroll-content" class="flex-1 overflow-y-auto px-6 py-6 pb-24 z-30 space-y-6">
-      
-      <!-- Metrics overview grid -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="glass-card rounded-2xl p-4 text-center border border-cyan-500/10">
-          <span class="text-[9px] text-slate-400 font-semibold block">إجمالي المعارض المسجلة</span>
-          <span id="total-galleries-count" class="text-xl font-black text-cyan-400">0</span>
-        </div>
-        <div class="glass-card rounded-2xl p-4 text-center border border-indigo-500/10">
-          <span class="text-[9px] text-slate-400 font-semibold block">حالة نظام التراخيص</span>
-          <span class="text-xs font-black text-emerald-400 flex items-center justify-center gap-1 mt-1">
-            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> مستقر
-          </span>
-        </div>
+      <div>
+        <h2 class="text-2xl font-black text-white">منصة إدارة المطاعم SaaS</h2>
+        <p class="text-sm text-slate-400 mt-1">تسجيل دخول السوبر أدمن (مالك المنصة)</p>
       </div>
 
-      <!-- Add Gallery Form Card -->
-      <div class="glass-card rounded-2xl p-5 shadow-lg border border-cyan-500/10 relative overflow-hidden">
-        <h2 class="text-sm font-black text-slate-200 border-b border-white/5 pb-3 mb-4 flex items-center gap-2">
-          <span class="text-cyan-400">➕</span> تسجيل وتفعيل معرض سيارات جديد
-        </h2>
+      <div id="login-error" class="hidden text-xs bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-xl font-bold"></div>
 
-        <form onsubmit="submitCreateGallery(event)" class="space-y-4">
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">اسم معرض السيارات</label>
-            <input type="text" id="new-gallery-name" placeholder="معرض السرعة القصوى الرياضي" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني لمالك المعرض</label>
-            <input type="email" id="new-owner-email" placeholder="owner@speed.com" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الخاصة به للولوج</label>
-            <input type="password" id="new-owner-password" placeholder="••••••••" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">رابط شعار المعرض (Optional Logo URL)</label>
-            <input type="text" id="new-gallery-logo" placeholder="https://example.com/logo.png" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <button type="submit" id="create-gallery-btn" class="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] text-white text-xs font-black rounded-lg transition-all duration-300">تسجيل وتأمين المعرض 🏢</button>
-        </form>
+      <form id="superadmin-login-form" onsubmit="handleSuperAdminLogin(event)" class="space-y-4 text-right">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">البريد الإلكتروني</label>
+          <input type="email" id="login-email" required value="admin@saas.com" dir="ltr"
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+                 placeholder="admin@saas.com">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">كلمة المرور</label>
+          <input type="password" id="login-password" required value="admin123" dir="ltr"
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+                 placeholder="••••••••">
+        </div>
+        <button type="submit" id="btn-login-submit"
+                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2">
+          <span>تسجيل الدخول إلى لوحة التحكم</span>
+          <span>🔐</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       MAIN TOP NAVIGATION BAR
+       ============================================== -->
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-md shadow-purple-500/20">
+        👑
       </div>
-
-      <!-- Registered Galleries List -->
-      <div class="glass-card rounded-2xl p-5 shadow-lg border border-white/5">
-        <h2 class="text-sm font-black text-slate-200 border-b border-white/5 pb-3 mb-4 flex items-center gap-2">
-          <span>🏢</span> قائمة معارض السيارات المعتمدة
-        </h2>
-        <div id="galleries-list" class="flex flex-col gap-3">
-          <p class="text-xs text-slate-500">جاري سحب قائمة المعارض...</p>
-        </div>
+      <div>
+        <h1 class="text-base font-black tracking-wide text-white flex items-center gap-2">
+          <span>لوحة تحكم المنصة المركزية</span>
+          <span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">SUPER ADMIN SaaS</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">إدارة المطاعم، والاشتراكات، والتحكم الشامل</p>
       </div>
-
-      <!-- Scoped Gallery Explorer Card (Dynamically displayed when a gallery is selected) -->
-      <div id="gallery-explorer-card" class="glass-card rounded-2xl p-5 shadow-lg border border-indigo-500/10 hidden flex-col space-y-4">
-        <div class="flex justify-between items-center border-b border-white/5 pb-3">
-          <h2 class="text-sm font-black text-slate-200 flex items-center gap-2">
-            <span class="text-indigo-400">🕵️‍♂️</span> مستكشف بيانات: <span id="scoped-gallery-name" class="text-cyan-400">----</span>
-          </h2>
-          <button onclick="closeGalleryExplorer()" class="text-[10px] bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-2 py-1 rounded">إغلاق</button>
-        </div>
-
-        <!-- Scoped Dashboard Navigation Tabs -->
-        <div class="flex bg-black/25 p-1 rounded-lg border border-white/5">
-          <button onclick="switchExplorerTab('cars')" id="tab-btn-cars" class="flex-1 py-1.5 text-[10px] font-black rounded bg-indigo-600 text-white transition-all">السيارات</button>
-          <button onclick="switchExplorerTab('drivers')" id="tab-btn-drivers" class="flex-1 py-1.5 text-[10px] font-black rounded text-slate-400 hover:text-white transition-all">السائقين</button>
-          <button onclick="switchExplorerTab('contracts')" id="tab-btn-contracts" class="flex-1 py-1.5 text-[10px] font-black rounded text-slate-400 hover:text-white transition-all">العقود</button>
-        </div>
-
-        <!-- Scoped Tab Contents -->
-        
-        <!-- Scoped Cars List -->
-        <div id="scoped-cars-panel" class="space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-[10px] text-slate-400 font-bold">السيارات المسجلة بالمعرض</span>
-            <button onclick="openAddCarModal()" class="text-[9px] font-black text-cyan-400 hover:underline">+ إضافة سيارة لهذا المعرض</button>
-          </div>
-          <div id="scoped-cars-list" class="flex flex-col gap-3 max-h-[220px] overflow-y-auto pr-1">
-            <!-- populated dynamically -->
-          </div>
-        </div>
-
-        <!-- Scoped Drivers List -->
-        <div id="scoped-drivers-panel" class="hidden space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-[10px] text-slate-400 font-bold">السائقين والمستأجرين المعتمدين</span>
-            <button onclick="openAddDriverModal()" class="text-[9px] font-black text-indigo-400 hover:underline">+ إضافة سائق لهذا المعرض</button>
-          </div>
-          <div id="scoped-drivers-list" class="flex flex-col gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-            <!-- populated dynamically -->
-          </div>
-        </div>
-
-        <!-- Scoped Contracts List -->
-        <div id="scoped-contracts-panel" class="hidden space-y-3">
-          <span class="text-[10px] text-slate-400 font-bold block">عقود التأجير المسجلة</span>
-          <div id="scoped-contracts-list" class="flex flex-col gap-3 max-h-[220px] overflow-y-auto pr-1">
-            <!-- populated dynamically -->
-          </div>
-        </div>
-
-      </div>
-
     </div>
 
-    <!-- Bottom Navigation Bar (Strictly Mobile-First Fixed Dock) -->
-    <nav class="absolute bottom-0 left-0 right-0 h-[76px] bg-[#080d1a]/95 backdrop-blur-2xl border-t border-white/5 flex justify-center items-center px-6 pb-env(safe-area-inset-bottom) z-50">
-      <button onclick="logoutSession()" class="flex flex-col items-center justify-center w-1/3 h-full text-rose-500/85 hover:text-rose-400 transition-all duration-300 gap-1">
-        <span class="text-xl">🚪</span>
-        <span class="text-[10px] font-black tracking-wide">تسجيل الخروج</span>
+    <!-- Quick Actions -->
+    <div class="flex items-center gap-3">
+      <button onclick="openCreateRestaurantModal()"
+              class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+        <span>➕</span>
+        <span>إنشاء مطعم جديد</span>
       </button>
-    </nav>
 
+      <div class="h-6 w-[1px] bg-slate-800 hidden sm:block"></div>
+
+      <div class="flex items-center gap-2">
+        <div class="text-left hidden md:block">
+          <div id="user-display-name" class="text-xs font-bold text-white">Super Admin</div>
+          <div id="user-display-email" class="text-[10px] text-slate-400 font-mono">admin@saas.com</div>
+        </div>
+        <button onclick="logoutSuperAdmin()" title="تسجيل الخروج"
+                class="bg-slate-800 hover:bg-rose-950/60 hover:text-rose-400 border border-slate-700/60 text-slate-300 p-2.5 rounded-xl transition-all">
+          🚪
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==============================================
+       MAIN CONTENT CONTAINER
+       ============================================== -->
+  <main class="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- 1. PLATFORM OVERVIEW KPIS -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- Total Restaurants -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-2 -bottom-2 text-6xl opacity-10 select-none">🏢</div>
+        <div class="text-xs font-bold text-slate-400">إجمالي المطاعم</div>
+        <div class="text-3xl font-black text-white mt-1 font-mono" id="stat-total-restaurants">0</div>
+        <div class="text-[11px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+          <span id="stat-active-restaurants">0</span> نشط حالياً
+        </div>
+      </div>
+
+      <!-- Total Revenue Across All Restaurants -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-2 -bottom-2 text-6xl opacity-10 select-none">💰</div>
+        <div class="text-xs font-bold text-slate-400">إجمالي مبيعات المنصة</div>
+        <div class="text-3xl font-black text-amber-400 mt-1 font-mono">
+          <span id="stat-total-revenue">0</span> <span class="text-sm text-slate-400">ج.م</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">لكافة المطاعم المشتركة</div>
+      </div>
+
+      <!-- Total Orders -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-2 -bottom-2 text-6xl opacity-10 select-none">📦</div>
+        <div class="text-xs font-bold text-slate-400">إجمالي الطلبات المنفذة</div>
+        <div class="text-3xl font-black text-purple-400 mt-1 font-mono" id="stat-total-orders">0</div>
+        <div class="text-[11px] text-slate-400 mt-1">كاشير وأونلاين وصالة</div>
+      </div>
+
+      <!-- Total Customers -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute -left-2 -bottom-2 text-6xl opacity-10 select-none">👥</div>
+        <div class="text-xs font-bold text-slate-400">إجمالي العملاء المسجلين</div>
+        <div class="text-3xl font-black text-cyan-400 mt-1 font-mono" id="stat-total-customers">0</div>
+        <div class="text-[11px] text-slate-400 mt-1">في دليل هواتف العملاء</div>
+      </div>
+    </section>
+
+    <!-- 2. RESTAURANTS DIRECTORY & MANAGEMENT -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+      <!-- Toolbar: Title, Search, Filter -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <span>قائمة المطاعم والعملاء المشتركين</span>
+            <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono" id="table-count-badge">0</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">تحكم في الاشتراكات، الدخول المباشر، وتحديث الحالات</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-64">
+            <span class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
+            <input type="text" id="filter-search" oninput="applyFilters()"
+                   placeholder="بحث بالاسم أو الهاتف..."
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+
+          <!-- Status Filter -->
+          <select id="filter-status" onchange="applyFilters()"
+                  class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+            <option value="ALL">جميع الحالات</option>
+            <option value="ACTIVE">النشطة فقط ✅</option>
+            <option value="SUSPENDED">الموقوفة ⚠️</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Restaurants Table -->
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th class="py-3 px-3">المطعم</th>
+              <th class="py-3 px-3">المدير والاتصال</th>
+              <th class="py-3 px-3">الباقة والحالة</th>
+              <th class="py-3 px-3">المبيعات والطلبات</th>
+              <th class="py-3 px-3">تاريخ الاشتراك</th>
+              <th class="py-3 px-3 text-center">الإجراءات السريعة</th>
+            </tr>
+          </thead>
+          <tbody id="restaurants-table-body" class="divide-y divide-slate-800/60 text-xs">
+            <!-- Rendered dynamically -->
+            <tr>
+              <td colspan="6" class="py-8 text-center text-slate-500">جاري تحميل بيانات المطاعم...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
-  <!-- EDIT GALLERY MODAL -->
-  <div id="edit-gallery-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
-      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">📝 تعديل بيانات المعرض ومالكه</h3>
-      <form onsubmit="submitEditGallery(event)" class="space-y-3">
-        <input type="hidden" id="edit-gal-id">
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">اسم معرض السيارات</label>
-          <input type="text" id="edit-gal-name" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+  <!-- ==============================================
+       MODAL 1: CREATE NEW RESTAURANT TENANT
+       ============================================== -->
+  <div id="modal-create-restaurant" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 my-8">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+            🏪
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white">إضافة مطعم جديد إلى المنصة</h3>
+            <p class="text-xs text-slate-400">توليد مساحة معزولة للمطعم وحساب إداري فوري</p>
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني للمالك</label>
-          <input type="email" id="edit-gal-email" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+        <button onclick="closeCreateRestaurantModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+      </div>
+
+      <div id="create-rest-error" class="hidden text-xs bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-xl font-bold"></div>
+
+      <form id="create-rest-form" onsubmit="submitCreateRestaurant(event)" class="space-y-4">
+        <!-- Section A: Restaurant Basic Info -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <h4 class="text-xs font-black text-purple-400 flex items-center gap-1.5">
+            <span>🏢</span> بيانات المطعم والهوية
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">اسم المطعم *</label>
+              <input type="text" id="new-rest-name" required placeholder="مثال: مطعم برجر ستيشن"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">المعرف في الرابط (Slug) *</label>
+              <input type="text" id="new-rest-slug" required placeholder="burger-station" dir="ltr"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">رقم الهاتف *</label>
+              <input type="text" id="new-rest-phone" required placeholder="010XXXXXXXX" dir="ltr"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">العنوان</label>
+              <input type="text" id="new-rest-address" placeholder="القاهرة - المعادي"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">باقة الاشتراك</label>
+              <select id="new-rest-plan"
+                      class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="PREMIUM">باقة الـ VIP الشاملة (كاشير + مخزون + QR ونقاط)</option>
+                <option value="PRO">باقة احترافية (كاشير + مخزون وتكاليف)</option>
+                <option value="BASIC">باقة كاشير أساسية</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">قالب المنيو المبدئي</label>
+              <select id="new-rest-template"
+                      class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="FAST_FOOD">قالب ساندوتشات وبرجر 🍔</option>
+                <option value="GRILL">قالب مشويات وطواجن 🥩</option>
+                <option value="NONE">فارغ (سيدخل أصنافه بنفسه)</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الجديدة (اتركه فارغاً لعدم التغيير)</label>
-          <input type="password" id="edit-gal-password" placeholder="••••••••" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+
+        <!-- Section B: Owner Account Info -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <h4 class="text-xs font-black text-emerald-400 flex items-center gap-1.5">
+            <span>👤</span> بيانات حساب المدير المسؤول
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">اسم المدير</label>
+              <input type="text" id="new-owner-name" placeholder="أحمد علي"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">البريد الإلكتروني (لتسجيل الدخول) *</label>
+              <input type="email" id="new-owner-email" required placeholder="manager@restaurant.com" dir="ltr"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">كلمة المرور *</label>
+              <input type="text" id="new-owner-password" required placeholder="••••••••" dir="ltr"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">رابط شعار المعرض (Logo URL)</label>
-          <input type="text" id="edit-gal-logo" placeholder="https://example.com/logo.png" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="flex-1 h-10 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">حفظ 💾</button>
-          <button type="button" onclick="closeEditGalleryModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
+
+        <div class="flex items-center justify-end gap-3 pt-3">
+          <button type="button" onclick="closeCreateRestaurantModal()"
+                  class="px-4 py-2.5 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:text-white transition-colors">
+            إلغاء
+          </button>
+          <button type="submit" id="btn-create-submit"
+                  class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+            <span>تأكيد وإنشاء المطعم</span>
+            <span>🚀</span>
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- EDIT DRIVER MODAL -->
-  <div id="edit-driver-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
-      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">📝 تعديل بيانات المستأجر وولوج السائق</h3>
-      <form onsubmit="submitEditDriver(event)" class="space-y-3">
-        <input type="hidden" id="edit-drv-id">
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">الاسم بالكامل</label>
-          <input type="text" id="edit-drv-name" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+  <!-- ==============================================
+       MODAL 2: EDIT RESTAURANT STATUS & SUBSCRIPTION
+       ============================================== -->
+  <div id="modal-edit-status" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-black text-white flex items-center gap-2">
+          <span>⚙️</span>
+          <span>تعديل اشتراك:</span>
+          <span id="edit-rest-title" class="text-purple-400">...</span>
+        </h3>
+        <button onclick="closeEditStatusModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <input type="hidden" id="edit-rest-id">
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">حالة الاشتراك</label>
+          <select id="edit-rest-status"
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            <option value="ACTIVE">نشط (فعّال) ✅</option>
+            <option value="TRIAL">فترة تجريبية ⏳</option>
+            <option value="SUSPENDED">موقوف (معلق) ⚠️</option>
+            <option value="EXPIRED">منتهي الصلاحية ❌</option>
+          </select>
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني للولوج</label>
-          <input type="email" id="edit-drv-email" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">باقة الاشتراك</label>
+          <select id="edit-rest-plan"
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
+            <option value="PREMIUM">PREMIUM (شاملة كاشير ومخزون وQR ونقاط)</option>
+            <option value="PRO">PRO (كاشير ومخزون)</option>
+            <option value="BASIC">BASIC (كاشير فقط)</option>
+          </select>
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور الجديدة (اتركه فارغاً لعدم التغيير)</label>
-          <input type="password" id="edit-drv-password" placeholder="••••••••" class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">تاريخ انتهاء الاشتراك</label>
+          <input type="date" id="edit-rest-expires"
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
         </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">الرقم القومي (14 رقم)</label>
-          <input type="text" id="edit-drv-national-id" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">ملاحظات إدارية</label>
+          <textarea id="edit-rest-notes" rows="2" placeholder="تم الدفع عبر فودافون كاش..."
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"></textarea>
         </div>
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="flex-1 h-10 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all">حفظ 💾</button>
-          <button type="button" onclick="closeEditDriverModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
-        </div>
-      </form>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button onclick="closeEditStatusModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white">إلغاء</button>
+        <button onclick="saveRestaurantStatus()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-md transition-all">حفظ التغييرات</button>
+      </div>
     </div>
   </div>
 
-  <!-- ADD CAR TO GALLERY MODAL -->
-  <div id="car-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
-      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">🚗 تسجيل سيارة جديدة للمعرض</h3>
-      <form onsubmit="submitAddCar(event)" class="space-y-3">
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">رقم اللوحة</label>
-          <input type="text" id="car-plate" placeholder="1212 أ ب ج" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">الموديل والنوع</label>
-          <input type="text" id="car-model" placeholder="BMW M4" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">سنة الصنع</label>
-            <input type="number" id="car-year" value="2026" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">اللون</label>
-            <input type="text" id="car-color" value="رمادي غير لامع" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">العداد الحالي (كم)</label>
-          <input type="number" id="car-odometer" value="5000" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">تغيير الزيت كل (كم)</label>
-            <input type="number" id="car-oil-interval" value="10000" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-          <div class="space-y-1">
-            <label class="text-[10px] text-slate-400 block font-semibold">تغيير الفلتر كل (كم)</label>
-            <input type="number" id="car-filter-interval" value="15000" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-          </div>
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="flex-1 h-10 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">تسجيل</button>
-          <button type="button" onclick="closeAddCarModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ADD DRIVER TO GALLERY MODAL -->
-  <div id="driver-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-[#0b1224] border border-white/10 p-6 rounded-3xl max-w-sm w-full space-y-4">
-      <h3 class="text-sm font-black text-slate-200 border-b border-white/5 pb-2">👤 إضافة مستأجر جديد للمعرض</h3>
-      <form onsubmit="submitAddDriver(event)" class="space-y-3">
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">الاسم بالكامل</label>
-          <input type="text" id="drv-name" placeholder="محمد السبيعي" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني</label>
-          <input type="email" id="drv-email" placeholder="driver.speed@example.com" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور</label>
-          <input type="password" id="drv-password" placeholder="••••••••" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">الرقم القومي (14 رقم)</label>
-          <input type="text" id="drv-national-id" placeholder="29501011234567" required class="w-full h-10 px-3 rounded-lg text-xs text-slate-100 glass-input focus:outline-none">
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button type="submit" class="flex-1 h-10 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all">إضافة</button>
-          <button type="button" onclick="closeAddDriverModal()" class="flex-1 h-10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-lg transition-all">إلغاء</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT ENGINE -->
+  <!-- ==============================================
+       JAVASCRIPT LOGIC
+       ============================================== -->
   <script>
-    // Safe LocalStorage Wrapper to prevent Security Exceptions
-    const safeStorage = {
-      _data: {},
-      setItem(key, value) {
-        try { localStorage.setItem(key, value); } catch (e) { this._data[key] = value; }
-      },
-      getItem(key) {
-        try { return localStorage.getItem(key); } catch (e) { return this._data[key] || null; }
-      },
-      removeItem(key) {
-        try { localStorage.removeItem(key); } catch (e) { delete this._data[key]; }
-      },
-      clear() {
-        try { localStorage.clear(); } catch (e) { this._data = {}; }
-      }
-    };
+    let allRestaurants = [];
 
-    // Auth token verification
-    const token = safeStorage.getItem('auth_token');
-    const user = JSON.parse(safeStorage.getItem('auth_user') || '{}');
-
-    if (!token || user.role !== 'SUPER_ADMIN') {
-      safeStorage.clear();
-      window.location.href = 'index.html';
+    // Helper: Auth Token
+    function getToken() {
+      return localStorage.getItem('token') || '';
     }
 
-    document.getElementById('owner-email-sub').innerText = user.email;
-
-    // Globals
-    let activeGalleries = [];
-    let selectedGalleryId = '';
-    let explorerActiveTab = 'cars';
-
-    // Show custom toast alert
-    function triggerAlert(title, message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      
-      let borderCol = 'border-emerald-500/30';
-      let icon = '✅';
-      if (type === 'error') {
-        borderCol = 'border-rose-500/30';
-        icon = '❌';
-      } else if (type === 'warning') {
-        borderCol = 'border-amber-500/30';
-        icon = '⚠️';
-      }
-
-      toast.className = `toast-anim bg-[#080d1a]/95 border ${borderCol} p-4 rounded-xl shadow-2xl backdrop-blur-xl flex gap-3 pointer-events-auto w-full`;
-      toast.innerHTML = `
-        <span class="text-xl shrink-0">${icon}</span>
-        <div class="flex flex-col">
-          <span class="text-xs font-black text-slate-100">${title}</span>
-          <span class="text-[10px] text-slate-400 mt-0.5">${message}</span>
-        </div>
-      `;
-
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    // API Get helper
-    async function apiGet(endpoint) {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      const res = await fetch(endpoint, { headers });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API Request Failed');
-      return data;
-    }
-
-    // API Post helper
-    async function apiPost(endpoint, body) {
-      const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    // Helper: Headers
+    function getAuthHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
       };
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API Request Failed');
-      return data;
     }
 
-    // API Put helper
-    async function apiPut(endpoint, body) {
-      const headers = { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      const res = await fetch(endpoint, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API Request Failed');
-      return data;
-    }
+    // On Load
+    window.addEventListener('DOMContentLoaded', () => {
+      checkSuperAdminAuth();
+    });
 
-    // Load galleries
-    async function loadAllGalleries() {
-      try {
-        activeGalleries = await apiGet('/api/v1/galleries');
-        document.getElementById('total-galleries-count').innerText = activeGalleries.length;
-        renderGalleriesList();
-      } catch (err) {
-        triggerAlert('خطأ بالشبكة', err.message, 'error');
-      }
-    }
-
-    // Render Galleries
-    function renderGalleriesList() {
-      const list = document.getElementById('galleries-list');
-      if (activeGalleries.length === 0) {
-        list.innerHTML = '<p class="text-xs text-slate-500">لا يوجد معارض مسجلة حتى الآن.</p>';
+    async function checkSuperAdminAuth() {
+      const token = getToken();
+      if (!token) {
+        showLoginModal();
         return;
       }
 
-      list.innerHTML = activeGalleries.map(gal => {
-        const ownerEmail = gal.users[0]?.email || 'لا يوجد مالك مسجل';
-        const isSelected = selectedGalleryId === gal.id ? 'glow-selection' : 'border-white/5 bg-black/10';
+      try {
+        const res = await fetch('/api/v1/auth/me', { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        if (data.user?.role !== 'SUPER_ADMIN') {
+          alert('هذا الحساب ليس لديه صلاحية سوبر أدمن للمنصة.');
+          showLoginModal();
+          return;
+        }
+
+        // Set user info
+        document.getElementById('user-display-name').innerText = data.user.fullName || 'Super Admin';
+        document.getElementById('user-display-email').innerText = data.user.email || 'admin@saas.com';
+        document.getElementById('login-modal').classList.add('hidden');
+
+        // Load Platform Data
+        loadPlatformStats();
+        loadRestaurants();
+      } catch (e) {
+        showLoginModal();
+      }
+    }
+
+    function showLoginModal() {
+      document.getElementById('login-modal').classList.remove('hidden');
+    }
+
+    async function handleSuperAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const errorBox = document.getElementById('login-error');
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'جاري التحقق...';
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'فشل تسجيل الدخول');
+        }
+
+        if (data.user?.role !== 'SUPER_ADMIN') {
+          throw new Error('هذا الحساب ليس مسجلاً كـ Super Admin للمنصة');
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        document.getElementById('login-modal').classList.add('hidden');
+        checkSuperAdminAuth();
+      } catch (err) {
+        errorBox.innerText = err.message;
+        errorBox.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>تسجيل الدخول إلى لوحة التحكم</span><span>🔐</span>';
+      }
+    }
+
+    function logoutSuperAdmin() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.reload();
+    }
+
+    // 1. Load Stats
+    async function loadPlatformStats() {
+      try {
+        const res = await fetch('/api/v1/super-admin/stats', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('stat-total-restaurants').innerText = data.totalRestaurants || 0;
+        document.getElementById('stat-active-restaurants').innerText = data.activeRestaurants || 0;
+        document.getElementById('stat-total-revenue').innerText = (data.totalRevenue || 0).toLocaleString();
+        document.getElementById('stat-total-orders').innerText = (data.totalOrders || 0).toLocaleString();
+        document.getElementById('stat-total-customers').innerText = (data.totalCustomers || 0).toLocaleString();
+      } catch (err) {
+        console.error('Stats error:', err);
+      }
+    }
+
+    // 2. Load Restaurants
+    async function loadRestaurants() {
+      try {
+        const res = await fetch('/api/v1/super-admin/restaurants', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        allRestaurants = data.restaurants || [];
+        renderRestaurants(allRestaurants);
+      } catch (err) {
+        console.error('Restaurants load error:', err);
+      }
+    }
+
+    // 3. Render Table
+    function renderRestaurants(list) {
+      const tbody = document.getElementById('restaurants-table-body');
+      document.getElementById('table-count-badge').innerText = list.length;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-10 text-center text-slate-500">لا يوجد مطاعم مسجلة حتى الآن</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(r => {
+        const isSuspended = r.subscriptionStatus === 'SUSPENDED' || r.subscriptionStatus === 'EXPIRED';
+        const statusBadge = r.subscriptionStatus === 'ACTIVE'
+          ? '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">نشط ✅</span>'
+          : r.subscriptionStatus === 'TRIAL'
+          ? '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">تجريبي ⏳</span>'
+          : '<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">موقوف ⚠️</span>';
+
+        const planBadge = r.subscriptionPlan === 'PREMIUM'
+          ? '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded-md text-[10px] font-bold">VIP الشاملة 👑</span>'
+          : r.subscriptionPlan === 'PRO'
+          ? '<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-md text-[10px] font-bold">PRO الاحترافية ⚡</span>'
+          : '<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md text-[10px] font-bold">BASIC كاشير</span>';
+
+        const expiryStr = r.subscriptionExpiresAt
+          ? new Date(r.subscriptionExpiresAt).toLocaleDateString('ar-EG')
+          : 'غير محدد';
 
         return `
-          <div onclick="selectGalleryScope('${gal.id}', '${gal.name}')" class="border ${isSelected} p-4 rounded-2xl cursor-pointer hover:border-cyan-500/20 transition-all duration-300 flex justify-between items-center">
-            <div class="space-y-1">
-              <span class="text-xs font-black text-slate-200 block">${gal.name}</span>
-              <span class="text-[9px] text-slate-500 block">بريد المالك: ${ownerEmail}</span>
-            </div>
-            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
-              <button onclick="openEditGalleryModal('${gal.id}', '${gal.name}', '${ownerEmail}', '${gal.logoUrl || ''}')" class="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded font-bold hover:bg-cyan-500/25">تعديل 📝</button>
-              <button onclick="deleteGallery('${gal.id}')" class="text-[9px] text-rose-500 hover:text-rose-400 font-bold px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded">حذف 🗑️</button>
-              <span class="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-1 rounded font-bold hover:bg-indigo-500/20 cursor-pointer" onclick="selectGalleryScope('${gal.id}', '${gal.name}')">معاينة 🔍</span>
-            </div>
-          </div>
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <!-- Restaurant Info -->
+            <td class="py-3 px-3">
+              <div class="flex items-center gap-3">
+                <img src="${r.logoUrl || '/dajja_logo.jpg'}" alt="${r.name}" class="w-10 h-10 rounded-xl object-cover bg-slate-800 border border-slate-700">
+                <div>
+                  <div class="font-black text-white text-sm">${r.name}</div>
+                  <div class="text-[10px] text-purple-400 font-mono mt-0.5">/${r.slug}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Owner & Contact -->
+            <td class="py-3 px-3">
+              <div class="text-slate-200 font-bold">${r.owner ? r.owner.fullName || r.owner.email : 'لم يسجل'}</div>
+              <div class="text-[11px] text-slate-400 font-mono">${r.phone || 'بدون هاتف'}</div>
+            </td>
+
+            <!-- Plan & Status -->
+            <td class="py-3 px-3 space-y-1">
+              <div>${statusBadge}</div>
+              <div>${planBadge}</div>
+            </td>
+
+            <!-- Revenue & Orders -->
+            <td class="py-3 px-3">
+              <div class="font-bold text-amber-400 font-mono">${(r.totalRevenue || 0).toLocaleString()} ج.م</div>
+              <div class="text-[11px] text-slate-400 font-mono">${r.totalOrders || 0} طلب • ${r.totalCustomers || 0} عميل</div>
+            </td>
+
+            <!-- Dates -->
+            <td class="py-3 px-3 text-[11px] text-slate-400">
+              <div>ينتهي: <span class="font-mono text-slate-300 font-bold">${expiryStr}</span></div>
+            </td>
+
+            <!-- Actions -->
+            <td class="py-3 px-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <!-- Impersonate Button -->
+                <button onclick="impersonateRestaurant('${r.id}', '${r.name}')" title="دخول مباشر كمدير المطعم"
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow transition-all flex items-center gap-1">
+                  <span>🚀</span>
+                  <span>دخول كمدير</span>
+                </button>
+
+                <!-- Customer Menu Link -->
+                <a href="/order.html?restaurant=${r.slug || r.id}" target="_blank" title="عرض صفحة الأونلاين والمنيو"
+                   class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1">
+                  <span>📱</span>
+                  <span>المنيو</span>
+                </a>
+
+                <!-- Edit Status Modal -->
+                <button onclick="openEditStatusModal('${r.id}')" title="تعديل الاشتراك والحالة"
+                        class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] p-1.5 rounded-lg border border-slate-700 transition-all">
+                  ⚙️
+                </button>
+              </div>
+            </td>
+          </tr>
         `;
       }).join('');
     }
 
-    // Create New Gallery (Multi-tenant seeder)
-    async function submitCreateGallery(e) {
-      e.preventDefault();
-      const btn = document.getElementById('create-gallery-btn');
-      btn.disabled = true;
-      btn.innerText = '🔄 جاري إنشاء المعرض...';
+    // 4. Filters
+    function applyFilters() {
+      const q = (document.getElementById('filter-search').value || '').toLowerCase().trim();
+      const status = document.getElementById('filter-status').value;
+
+      let filtered = allRestaurants.filter(r => {
+        const matchesQuery = !q ||
+          r.name.toLowerCase().includes(q) ||
+          (r.slug && r.slug.toLowerCase().includes(q)) ||
+          (r.phone && r.phone.includes(q)) ||
+          (r.owner && r.owner.email.toLowerCase().includes(q));
+
+        const matchesStatus = status === 'ALL' || r.subscriptionStatus === status;
+
+        return matchesQuery && matchesStatus;
+      });
+
+      renderRestaurants(filtered);
+    }
+
+    // 5. Impersonate (Login as Restaurant Admin)
+    async function impersonateRestaurant(id, name) {
+      if (!confirm(`هل تريد الدخول كمدير لمطعم (${name})؟\nسيتم نقلك مباشرة إلى لوحة تحكم المطعم.`)) return;
 
       try {
-        const name = document.getElementById('new-gallery-name').value;
-        const ownerEmail = document.getElementById('new-owner-email').value;
-        const ownerPassword = document.getElementById('new-owner-password').value;
-        const logoUrl = document.getElementById('new-gallery-logo').value;
+        const res = await fetch(`/api/v1/super-admin/restaurants/${id}/impersonate`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
 
-        await apiPost('/api/v1/auth/create-gallery', { name, ownerEmail, ownerPassword, logoUrl });
-        triggerAlert('تم التسجيل!', 'تم إنشاء المعرض وحساب مالكه بنجاح.', 'success');
+        if (!res.ok) throw new Error(data.error || 'فشل الدخول للمطعم');
 
-        // Clear inputs
-        document.getElementById('new-gallery-name').value = '';
-        document.getElementById('new-owner-email').value = '';
-        document.getElementById('new-owner-password').value = '';
-        document.getElementById('new-gallery-logo').value = '';
-
-        await loadAllGalleries();
+        // Store new impersonation token
+        localStorage.setItem('token', data.token);
+        
+        // Redirect to dashboard
+        window.location.href = data.redirectUrl || '/dashboard';
       } catch (err) {
-        triggerAlert('فشل الإنشاء', err.message, 'error');
+        alert(err.message);
+      }
+    }
+
+    // 6. Create Modal Handlers
+    function openCreateRestaurantModal() {
+      document.getElementById('create-rest-error').classList.add('hidden');
+      document.getElementById('create-rest-form').reset();
+      document.getElementById('modal-create-restaurant').classList.remove('hidden');
+    }
+
+    function closeCreateRestaurantModal() {
+      document.getElementById('modal-create-restaurant').classList.add('hidden');
+    }
+
+    async function submitCreateRestaurant(e) {
+      e.preventDefault();
+      const errorBox = document.getElementById('create-rest-error');
+      const submitBtn = document.getElementById('btn-create-submit');
+
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'جاري الإنشاء...';
+
+      const payload = {
+        name: document.getElementById('new-rest-name').value,
+        slug: document.getElementById('new-rest-slug').value,
+        phone: document.getElementById('new-rest-phone').value,
+        address: document.getElementById('new-rest-address').value,
+        subscriptionPlan: document.getElementById('new-rest-plan').value,
+        template: document.getElementById('new-rest-template').value,
+        ownerName: document.getElementById('new-owner-name').value,
+        ownerEmail: document.getElementById('new-owner-email').value,
+        ownerPassword: document.getElementById('new-owner-password').value
+      };
+
+      try {
+        const res = await fetch('/api/v1/super-admin/restaurants', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'فشل إنشاء المطعم');
+
+        alert(`تم إنشاء مطعم (${payload.name}) بنجاح! 🎉\nبيانات المدير:\nالإيميل: ${payload.ownerEmail}\nكلمة المرور: ${payload.ownerPassword}`);
+        closeCreateRestaurantModal();
+        loadPlatformStats();
+        loadRestaurants();
+      } catch (err) {
+        errorBox.innerText = err.message;
+        errorBox.classList.remove('hidden');
       } finally {
-        btn.disabled = false;
-        btn.innerText = 'تسجيل وتأمين المعرض 🏢';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>تأكيد وإنشاء المطعم</span><span>🚀</span>';
       }
     }
 
-    // ====================================================
-    // DELETE GALLERY ACTION
-    // ====================================================
-    async function deleteGallery(galleryId) {
-      if (!confirm('⚠️ تحذير خطير: سيؤدي حذف هذا المعرض إلى حذف جميع السيارات والسائقين والعقود التابعة له بشكل نهائي من قاعدة البيانات! هل أنت متأكد من الحذف التام؟')) return;
-      try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const res = await fetch(`/api/v1/galleries/${galleryId}`, {
-          method: 'DELETE',
-          headers
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to delete gallery');
-        }
-        triggerAlert('تم الحذف', 'تم مسح المعرض بكافة سجلاته التابعة بنجاح.', 'success');
-        
-        // If the deleted gallery is currently open in explorer, close it
-        if (selectedGalleryId === galleryId) {
-          closeGalleryExplorer();
-        }
-        
-        await loadAllGalleries();
-      } catch (err) {
-        triggerAlert('خطأ بالحذف', err.message, 'error');
-      }
-    }
+    // 7. Edit Status Modal
+    function openEditStatusModal(id) {
+      const r = allRestaurants.find(x => x.id === id);
+      if (!r) return;
 
-    // ====================================================
-    // EDIT GALLERY MODAL ACTIONS
-    // ====================================================
-    function openEditGalleryModal(id, name, email, logoUrl) {
-      document.getElementById('edit-gal-id').value = id;
-      document.getElementById('edit-gal-name').value = name;
-      document.getElementById('edit-gal-email').value = email;
-      document.getElementById('edit-gal-password').value = '';
-      document.getElementById('edit-gal-logo').value = logoUrl || '';
-      document.getElementById('edit-gallery-modal').style.display = 'flex';
-    }
+      document.getElementById('edit-rest-id').value = r.id;
+      document.getElementById('edit-rest-title').innerText = r.name;
+      document.getElementById('edit-rest-status').value = r.subscriptionStatus || 'ACTIVE';
+      document.getElementById('edit-rest-plan').value = r.subscriptionPlan || 'PREMIUM';
+      document.getElementById('edit-rest-notes').value = r.notes || '';
 
-    function closeEditGalleryModal() {
-      document.getElementById('edit-gallery-modal').style.display = 'none';
-    }
-
-    async function submitEditGallery(e) {
-      e.preventDefault();
-      try {
-        const id = document.getElementById('edit-gal-id').value;
-        const name = document.getElementById('edit-gal-name').value;
-        const ownerEmail = document.getElementById('edit-gal-email').value;
-        const ownerPassword = document.getElementById('edit-gal-password').value;
-        const logoUrl = document.getElementById('edit-gal-logo').value;
-
-        const body = { name, ownerEmail, logoUrl };
-        if (ownerPassword) body.ownerPassword = ownerPassword;
-
-        await apiPut(`/api/v1/galleries/${id}`, body);
-        triggerAlert('تم التحديث', 'تم حفظ تعديلات المعرض والمالك بنجاح.');
-        closeEditGalleryModal();
-        await loadAllGalleries();
-      } catch (err) {
-        triggerAlert('فشل التحديث', err.message, 'error');
-      }
-    }
-
-    // ====================================================
-    // SCOPED GALLERY EXPLORER & IMPERSONATION
-    // ====================================================
-    async function selectGalleryScope(galleryId, name) {
-      selectedGalleryId = galleryId;
-      document.getElementById('scoped-gallery-name').innerText = name;
-      
-      const explorer = document.getElementById('gallery-explorer-card');
-      explorer.classList.remove('hidden');
-      explorer.classList.add('panel-active');
-
-      renderGalleriesList(); // Refresh selected highlight
-      await loadScopedGalleryData();
-    }
-
-    function closeGalleryExplorer() {
-      selectedGalleryId = '';
-      document.getElementById('gallery-explorer-card').classList.add('hidden');
-      renderGalleriesList();
-    }
-
-    function switchExplorerTab(tab) {
-      explorerActiveTab = tab;
-      const carsBtn = document.getElementById('tab-btn-cars');
-      const drvBtn = document.getElementById('tab-btn-drivers');
-      const conBtn = document.getElementById('tab-btn-contracts');
-
-      const carsPanel = document.getElementById('scoped-cars-panel');
-      const drvPanel = document.getElementById('scoped-drivers-panel');
-      const conPanel = document.getElementById('scoped-contracts-panel');
-
-      // Reset Tab Styles
-      [carsBtn, drvBtn, conBtn].forEach(b => b.className = "flex-1 py-1.5 text-[10px] font-black rounded text-slate-400 hover:text-white transition-all");
-      [carsPanel, drvPanel, conPanel].forEach(p => p.classList.add('hidden'));
-
-      // Apply active style
-      if (tab === 'cars') {
-        carsBtn.className = "flex-1 py-1.5 text-[10px] font-black rounded bg-indigo-600 text-white transition-all";
-        carsPanel.classList.remove('hidden');
-      } else if (tab === 'drivers') {
-        drvBtn.className = "flex-1 py-1.5 text-[10px] font-black rounded bg-indigo-600 text-white transition-all";
-        drvPanel.classList.remove('hidden');
+      if (r.subscriptionExpiresAt) {
+        const dateVal = new Date(r.subscriptionExpiresAt).toISOString().split('T')[0];
+        document.getElementById('edit-rest-expires').value = dateVal;
       } else {
-        conBtn.className = "flex-1 py-1.5 text-[10px] font-black rounded bg-indigo-600 text-white transition-all";
-        conPanel.classList.remove('hidden');
+        document.getElementById('edit-rest-expires').value = '';
       }
+
+      document.getElementById('modal-edit-status').classList.remove('hidden');
     }
 
-    // Load Scoped Gallery Data (using ?gallery_id=XX)
-    async function loadScopedGalleryData() {
-      if (!selectedGalleryId) return;
+    function closeEditStatusModal() {
+      document.getElementById('modal-edit-status').classList.add('hidden');
+    }
+
+    async function saveRestaurantStatus() {
+      const id = document.getElementById('edit-rest-id').value;
+      const status = document.getElementById('edit-rest-status').value;
+      const plan = document.getElementById('edit-rest-plan').value;
+      const expires = document.getElementById('edit-rest-expires').value;
+      const notes = document.getElementById('edit-rest-notes').value;
 
       try {
-        // 1. Load Cars
-        const cars = await apiGet(`/api/v1/cars?gallery_id=${selectedGalleryId}`);
-        renderScopedCars(cars);
-
-        // 2. Load Drivers
-        const drivers = await apiGet(`/api/v1/drivers?gallery_id=${selectedGalleryId}`);
-        renderScopedDrivers(drivers);
-
-        // 3. Load Contracts
-        const contracts = await apiGet(`/api/v1/contracts?gallery_id=${selectedGalleryId}`);
-        renderScopedContracts(contracts);
-
-      } catch (err) {
-        triggerAlert('خطأ في جلب البيانات', err.message, 'error');
-      }
-    }
-
-    function renderScopedCars(cars) {
-      const box = document.getElementById('scoped-cars-list');
-      if (cars.length === 0) {
-        box.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">لا توجد سيارات بالأسطول الخاص بهذا المعرض.</p>';
-        return;
-      }
-
-      box.innerHTML = cars.map(car => `
-        <div class="flex justify-between items-center border border-white/5 p-3 rounded-xl bg-black/20">
-          <div>
-            <span class="text-xs font-black block text-slate-200">${car.model}</span>
-            <span class="text-[9px] text-slate-400 block mt-0.5">عداد: ${car.currentOdometer.toLocaleString()} كم | لوحة: ${car.plateNumber}</span>
-          </div>
-          <button onclick="deleteScopedCar('${car.id}')" class="text-[9px] text-rose-500 hover:text-rose-400 font-bold px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded">حذف 🗑️</button>
-        </div>
-      `).join('');
-    }
-
-    function renderScopedDrivers(drivers) {
-      const box = document.getElementById('scoped-drivers-list');
-      if (drivers.length === 0) {
-        box.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">لا يوجد سائقون مسجلون في هذا المعرض.</p>';
-        return;
-      }
-
-      box.innerHTML = drivers.map(drv => `
-        <div class="flex justify-between items-center border border-white/5 p-3 rounded-xl bg-black/20">
-          <div>
-            <span class="text-xs font-bold block text-slate-200">${drv.fullName}</span>
-            <span class="text-[9px] text-slate-400 block mt-0.5">بريد: ${drv.user.email} | قومي: ${drv.nationalId}</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="openEditDriverModal('${drv.id}', '${drv.fullName}', '${drv.user.email}', '${drv.nationalId}')" class="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold px-2 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded">تعديل 📝</button>
-            <button onclick="deleteScopedDriver('${drv.id}')" class="text-[9px] text-rose-500 hover:text-rose-400 font-bold px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded">حذف 🗑️</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderScopedContracts(contracts) {
-      const box = document.getElementById('scoped-contracts-list');
-      if (contracts.length === 0) {
-        box.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">لا توجد عقود تأجير مسجلة في هذا المعرض.</p>';
-        return;
-      }
-
-      box.innerHTML = contracts.map(con => `
-        <div class="border border-white/5 p-3 rounded-xl bg-black/20 space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="text-xs font-black text-slate-200">${con.car.model} ➡️ ${con.tenant.fullName}</span>
-            <span class="text-[9px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-black">${con.status}</span>
-          </div>
-          <div class="flex justify-between items-center text-[9px] text-slate-400">
-            <span>القيمة: <strong class="text-emerald-400">$${con.rentalValue}</strong></span>
-            <span>العداد المسموح: ${con.allowedMonthlyKm} كم</span>
-          </div>
-          ${con.signature ? `
-            <div class="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
-              <span class="text-[8px] text-slate-500 font-bold">التوقيع الرقمي:</span>
-              <img src="${con.signature}" alt="توقيع المستأجر" class="max-h-[30px] object-contain filter invert drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    // ====================================================
-    // EDIT DRIVER MODAL ACTIONS
-    // ====================================================
-    function openEditDriverModal(id, fullName, email, nationalId) {
-      document.getElementById('edit-drv-id').value = id;
-      document.getElementById('edit-drv-name').value = fullName;
-      document.getElementById('edit-drv-email').value = email;
-      document.getElementById('edit-drv-national-id').value = nationalId;
-      document.getElementById('edit-drv-password').value = '';
-      document.getElementById('edit-driver-modal').style.display = 'flex';
-    }
-
-    function closeEditDriverModal() {
-      document.getElementById('edit-driver-modal').style.display = 'none';
-    }
-
-    async function submitEditDriver(e) {
-      e.preventDefault();
-      try {
-        const id = document.getElementById('edit-drv-id').value;
-        const fullName = document.getElementById('edit-drv-name').value;
-        const email = document.getElementById('edit-drv-email').value;
-        const nationalId = document.getElementById('edit-drv-national-id').value;
-        const password = document.getElementById('edit-drv-password').value;
-
-        const body = { fullName, email, nationalId };
-        if (password) body.password = password;
-
-        await apiPut(`/api/v1/drivers/${id}?gallery_id=${selectedGalleryId}`, body);
-        triggerAlert('تم التحديث', 'تم حفظ تعديلات بيانات وحساب المستأجر بنجاح.');
-        closeEditDriverModal();
-        await loadScopedGalleryData();
-      } catch (err) {
-        triggerAlert('فشل التحديث', err.message, 'error');
-      }
-    }
-
-    // ====================================================
-    // ACTIONS: DELETE CAR / DRIVER FOR SPECIFIC GALLERY
-    // ====================================================
-    async function deleteScopedCar(carId) {
-      if (!confirm('هل أنت متأكد من حذف هذه السيارة؟')) return;
-      try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const res = await fetch(`/api/v1/cars/${carId}?gallery_id=${selectedGalleryId}`, {
-          method: 'DELETE',
-          headers
+        const res = await fetch(`/api/v1/super-admin/restaurants/${id}/status`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            subscriptionStatus: status,
+            subscriptionPlan: plan,
+            ...(expires && { subscriptionExpiresAt: expires }),
+            notes
+          })
         });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to delete car');
-        }
-        triggerAlert('تم الحذف', 'تم حذف السيارة بنجاح من المعرض.');
-        await loadScopedGalleryData();
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'فشل التحديث');
+
+        alert('تم تحديث حالة الاشتراك بنجاح! ✅');
+        closeEditStatusModal();
+        loadPlatformStats();
+        loadRestaurants();
       } catch (err) {
-        triggerAlert('خطأ بالحذف', err.message, 'error');
+        alert(err.message);
       }
     }
-
-    async function deleteScopedDriver(driverId) {
-      if (!confirm('هل أنت متأكد من حذف هذا السائق وإلغاء حسابه؟')) return;
-      try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const res = await fetch(`/api/v1/drivers/${driverId}?gallery_id=${selectedGalleryId}`, {
-          method: 'DELETE',
-          headers
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to delete driver');
-        }
-        triggerAlert('تم الحذف', 'تم حذف السائق وإلغاء حساب الدخول بنجاح.');
-        await loadScopedGalleryData();
-      } catch (err) {
-        triggerAlert('خطأ بالحذف', err.message, 'error');
-      }
-    }
-
-    // ====================================================
-    // ACTIONS: ADD CAR / DRIVER TO SPECIFIC GALLERY
-    // ====================================================
-    function openAddCarModal() { document.getElementById('car-modal').style.display = 'flex'; }
-    function closeAddCarModal() { document.getElementById('car-modal').style.display = 'none'; }
-
-    // Modal driver actions
-    function openAddDriverModal() { document.getElementById('driver-modal').style.display = 'flex'; }
-    function closeAddDriverModal() { document.getElementById('driver-modal').style.display = 'none'; }
-
-    async function submitAddCar(e) {
-      e.preventDefault();
-      try {
-        await apiPost(`/api/v1/cars?gallery_id=${selectedGalleryId}`, {
-          plateNumber: document.getElementById('car-plate').value,
-          model: document.getElementById('car-model').value,
-          year: Number(document.getElementById('car-year').value),
-          color: document.getElementById('car-color').value,
-          currentOdometer: Number(document.getElementById('car-odometer').value),
-          oilChangeInterval: Number(document.getElementById('car-oil-interval').value),
-          filterChangeInterval: Number(document.getElementById('car-filter-interval').value),
-          imageUrl: null
-        });
-
-        triggerAlert('تم التسجيل', 'تم حفظ وتسجيل السيارة بالمعرض بنجاح.');
-        closeAddCarModal();
-        
-        // Reset inputs
-        document.getElementById('car-plate').value = '';
-        document.getElementById('car-model').value = '';
-        document.getElementById('car-year').value = '2026';
-        document.getElementById('car-color').value = 'رمادي غير لامع';
-        document.getElementById('car-odometer').value = '5000';
-
-        await loadScopedGalleryData();
-      } catch (err) {
-        triggerAlert('خطأ بالتسجيل', err.message, 'error');
-      }
-    }
-
-    async function submitAddDriver(e) {
-      e.preventDefault();
-      try {
-        await apiPost(`/api/v1/drivers?gallery_id=${selectedGalleryId}`, {
-          fullName: document.getElementById('drv-name').value,
-          email: document.getElementById('drv-email').value,
-          password: document.getElementById('drv-password').value,
-          nationalId: document.getElementById('drv-national-id').value,
-          nationalIdUrl: "/uploads/mock-national-id.jpg",
-          drivingLicenseUrl: "/uploads/mock-license.jpg"
-        });
-
-        triggerAlert('تمت الإضافة', 'تم إنشاء حساب سائق وربطه بالمعرض بنجاح.');
-        closeAddDriverModal();
-
-        // Reset inputs
-        document.getElementById('drv-name').value = '';
-        document.getElementById('drv-email').value = '';
-        document.getElementById('drv-password').value = '';
-        document.getElementById('drv-national-id').value = '';
-
-        await loadScopedGalleryData();
-      } catch (err) {
-        triggerAlert('خطأ بالإرسال', err.message, 'error');
-      }
-    }
-
-    // Logout
-    function logoutSession() {
-      safeStorage.clear();
-      window.location.href = 'index.html';
-    }
-
-    // Initialize
-    loadAllGalleries();
   </script>
-
 </body>
 </html>
