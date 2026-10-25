@@ -1034,6 +1034,10 @@
                   <input type="checkbox" value="SETTINGS" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('SETTINGS') ? 'checked' : ''}>
                   <span>⚙️ إعدادات المطعم</span>
                 </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/60 hover:border-slate-700 cursor-pointer text-slate-300">
+                  <input type="checkbox" value="QR" data-user-id="${u.id}" class="user-perm-checkbox accent-purple-600 rounded" ${userPerms.includes('QR') ? 'checked' : ''}>
+                  <span>📱 كود QR الذكي</span>
+                </label>
               </div>
             </div>
           </div>
@@ -1045,7 +1049,7 @@
       const checkboxes = document.querySelectorAll(`.user-perm-checkbox[data-user-id="${userId}"]`);
       let allowed = [];
       if (role === 'RESTAURANT_ADMIN') {
-        allowed = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS', 'MENU', 'REPORTS', 'INVENTORY', 'RECIPES', 'SETTINGS'];
+        allowed = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS', 'MENU', 'REPORTS', 'INVENTORY', 'RECIPES', 'SETTINGS', 'QR'];
       } else if (role === 'CASHIER') {
         allowed = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS'];
       } else if (role === 'KITCHEN') {

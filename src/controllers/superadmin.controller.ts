@@ -193,7 +193,7 @@ export class SuperAdminController {
           fullName: ownerName || `مدير ${name}`,
           passwordHash,
           role: Role.RESTAURANT_ADMIN,
-          permissions: 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS',
+          permissions: 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS,QR',
           restaurantId: restaurant.id
         }
       });
@@ -372,7 +372,7 @@ export class SuperAdminController {
       if (!userPerms) {
         if (role === Role.CASHIER) userPerms = 'POS,ORDERS,CAPTAINS,CUSTOMERS';
         else if (role === Role.KITCHEN) userPerms = 'ORDERS';
-        else userPerms = 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS';
+        else userPerms = 'POS,ORDERS,CAPTAINS,CUSTOMERS,MENU,REPORTS,INVENTORY,RECIPES,SETTINGS,QR';
       }
 
       const passwordHash = await bcrypt.hash(password, 10);

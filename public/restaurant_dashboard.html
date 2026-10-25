@@ -1832,6 +1832,11 @@
           userPerms = ['ORDERS'];
         }
 
+        // Restaurant Admin & Super Admin always have QR code permission
+        if ((user.role === 'RESTAURANT_ADMIN' || user.role === 'SUPER_ADMIN') && !userPerms.includes('QR')) {
+          userPerms.push('QR');
+        }
+
         // Apply tab visibility based on user permissions
         const tabPermissions = [
           { id: 'tab-btn-pos', perm: 'POS' },
@@ -1989,6 +1994,11 @@
           userPerms = ['POS', 'ORDERS', 'CAPTAINS', 'CUSTOMERS'];
         } else if (currentUser.role === 'KITCHEN') {
           userPerms = ['ORDERS'];
+        }
+
+        // Restaurant Admin always has QR code permission
+        if ((currentUser.role === 'RESTAURANT_ADMIN' || currentUser.role === 'SUPER_ADMIN') && !userPerms.includes('QR')) {
+          userPerms.push('QR');
         }
 
         const tabPermMap = {
