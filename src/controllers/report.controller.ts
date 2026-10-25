@@ -121,7 +121,27 @@ export class ReportController {
       });
 
       if (orders.length === 0) {
-        return res.status(400).json({ error: 'لا توجد طلبات مفتوحة لليوم الحالي لإغلاقها.' });
+        // Close any orphan cancelled orders if present
+        const cancelledOrders = await prisma.order.findMany({
+          where: { restaurantId, closureId: null, status: 'CANCELLED' }
+        });
+        if (cancelledOrders.length > 0) {
+          const lastClosure = await prisma.dailyClosure.findFirst({
+            where: { restaurantId },
+            orderBy: { closedAt: 'desc' }
+          });
+          if (lastClosure) {
+            await prisma.order.updateMany({
+              where: { id: { in: cancelledOrders.map(o => o.id) } },
+              data: { closureId: lastClosure.id }
+            });
+          }
+        }
+
+        return res.status(200).json({
+          message: 'الوردية الحالية مغلقة ومصفرة بالفعل (0 طلبات حالية) 🔒✨',
+          alreadyClosed: true
+        });
       }
 
       let totalRevenue = 0;
@@ -177,16 +197,30 @@ export class ReportController {
         });
 
         const orderIds = orders.map(o => o.id);
+        // Mark all active orders belonging to this shift as DELIVERED and link to closure
         await tx.order.updateMany({
           where: { id: { in: orderIds } },
+          data: {
+            closureId: createdClosure.id,
+            status: 'DELIVERED'
+          }
+        });
+
+        // Also close any cancelled orders belonging to this shift
+        await tx.order.updateMany({
+          where: {
+            restaurantId,
+            closureId: null,
+            status: 'CANCELLED'
+          },
           data: { closureId: createdClosure.id }
         });
 
         return createdClosure;
-      });
+      }, { timeout: 20000, maxWait: 10000 });
 
       return res.status(201).json({
-        message: 'تم إغلاق اليوم المالي بنجاح 🔒 وتصفير الوردية الحالية!',
+        message: 'تم إغلاق اليوم المالي وتصفير الوردية الحالية بنجاح 🔒✅',
         closure
       });
     } catch (err: any) {
@@ -260,7 +294,10 @@ export class ReportController {
       }
 
       // Date filtering
-      if (from || to) {
+      if (!from && !to) {
+        // Current active shift: only unclosed orders
+        where.closureId = null;
+      } else {
         where.createdAt = {};
         if (from) {
           const fromDate = new Date(`${from}T00:00:00.000Z`);

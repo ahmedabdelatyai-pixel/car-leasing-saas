@@ -364,7 +364,7 @@ export class OrderController {
    */
   static async getOrders(req: Request, res: Response) {
     try {
-      const { status, type } = req.query;
+      const { status, type, shift } = req.query;
 
       const where: any = {};
       if (status && status !== 'ALL') {
@@ -372,6 +372,10 @@ export class OrderController {
       }
       if (type && type !== 'ALL') {
         where.orderType = type as OrderType;
+      }
+      // If shift is not 'all', only return active orders of the unclosed shift
+      if (shift !== 'all') {
+        where.closureId = null;
       }
 
       const orders = await prisma.order.findMany({

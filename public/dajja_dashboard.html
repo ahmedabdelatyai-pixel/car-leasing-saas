@@ -405,9 +405,9 @@
          TAB 2: LIVE ORDERS PANE
          ============================================== -->
     <section id="pane-orders" class="space-y-4 hidden">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <!-- Status filter buttons -->
-        <div class="flex gap-1.5 bg-black/30 p-1 rounded-xl border border-white/5 text-xs">
+        <div class="flex flex-wrap gap-1.5 bg-black/30 p-1 rounded-xl border border-white/5 text-xs">
           <button onclick="filterOrders('ALL')" class="order-filter-btn active px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white">الكل</button>
           <button onclick="filterOrders('PENDING')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">جديد 🕒</button>
           <button onclick="filterOrders('PREPARING')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">في المطبخ 🍳</button>
@@ -415,10 +415,24 @@
           <button onclick="filterOrders('DELIVERED')" class="order-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white">مكتمل ✅</button>
         </div>
 
-        <button onclick="loadLiveOrders()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition-all">
-          <span>🔄</span>
-          <span>تحديث</span>
-        </button>
+        <!-- Shift mode switcher (Current active shift vs All history) -->
+        <div class="flex items-center gap-2">
+          <div class="flex bg-black/40 p-1 rounded-xl border border-white/10 text-xs">
+            <button type="button" onclick="setOrdersShiftView('current')" id="btn-shift-view-current" class="px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white transition-all flex items-center gap-1">
+              <span>⚡</span>
+              <span>الوردية الحالية</span>
+            </button>
+            <button type="button" onclick="setOrdersShiftView('all')" id="btn-shift-view-all" class="px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1">
+              <span>🗄️</span>
+              <span>أرشيف كل الطلبات</span>
+            </button>
+          </div>
+
+          <button onclick="loadLiveOrders()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition-all">
+            <span>🔄</span>
+            <span>تحديث</span>
+          </button>
+        </div>
       </div>
 
       <!-- Orders Grid -->
@@ -2857,13 +2871,41 @@
     // ==============================================
     // 3. ORDERS MANAGEMENT (LIVE KITCHEN)
     // ==============================================
+    let currentShiftView = 'current'; // 'current' or 'all'
+
+    function setOrdersShiftView(view) {
+      currentShiftView = view;
+      const btnCurrent = document.getElementById('btn-shift-view-current');
+      const btnAll = document.getElementById('btn-shift-view-all');
+      if (btnCurrent && btnAll) {
+        if (view === 'current') {
+          btnCurrent.className = "px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white transition-all flex items-center gap-1";
+          btnAll.className = "px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1";
+        } else {
+          btnCurrent.className = "px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1";
+          btnAll.className = "px-3 py-1.5 rounded-lg font-bold bg-orange-600 text-white transition-all flex items-center gap-1";
+        }
+      }
+      loadLiveOrders();
+    }
+
     async function loadLiveOrders() {
       try {
-        const orders = await apiFetch('/api/v1/orders');
+        const url = currentShiftView === 'all' ? '/api/v1/orders?shift=all' : '/api/v1/orders?shift=current';
+        const orders = await apiFetch(url);
         allOrders = orders;
         
-        const activeCount = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length;
-        document.getElementById('count-active-orders').innerText = activeCount;
+        // Active orders count in tab header represents current unclosed active kitchen orders
+        if (currentShiftView === 'current') {
+          const activeCount = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length;
+          document.getElementById('count-active-orders').innerText = activeCount;
+        } else {
+          try {
+            const currentOrders = await apiFetch('/api/v1/orders?shift=current');
+            const activeCount = currentOrders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length;
+            document.getElementById('count-active-orders').innerText = activeCount;
+          } catch (_) {}
+        }
 
         renderOrdersList();
       } catch (err) {
@@ -2888,7 +2930,19 @@
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-500 col-span-full text-center py-12">لا توجد طلبات في هذا القسم حالياً.</p>';
+        if (currentShiftView === 'current') {
+          container.innerHTML = `
+            <div class="col-span-full py-14 px-4 text-center space-y-3 bg-[#111827]/40 border border-white/5 rounded-3xl">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-2xl">
+                🔒
+              </div>
+              <h4 class="text-sm font-black text-white">الوردية الحالية مصفّرة ونظيفة (0 طلبات)</h4>
+              <p class="text-xs text-slate-400 max-w-md mx-auto">تم إغلاق اليومية بنجاح والعداد جاهز لاستقبال طلبات الزبائن الجديدة، أو يمكنك الضغط على "أرشيف كل الطلبات" لمشاهدة الطلبات السابقة.</p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = '<p class="text-xs text-slate-500 col-span-full text-center py-12">لا توجد طلبات في هذا القسم حالياً.</p>';
+        }
         return;
       }
 
@@ -3563,7 +3617,11 @@
           body: JSON.stringify({ notes })
         });
 
-        alert('تم غلق اليوم المالي وتصفير الوردية بنجاح 🔒✅');
+        if (res.alreadyClosed) {
+          alert('الوردية الحالية مغلقة ومصفرة بالفعل (0 طلبات حالية) 🔒✨');
+        } else {
+          alert('تم غلق اليوم المالي وتصفير الوردية بنجاح 🔒✅');
+        }
         closeCloseDayModal();
         
         // Show Z-Report of the closed shift
