@@ -1,0 +1,56 @@
+{
+  "name": "لوحة تحكم مطعم ضجة | POS & Dashboard",
+  "short_name": "لوحة تحكم ضجة",
+  "description": "لوحة تحكم ونظام كاشير وإدارة الطلبات والتقارير لمطعم ضجة",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#ea580c",
+  "orientation": "any",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/dajja_logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/dajja_logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "كاشير المبيعات POS",
+      "short_name": "الكاشير",
+      "description": "فتح شاشة الكاشير وضرب الأوردرات",
+      "url": "/dashboard",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "متابعة الطلبات المباشرة",
+      "short_name": "الطلبات",
+      "description": "شاشة لايف لمتابعة الطلبات والمطبخ والدليفري",
+      "url": "/dashboard",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "المخزون والتكاليف",
+      "short_name": "المخزون",
+      "description": "متابعة أرصدة المخازن والخصم التلقائي",
+      "url": "/inventory",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    },
+    {
+      "name": "موقع الزبائن والمنيو أونلاين",
+      "short_name": "منيو الزبائن",
+      "description": "صفحة طلب العملاء عبر الإنترنت",
+      "url": "/order.html",
+      "icons": [{ "src": "/dajja_logo.jpg", "sizes": "192x192", "type": "image/jpeg" }]
+    }
+  ]
+}

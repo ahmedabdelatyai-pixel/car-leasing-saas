@@ -1,11 +1,14 @@
-﻿// Service Worker for Dajja Restaurant PWA
-const CACHE_NAME = 'dajja-cache-v1';
+// Service Worker for Dajja Restaurant PWA
+const CACHE_NAME = 'dajja-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/order.html',
   '/dajja_dashboard.html',
+  '/restaurant_dashboard.html',
+  '/dashboard',
   '/dajja_logo.jpg',
-  '/manifest.json'
+  '/manifest.json',
+  '/manifest-dashboard.json'
 ];
 
 self.addEventListener('install', (event) => {
