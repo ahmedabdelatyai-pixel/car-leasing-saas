@@ -277,30 +277,83 @@ export class OrderController {
   }
 
   /**
-   * Customer tracks their order by orderNumber.
+   * Customer tracks their order by customer phone number OR orderNumber.
    */
   static async trackOrder(req: Request, res: Response) {
     try {
-      const { orderNumber } = req.params;
+      const rawParam = (req.params.orderNumber || (req.query.phone as string) || (req.query.orderNumber as string) || '').trim();
 
-      const order = await prisma.order.findUnique({
-        where: { orderNumber },
-        include: {
-          items: true,
-          captain: {
-            select: { name: true, phone: true, vehicleType: true }
-          },
-          restaurant: {
-            select: { name: true, phone: true }
-          }
-        }
-      });
-
-      if (!order) {
-        return res.status(404).json({ error: 'Order not found with this code.' });
+      if (!rawParam) {
+        return res.status(400).json({ error: 'يرجى إدخال رقم الهاتف أو كود الطلب للتتبع.' });
       }
 
-      return res.json(order);
+      // Check if rawParam contains digits and looks like a phone number
+      const digitsOnly = rawParam.replace(/[^0-9]/g, '');
+      const isPhoneSearch = digitsOnly.length >= 8 && !rawParam.toUpperCase().startsWith('ORD-');
+
+      let order: any = null;
+      let recentOrders: any[] = [];
+
+      if (isPhoneSearch) {
+        // Strip 0 or 20 prefix for flexible lookup
+        let stripped = digitsOnly;
+        if (stripped.startsWith('20')) stripped = stripped.slice(2);
+        if (stripped.startsWith('0')) stripped = stripped.slice(1);
+
+        const orders = await prisma.order.findMany({
+          where: {
+            OR: [
+              { customerPhone: { contains: digitsOnly } },
+              { customerPhone: { contains: stripped } },
+              { customerPhone: { contains: `0${stripped}` } },
+              { customerPhone: { contains: `20${stripped}` } }
+            ]
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          include: {
+            items: true,
+            captain: {
+              select: { name: true, phone: true, vehicleType: true }
+            },
+            restaurant: {
+              select: { name: true, phone: true }
+            }
+          }
+        });
+
+        if (orders && orders.length > 0) {
+          order = orders[0]; // Most recent order
+          recentOrders = orders;
+        }
+      } else {
+        // Search by exact orderNumber (e.g. ORD-1001)
+        order = await prisma.order.findUnique({
+          where: { orderNumber: rawParam.toUpperCase() },
+          include: {
+            items: true,
+            captain: {
+              select: { name: true, phone: true, vehicleType: true }
+            },
+            restaurant: {
+              select: { name: true, phone: true }
+            }
+          }
+        });
+      }
+
+      if (!order) {
+        return res.status(404).json({
+          error: isPhoneSearch 
+            ? `لم يتم العثور على أي طلبات مسجلة برقم الهاتف (${rawParam}). تأكد من إدخال نفس الرقم المسجل في الأوردر.`
+            : `لم يتم العثور على طلب بهذا الكود (${rawParam}).`
+        });
+      }
+
+      return res.json({
+        ...order,
+        recentOrders: recentOrders.length > 1 ? recentOrders : undefined
+      });
     } catch (err: any) {
       return res.status(500).json({ error: 'Failed to track order', message: err.message });
     }

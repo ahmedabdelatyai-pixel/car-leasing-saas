@@ -137,7 +137,8 @@ router.delete(
 // 4. ORDERS & KITCHEN SYSTEM
 // ==========================================
 router.post('/orders', OrderController.createOrder); // Public for customers to order
-router.get('/orders/track/:orderNumber', OrderController.trackOrder); // Public for customers to track
+router.get('/orders/track', OrderController.trackOrder); // Public for customers to track by query (e.g. ?phone=...)
+router.get('/orders/track/:orderNumber', OrderController.trackOrder); // Public for customers to track by param
 
 router.get(
   '/orders',

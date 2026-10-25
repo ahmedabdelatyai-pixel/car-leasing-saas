@@ -319,22 +319,34 @@
   </div>
 
   <!-- TRACK ORDER MODAL -->
-  <div id="track-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-[#111827] border border-white/10 max-w-sm w-full rounded-3xl p-5 space-y-4 shadow-2xl">
+  <div id="track-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-[#111827] border border-white/10 max-w-md w-full rounded-3xl p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center border-b border-white/10 pb-3">
         <div class="flex items-center gap-2.5">
           <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-8 h-8 rounded-full object-cover border border-orange-500/30">
-          <h3 class="text-sm font-black text-white flex items-center gap-2">
-            <span>🛵</span> تتبع طلبك الحي
-          </h3>
+          <div>
+            <h3 class="text-sm font-black text-white flex items-center gap-2">
+              <span>🛵</span> تتبع طلبك الحي برقم الموبايل
+            </h3>
+            <p class="text-[10px] text-slate-400">اعرف أوردرك فين لحظة بلحظة برقم تليفونك</p>
+          </div>
         </div>
         <button onclick="closeTrackModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <div class="flex gap-2">
-        <input type="text" id="track-order-input" placeholder="ادخل كود الطلب (مثل DJ-1042)" class="flex-1 h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono uppercase">
-        <button onclick="fetchOrderTracking()" class="px-4 h-10 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-xl transition-all">بحث</button>
+      <div class="space-y-1.5">
+        <label class="text-[10px] text-orange-400 block font-bold">📱 أدخل رقم الموبايل المسجل به الطلب:</label>
+        <div class="flex gap-2">
+          <input type="tel" id="track-order-input" onkeyup="if(event.key==='Enter') fetchOrderTracking()" placeholder="01xxxxxxxxx" class="flex-1 h-11 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono font-bold">
+          <button onclick="fetchOrderTracking()" id="btn-do-track" class="px-5 h-11 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-xl shadow-lg glow-orange transition-all active:scale-95 flex items-center gap-1.5 shrink-0">
+            <span>تتبع 🔍</span>
+          </button>
+        </div>
+        <p class="text-[9px] text-slate-500">يمكنك أيضاً إدخال كود الطلب (مثل DJ-1001) إذا رغبت</p>
       </div>
+
+      <!-- Multiple Orders Switcher -->
+      <div id="track-recent-switcher" class="hidden flex gap-1.5 overflow-x-auto custom-scrollbar py-1"></div>
 
       <!-- Tracking Status Result Area -->
       <div id="track-result-area" class="space-y-4 hidden">
@@ -514,12 +526,8 @@
             <span>🛵</span>
             <span>مناطق التوصيل السريع بالإسكندرية</span>
           </h5>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">العصافرة قبلي وبحري</span>
-            <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">ميامي وجمال عبد الناصر</span>
-            <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">المندرة قبلي وبحري</span>
-            <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">سيدي بشر قبلي وبحري</span>
-            <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">شارع 45 ومسجد حمزة</span>
+          <div id="radar-zones-container" class="flex flex-wrap gap-1.5">
+            <!-- Populated dynamically from restaurantData.deliveryZones -->
           </div>
           <p class="text-[10px] text-slate-500 pt-1">يصلك الأوردر في حافظة حرارية ليبقى ساخناً ومقرمشاً كأنك تأكله داخل المطعم!</p>
         </div>
@@ -637,6 +645,7 @@
         renderStoriesRing();
         renderCategoriesPills();
         renderMenuCards();
+        renderRadarZones();
 
         // Check URL Parameters (Table QR scanning or Order tracking)
         const params = new URLSearchParams(window.location.search);
@@ -1077,23 +1086,85 @@
     }
 
 
-    // 7. Track Order Live
-    async function fetchOrderTracking() {
-      const code = document.getElementById('track-order-input').value.trim();
-      if (!code) return;
+    // 7. Track Order Live by Phone or Code
+    let currentTrackingHistory = [];
+
+    async function fetchOrderTracking(forcedParam = null) {
+      const input = (forcedParam || document.getElementById('track-order-input').value).trim();
+      if (!input) {
+        alert('أدخل رقم هاتفك للبحث عن طلبك.');
+        return;
+      }
 
       const resultArea = document.getElementById('track-result-area');
       resultArea.classList.remove('hidden');
-      resultArea.innerHTML = '<p class="text-xs text-center text-slate-400 py-4">جاري الاستعلام عن كود الطلب...</p>';
+      resultArea.innerHTML = '<div class="py-6 text-center text-xs text-orange-400 font-bold space-y-2"><div class="animate-spin text-2xl">⏳</div><p>جاري البحث عن طلباتك الحية برقم الهاتف...</p></div>';
+
+      const btn = document.getElementById('btn-do-track');
+      if (btn) btn.disabled = true;
 
       try {
-        const res = await fetch(`/api/v1/orders/track/${encodeURIComponent(code)}`);
-        const order = await res.json();
-        if (!res.ok) throw new Error(order.error || 'Order not found');
+        const clean = input.replace(/[^0-9]/g, '');
+        const isPhone = clean.length >= 8 && !input.toUpperCase().startsWith('ORD-');
+        const url = isPhone 
+          ? `/api/v1/orders/track?phone=${encodeURIComponent(input)}`
+          : `/api/v1/orders/track/${encodeURIComponent(input)}`;
 
-        displayTrackingResult(order);
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'لم يتم العثور على طلبات لهذا الرقم.');
+
+        if (data.recentOrders && data.recentOrders.length > 0) {
+          currentTrackingHistory = data.recentOrders;
+        } else {
+          currentTrackingHistory = [data];
+        }
+
+        renderTrackingSwitcher(data.id);
+        displayTrackingResult(data);
       } catch (err) {
-        resultArea.innerHTML = `<div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs text-center font-bold">${err.message}</div>`;
+        document.getElementById('track-recent-switcher')?.classList.add('hidden');
+        resultArea.innerHTML = `
+          <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-bold space-y-2">
+            <span class="text-xl block">🔍</span>
+            <p>${err.message}</p>
+            <p class="text-[10px] text-slate-400 font-normal">تأكد من إدخال نفس رقم الموبايل المستخدم أثناء إرسال الطلب.</p>
+          </div>
+        `;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function renderTrackingSwitcher(activeOrderId) {
+      const switcher = document.getElementById('track-recent-switcher');
+      if (!switcher) return;
+
+      if (!currentTrackingHistory || currentTrackingHistory.length <= 1) {
+        switcher.classList.add('hidden');
+        return;
+      }
+
+      switcher.classList.remove('hidden');
+      switcher.innerHTML = `
+        <span class="text-[10px] text-slate-400 block font-bold shrink-0 self-center">طلباتك:</span>
+        ${currentTrackingHistory.map((ord, idx) => {
+          const isActive = ord.id === activeOrderId;
+          const statusTxt = ord.status === 'DELIVERED' ? 'تم التسليم ✅' : 'جاري ⏳';
+          return `
+            <button type="button" onclick="switchTrackedOrder('${ord.id}')" class="px-2.5 py-1 rounded-xl text-[10px] font-bold ${isActive ? 'bg-orange-600 text-white shadow' : 'bg-white/5 text-slate-300 hover:text-white border border-white/5'} transition-all shrink-0 font-mono">
+              #${ord.orderNumber} (${statusTxt})
+            </button>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function switchTrackedOrder(orderId) {
+      const found = currentTrackingHistory.find(o => o.id === orderId);
+      if (found) {
+        renderTrackingSwitcher(found.id);
+        displayTrackingResult(found);
       }
     }
 
@@ -1127,44 +1198,80 @@
         return `
           <div class="flex items-center gap-3">
             <span class="text-sm">${icon}</span>
-            <span class="text-xs ${color} ${isCurrent ? 'scale-105' : ''}">${st.label}</span>
+            <span class="text-xs ${color} ${isCurrent ? 'scale-105 font-bold' : ''}">${st.label}</span>
           </div>
         `;
       }).join('');
 
+      const orderTime = new Date(order.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      // Order Items summary
+      const itemsListHtml = (order.items || []).map(it => `
+        <div class="flex justify-between items-center text-[11px] text-slate-300">
+          <span>${it.quantity}× ${it.name}</span>
+          <span class="font-mono text-white font-bold">${Number(it.totalPrice || it.price * it.quantity)} ج.م</span>
+        </div>
+      `).join('');
+
       resultArea.innerHTML = `
-        <div class="bg-black/40 rounded-2xl p-4 border border-white/5 space-y-3">
-          <div class="flex justify-between items-center border-b border-white/5 pb-2">
+        <div class="bg-black/50 rounded-2xl p-4 border border-white/10 space-y-3.5 shadow-xl">
+          <!-- Order Header -->
+          <div class="flex justify-between items-start border-b border-white/10 pb-3">
             <div>
               <span class="text-[10px] text-slate-400 block">كود الطلب:</span>
               <span class="text-sm font-black text-orange-400 font-mono tracking-wider">${order.orderNumber}</span>
+              <span class="text-[10px] text-slate-400 block mt-0.5">ساعة الطلب: <strong class="text-slate-200 font-mono">${orderTime}</strong></span>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] text-slate-400 block">نوع الطلب:</span>
-              <span class="text-xs font-bold text-white">${order.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}</span>
+            <div class="text-right space-y-1">
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white/10 text-white">
+                ${order.orderType === 'DELIVERY' ? '🛵 دليفري' : order.orderType === 'DINE_IN' ? '🍽️ صالة' : '🥡 تيك واي'}
+              </span>
+              ${order.customerName ? `<span class="text-[10px] text-slate-300 block font-bold">العميل: ${order.customerName}</span>` : ''}
+              ${order.customerPhone ? `<span class="text-[9px] text-orange-400/80 block font-mono">📱 ${order.customerPhone}</span>` : ''}
             </div>
           </div>
 
           <!-- Stepper -->
-          <div class="space-y-2.5 py-1">
+          <div class="space-y-2 py-1 bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
             ${stepperHtml}
           </div>
 
-          <!-- Details -->
-          <div class="border-t border-white/5 pt-2 text-xs space-y-1 text-slate-300">
-            <div class="flex justify-between">
-              <span>الإجمالي:</span>
-              <span class="font-black text-orange-400 font-mono">${order.totalAmount} ج.م</span>
-            </div>
-            ${order.captain ? `
-              <div class="p-2 bg-white/5 rounded-xl border border-white/5 mt-2 flex justify-between items-center">
-                <div>
-                  <span class="text-[9px] text-slate-400 block">كابتن التوصيل:</span>
-                  <span class="text-xs font-bold text-white">${order.captain.name} (${order.captain.phone})</span>
-                </div>
-                <a href="tel:${order.captain.phone}" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold">اتصال 📞</a>
+          <!-- Items Ordered -->
+          ${itemsListHtml ? `
+            <div class="space-y-1.5 pt-1">
+              <span class="text-[10px] text-slate-400 font-bold block">محتويات الطلب:</span>
+              <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 space-y-1">
+                ${itemsListHtml}
               </div>
-            ` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Delivery Address if delivery -->
+          ${order.deliveryAddress ? `
+            <div class="text-[11px] text-slate-300 bg-white/5 p-2.5 rounded-xl border border-white/5 space-y-0.5">
+              <span class="text-[9px] text-slate-400 block font-bold">📍 عنوان التوصيل:</span>
+              <p class="leading-snug">${order.deliveryAddress}</p>
+            </div>
+          ` : ''}
+
+          <!-- Captain Info -->
+          ${order.captain ? `
+            <div class="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl flex justify-between items-center">
+              <div>
+                <span class="text-[9px] text-emerald-400 block font-bold">🛵 كابتن التوصيل:</span>
+                <span class="text-xs font-black text-white">${order.captain.name}</span>
+                <span class="text-[10px] text-slate-400 block font-mono">${order.captain.phone}</span>
+              </div>
+              <a href="tel:${order.captain.phone}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                <span>اتصال 📞</span>
+              </a>
+            </div>
+          ` : ''}
+
+          <!-- Totals -->
+          <div class="border-t border-white/10 pt-2 flex justify-between items-center text-xs">
+            <span class="text-slate-300">المبلغ الإجمالي:</span>
+            <span class="text-sm font-black text-orange-400 font-mono">${Number(order.totalAmount)} ج.م</span>
           </div>
         </div>
       `;
@@ -1433,7 +1540,20 @@
     // ==============================================
     // 10. BRANCHES & NAVIGATION LOGIC
     // ==============================================
+    function renderRadarZones() {
+      const container = document.getElementById('radar-zones-container');
+      if (!container) return;
+      const raw = restaurantData?.deliveryZones || "العصافرة قبلي وبحري, ميامي وجمال عبد الناصر, المندرة قبلي وبحري, سيدي بشر قبلي وبحري, شارع 45 ومسجد حمزة";
+      const zones = raw.split(',').map(z => z.trim()).filter(Boolean);
+      container.innerHTML = zones.map(z => `
+        <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/5 text-slate-300 border border-white/5">
+          📍 ${z}
+        </span>
+      `).join('');
+    }
+
     function openBranchesModal() {
+      renderRadarZones();
       const modal = document.getElementById('branches-modal');
       if (modal) {
         modal.classList.remove('hidden');

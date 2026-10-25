@@ -51,6 +51,7 @@ model Restaurant {
   whatsappNumber  String?     @default("01210783175") @map("whatsapp_number") @db.VarChar(50)
   address         String?     @default("ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب") @db.VarChar(255)
   googleMapsUrl   String?     @default("https://maps.google.com/?q=31.2156,29.9553") @map("google_maps_url") @db.Text
+  deliveryZones   String?     @default("العصافرة قبلي وبحري, ميامي وجمال عبد الناصر, المندرة قبلي وبحري, سيدي بشر قبلي وبحري, شارع 45 ومسجد حمزة") @map("delivery_zones") @db.Text
   deliveryFee     Decimal     @default(15.00) @map("delivery_fee") @db.Decimal(10, 2)
   minOrderAmount  Decimal     @default(0.00) @map("min_order_amount") @db.Decimal(10, 2)
   estimatedTime   String?     @default("30 - 45 دقيقة") @map("estimated_time") @db.VarChar(50)
