@@ -20,6 +20,9 @@ export class RestaurantController {
       ...(whereClause && { where: whereClause }),
       include: {
         overheads: true,
+        stories: {
+          orderBy: { sortOrder: 'asc' }
+        },
         categories: {
           orderBy: { sortOrder: 'asc' },
           include: {
@@ -162,6 +165,9 @@ export class RestaurantController {
         where: { id: created.id },
         include: {
           overheads: true,
+          stories: {
+            orderBy: { sortOrder: 'asc' }
+          },
           categories: {
             orderBy: { sortOrder: 'asc' },
             include: {
@@ -274,6 +280,7 @@ export class RestaurantController {
         phone,
         whatsappNumber,
         address,
+        googleMapsUrl,
         deliveryFee,
         minOrderAmount,
         estimatedTime,
@@ -295,6 +302,7 @@ export class RestaurantController {
           phone: phone !== undefined ? phone.trim() : undefined,
           whatsappNumber: whatsappNumber !== undefined ? whatsappNumber.trim() : undefined,
           address: address !== undefined ? address.trim() : undefined,
+          googleMapsUrl: googleMapsUrl !== undefined ? googleMapsUrl.trim() : undefined,
           deliveryFee: deliveryFee !== undefined ? Number(deliveryFee) : undefined,
           minOrderAmount: minOrderAmount !== undefined ? Number(minOrderAmount) : undefined,
           estimatedTime: estimatedTime !== undefined ? estimatedTime.trim() : undefined,
@@ -416,4 +424,98 @@ export class RestaurantController {
       return res.status(500).json({ error: 'Failed to delete menu item', message: err.message });
     }
   }
+
+  /**
+   * Get all stories for the restaurant (Admin or Public)
+   */
+  static async getStories(req: Request, res: Response) {
+    try {
+      const restaurant = await RestaurantController.getOrCreateRestaurant(
+        (req.query.restaurant || req.query.restaurantId || (req as any).user?.restaurantId) as string | undefined
+      );
+      const stories = await prisma.story.findMany({
+        where: { restaurantId: restaurant.id },
+        orderBy: { sortOrder: 'asc' }
+      });
+      return res.json(stories);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'Failed to fetch stories', message: err.message });
+    }
+  }
+
+  /**
+   * Create a new story (Admin)
+   */
+  static async createStory(req: Request, res: Response) {
+    try {
+      const restaurant = await RestaurantController.getOrCreateRestaurant((req as any).user?.restaurantId);
+      const { title, subtitle, imageUrl, badge, priceText, linkedItemId, actionText, sortOrder, isActive } = req.body;
+
+      if (!title || !imageUrl) {
+        return res.status(400).json({ error: 'Title and Image URL are required for story' });
+      }
+
+      const story = await prisma.story.create({
+        data: {
+          restaurantId: restaurant.id,
+          title: title.trim(),
+          subtitle: subtitle ? subtitle.trim() : null,
+          imageUrl: imageUrl.trim(),
+          badge: badge ? badge.trim() : 'عرض خاص 🔥',
+          priceText: priceText ? priceText.trim() : null,
+          linkedItemId: linkedItemId || null,
+          actionText: actionText ? actionText.trim() : 'اطلب الآن 🚀',
+          sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
+          isActive: isActive !== undefined ? Boolean(isActive) : true
+        }
+      });
+
+      return res.status(201).json(story);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'Failed to create story', message: err.message });
+    }
+  }
+
+  /**
+   * Update an existing story (Admin)
+   */
+  static async updateStory(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { title, subtitle, imageUrl, badge, priceText, linkedItemId, actionText, sortOrder, isActive } = req.body;
+
+      const story = await prisma.story.update({
+        where: { id },
+        data: {
+          title: title !== undefined ? title.trim() : undefined,
+          subtitle: subtitle !== undefined ? (subtitle ? subtitle.trim() : null) : undefined,
+          imageUrl: imageUrl !== undefined ? imageUrl.trim() : undefined,
+          badge: badge !== undefined ? (badge ? badge.trim() : null) : undefined,
+          priceText: priceText !== undefined ? (priceText ? priceText.trim() : null) : undefined,
+          linkedItemId: linkedItemId !== undefined ? (linkedItemId || null) : undefined,
+          actionText: actionText !== undefined ? (actionText ? actionText.trim() : null) : undefined,
+          sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
+          isActive: isActive !== undefined ? Boolean(isActive) : undefined
+        }
+      });
+
+      return res.json(story);
+    } catch (err: any) {
+      return res.status(500).json({ error: 'Failed to update story', message: err.message });
+    }
+  }
+
+  /**
+   * Delete a story (Admin)
+   */
+  static async deleteStory(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      await prisma.story.delete({ where: { id } });
+      return res.json({ message: 'Story deleted successfully' });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'Failed to delete story', message: err.message });
+    }
+  }
 }
+

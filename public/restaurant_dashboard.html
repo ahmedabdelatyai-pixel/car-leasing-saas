@@ -226,6 +226,9 @@
     <button onclick="switchTab('qr')" id="tab-btn-qr" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-all">
       <span>📱</span> كود QR والمنيو الذكي
     </button>
+    <button onclick="switchTab('stories')" id="tab-btn-stories" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-pink-400 hover:text-pink-300 flex items-center gap-2 transition-all">
+      <span>✨</span> الستوري وعروض الواجهة (<span id="count-stories-badge">0</span>)
+    </button>
     <a href="/inventory" id="nav-link-inventory" class="nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-amber-400 hover:text-amber-300 flex items-center gap-2 transition-all">
       <span>📦</span> المخزون والبضاعة
     </a>
@@ -920,6 +923,70 @@
     </section>
 
     <!-- ==============================================
+         TAB: RESTAURANT STORIES & PROMOTIONS MANAGEMENT
+         ============================================== -->
+    <section id="pane-stories" class="space-y-6 hidden">
+      <!-- Header with Action -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-xl">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">✨</span>
+            <h2 class="text-base font-black text-white">إدارة ستوري وعروض مطعم ضجة (Instagram Stories)</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30">جديد وحصري 🔥</span>
+          </div>
+          <p class="text-xs text-slate-400">تحكم كامل في القصص التفاعلية، صور الأطباق، العروض الخاصة، والطلب الفوري السريع لزبائنك</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="order.html" target="_blank" class="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow">
+            <span>👁️</span>
+            <span>معاينة الواجهة لايف</span>
+          </a>
+          <button onclick="openAddStoryModal()" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600 hover:from-pink-500 hover:to-orange-500 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-lg glow-orange active:scale-95">
+            <span>➕</span>
+            <span>إضافة ستوري جديد</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick KPI Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center text-lg">📸</div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-bold">إجمالي القصص</span>
+            <span id="stat-stories-total" class="text-lg font-black text-white font-mono">0</span>
+          </div>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-lg">🟢</div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-bold">النشطة للعملاء</span>
+            <span id="stat-stories-active" class="text-lg font-black text-emerald-400 font-mono">0</span>
+          </div>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center text-lg">🍔</div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-bold">مرتبطة بأصناف طلب</span>
+            <span id="stat-stories-linked" class="text-lg font-black text-orange-400 font-mono">0</span>
+          </div>
+        </div>
+        <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-lg">⚡</div>
+          <div>
+            <span class="text-[10px] text-slate-400 block font-bold">معدل التحويل المتوقع</span>
+            <span class="text-lg font-black text-purple-400 font-mono">+38%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stories Grid -->
+      <div id="stories-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ==============================================
          TAB 6: RESTAURANT SETTINGS PANE
          ============================================== -->
     <section id="pane-settings" class="max-w-3xl mx-auto space-y-6 hidden">
@@ -1045,6 +1112,12 @@
             <div class="space-y-1">
               <label class="text-[10px] text-slate-400 block font-semibold">عنوان الفرع بالتفصيل</label>
               <input type="text" id="set-address" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] text-orange-400 block font-bold">📍 رابط لوكيشن الفرع على خرائط جوجل (Google Maps URL)</label>
+              <input type="url" id="set-google-maps" placeholder="https://maps.google.com/?q=31.2156,29.9553" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-orange-500/30 text-white focus:outline-none font-mono">
+              <p class="text-[10px] text-slate-500">يظهر لزبائنك في زر "موقعنا على الخريطة" لتوجيههم بنقرة واحدة عبر GPS</p>
             </div>
           </div>
 
@@ -1374,6 +1447,120 @@
         <div class="flex gap-2 pt-2">
           <button type="submit" class="flex-1 h-10 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl transition-all">تسجيل ✅</button>
           <button type="button" onclick="closeAddCaptainModal()" class="flex-1 h-10 bg-white/5 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-all">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT STORY MODAL -->
+  <div id="story-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-white/10 max-w-xl w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="text-sm font-black text-white flex items-center gap-2" id="modal-story-title">
+          <span>✨</span>
+          <span>إضافة ستوري ترويجي جديد</span>
+        </h3>
+        <button type="button" onclick="closeStoryModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form onsubmit="submitStory(event)" class="space-y-4">
+        <input type="hidden" id="story-id">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <!-- Left Column: Inputs -->
+          <div class="space-y-3">
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-300 block font-bold">عنوان الستوري (العريض) *</label>
+              <input type="text" id="story-title" required oninput="updateStoryPreview()" placeholder="مثال: مطة الجبنة الخطيرة 🧀" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-400 block font-semibold">الوصف التشويقي / التفاصيل</label>
+              <textarea id="story-subtitle" rows="2" oninput="updateStoryPreview()" placeholder="مثال: بيتزا غرقانة موتزاريلا طبيعي..." class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none"></textarea>
+            </div>
+
+            <!-- IMAGE SECTION -->
+            <div class="space-y-2 bg-black/40 p-3 rounded-2xl border border-white/5">
+              <label class="text-[10px] text-pink-400 block font-bold">صورة الستوري عالية الدقة 📸 *</label>
+              <input type="file" id="story-file-input" accept="image/*" onchange="handleStoryImageUpload(event)" class="text-[10px] text-slate-400 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-400 file:font-bold hover:file:bg-pink-600 hover:file:text-white cursor-pointer w-full">
+              <span class="text-[9px] text-slate-500 block">أو ضع رابط مباشر للصورة:</span>
+              <input type="url" id="story-img-url" required oninput="updateStoryPreview()" placeholder="https://..." class="w-full h-8 px-2.5 rounded-lg text-[10px] bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">البادج المميز</label>
+                <input type="text" id="story-badge" oninput="updateStoryPreview()" placeholder="الأكثر طلباً 🔥" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">نص السعر (أو العرض)</label>
+                <input type="text" id="story-price-text" oninput="updateStoryPreview()" placeholder="من 60 ج.م" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none font-bold text-orange-400">
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] text-slate-300 block font-bold">🍔 ربط بصنف من المنيو (للطلب بنقرة واحدة)</label>
+              <select id="story-linked-item" onchange="updateStoryPreview()" class="w-full h-10 px-3 rounded-xl text-xs bg-black/60 border border-white/10 text-white focus:outline-none">
+                <option value="">-- بدون ربط (عرض ترويجي فقط) --</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">نص زر الإجراء</label>
+                <input type="text" id="story-action-text" oninput="updateStoryPreview()" placeholder="اطلب الآن 🚀" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] text-slate-400 block font-semibold">ترتيب الظهور</label>
+                <input type="number" id="story-sort-order" value="1" min="0" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white font-mono focus:outline-none">
+              </div>
+            </div>
+
+            <div class="pt-1 flex items-center gap-2">
+              <input type="checkbox" id="story-is-active" checked class="w-4 h-4 rounded text-pink-600 bg-white/5 border-white/20">
+              <label for="story-is-active" class="text-xs text-white font-bold cursor-pointer">مفعل ويظهر للزبائن الآن 🟢</label>
+            </div>
+          </div>
+
+          <!-- Right Column: Live Phone Mockup Preview -->
+          <div class="space-y-2 bg-black/50 p-3 rounded-2xl border border-white/5 flex flex-col items-center">
+            <span class="text-[10px] text-slate-400 font-bold">معاينة حية كما تظهر لشاشة الزبون 📱</span>
+            
+            <div class="w-[200px] h-[330px] rounded-3xl overflow-hidden relative border-2 border-white/20 shadow-2xl bg-black flex flex-col justify-between p-3 select-none">
+              <!-- Background Image -->
+              <img id="preview-mock-img" src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" class="absolute inset-0 w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/30"></div>
+
+              <!-- Top Bar & Badge -->
+              <div class="relative z-10 flex justify-between items-center">
+                <div class="h-1 bg-white/30 rounded-full w-full mx-1">
+                  <div class="h-full bg-orange-500 rounded-full w-1/2"></div>
+                </div>
+              </div>
+              <div class="relative z-10 flex justify-between items-center mt-1">
+                <span id="preview-mock-badge" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-orange-600 text-white shadow">الأكثر طلباً 🔥</span>
+                <span id="preview-mock-price" class="px-2 py-0.5 rounded-full text-[9px] font-black bg-black/60 text-orange-400 border border-orange-500/30">من 60 ج.م</span>
+              </div>
+
+              <!-- Bottom Content -->
+              <div class="relative z-10 space-y-1 text-right">
+                <h4 id="preview-mock-title" class="text-xs font-black text-white leading-tight">مطة الجبنة الخطيرة 🧀</h4>
+                <p id="preview-mock-sub" class="text-[9px] text-slate-200 line-clamp-2 leading-tight">بيتزا غرقانة موتزاريلا طبيعي فريش بتشد لآخر الشارع!</p>
+                <div class="pt-1">
+                  <div class="w-full py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-black text-[10px] shadow-lg flex items-center justify-center gap-1">
+                    <span id="preview-mock-action">اطلب الآن 🚀</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2 border-t border-white/10">
+          <button type="submit" id="btn-save-story" class="flex-1 h-11 bg-gradient-to-r from-pink-600 to-orange-600 hover:from-pink-500 hover:to-orange-500 text-white text-xs font-black rounded-xl shadow-lg glow-orange transition-all flex items-center justify-center gap-2">
+            <span>حفظ الستوري 💾</span>
+          </button>
+          <button type="button" onclick="closeStoryModal()" class="px-5 h-11 bg-white/5 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-all">إلغاء</button>
         </div>
       </form>
     </div>
@@ -2009,6 +2196,7 @@
           captains: { key: 'CAPTAINS', name: 'كباتن الدليفري' },
           customers: { key: 'CUSTOMERS', name: 'دليل العملاء' },
           qr: { key: 'QR', name: 'كود QR' },
+          stories: { key: 'MENU', name: 'الستوري وعروض الواجهة' },
           settings: { key: 'SETTINGS', name: 'إعدادات المطعم' }
         };
 
@@ -2029,7 +2217,8 @@
           reports: { key: 'REPORTS', name: 'التقارير والأرباح' },
           captains: { key: 'CAPTAINS', name: 'كباتن الدليفري' },
           customers: { key: 'CUSTOMERS', name: 'دليل العملاء' },
-          qr: { key: 'QR', name: 'كود QR والمنيو الذكي' }
+          qr: { key: 'QR', name: 'كود QR والمنيو الذكي' },
+          stories: { key: 'MENU', name: 'الستوري وعروض الواجهة' }
         };
         const feat = featureNames[tab];
         if (feat && !features.includes(feat.key)) {
@@ -2042,7 +2231,7 @@
         b.className = "nav-tab px-4 py-3 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all";
       });
 
-      ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'qr', 'settings'].forEach(p => {
+      ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'qr', 'stories', 'settings'].forEach(p => {
         const el = document.getElementById(`pane-${p}`);
         if (el) el.classList.add('hidden');
       });
@@ -2064,6 +2253,7 @@
       if (tab === 'captains') loadCaptains();
       if (tab === 'customers') loadCustomersDirectory();
       if (tab === 'qr') renderQrDashboard();
+      if (tab === 'stories') loadStoriesData();
       if (tab === 'settings') {
         loadSettingsData();
         loadUserProfile();
@@ -3664,6 +3854,8 @@
         document.getElementById('set-phone').value = res.phone || '01210783175 - 01272022986';
         document.getElementById('set-whatsapp').value = res.whatsappNumber || '01210783175';
         document.getElementById('set-address').value = res.address || '';
+        const gmapsEl = document.getElementById('set-google-maps');
+        if (gmapsEl) gmapsEl.value = res.googleMapsUrl || 'https://maps.google.com/?q=31.2156,29.9553';
         document.getElementById('set-delivery-fee').value = res.deliveryFee !== undefined ? Number(res.deliveryFee) : 15;
         document.getElementById('set-min-order').value = res.minOrderAmount !== undefined ? Number(res.minOrderAmount) : 0;
         document.getElementById('set-estimated-time').value = res.estimatedTime || '30 - 45 دقيقة';
@@ -3716,6 +3908,7 @@
         phone: document.getElementById('set-phone').value.trim(),
         whatsappNumber: document.getElementById('set-whatsapp').value.trim(),
         address: document.getElementById('set-address').value.trim(),
+        googleMapsUrl: document.getElementById('set-google-maps')?.value?.trim() || undefined,
         deliveryFee: Number(document.getElementById('set-delivery-fee').value),
         minOrderAmount: Number(document.getElementById('set-min-order').value),
         estimatedTime: document.getElementById('set-estimated-time').value.trim(),
@@ -4736,6 +4929,316 @@
       }
     }
 
+    // ==============================================
+    // 12. RESTAURANT STORIES & PROMOTIONS LOGIC
+    // ==============================================
+    let allStories = [];
+
+    async function loadStoriesData() {
+      try {
+        const stories = await apiFetch('/api/v1/restaurant/stories');
+        allStories = stories || [];
+
+        // Update badges & stats
+        const activeCount = allStories.filter(s => s.isActive).length;
+        const linkedCount = allStories.filter(s => s.linkedItemId).length;
+
+        const badgeEl = document.getElementById('count-stories-badge');
+        if (badgeEl) badgeEl.innerText = activeCount;
+
+        const statTotal = document.getElementById('stat-stories-total');
+        if (statTotal) statTotal.innerText = allStories.length;
+
+        const statActive = document.getElementById('stat-stories-active');
+        if (statActive) statActive.innerText = activeCount;
+
+        const statLinked = document.getElementById('stat-stories-linked');
+        if (statLinked) statLinked.innerText = linkedCount;
+
+        renderStoriesUI();
+      } catch (err) {
+        console.error('Error loading stories:', err);
+      }
+    }
+
+    function renderStoriesUI() {
+      const container = document.getElementById('stories-grid-container');
+      if (!container) return;
+
+      if (!allStories || allStories.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center bg-black/20 rounded-3xl border border-white/5 space-y-3">
+            <span class="text-4xl">📸</span>
+            <h4 class="text-sm font-black text-white">لا توجد قصص ترويجية حالياً</h4>
+            <p class="text-xs text-slate-400">أضف أول ستوري ليعرض لزبائنك بأعلى صفحة الطلب بأسلوب إنستجرام الرائع!</p>
+            <button onclick="openAddStoryModal()" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs rounded-xl transition-all shadow">
+              ➕ إضافة أول ستوري
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = allStories.map(story => {
+        const linkedItem = currentRestaurant?.categories?.flatMap(c => c.items)?.find(i => i.id === story.linkedItemId);
+        const isActive = story.isActive !== false;
+
+        return `
+          <div class="bg-[#111827] border ${isActive ? 'border-pink-500/30 shadow-lg glow-orange' : 'border-white/5 opacity-60'} rounded-3xl overflow-hidden flex flex-col justify-between transition-all group hover:border-pink-500/60">
+            <!-- Visual Story Card (9:14 aspect ratio) -->
+            <div class="h-64 relative bg-black overflow-hidden select-none">
+              <img src="${story.imageUrl}" alt="${story.title}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-[#111827] via-black/40 to-black/30"></div>
+
+              <!-- Top badges -->
+              <div class="absolute top-3 inset-x-3 flex justify-between items-center z-10">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-black/60 text-slate-300 border border-white/10">#${story.sortOrder}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black ${isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                  ${isActive ? 'نشط 🟢' : 'معطل 🔴'}
+                </span>
+              </div>
+
+              <!-- Custom story badge & price -->
+              <div class="absolute top-10 right-3 flex flex-col gap-1 z-10 items-end">
+                ${story.badge ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-pink-600 text-white shadow-md">${story.badge}</span>` : ''}
+                ${story.priceText ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-black/80 text-orange-400 border border-orange-500/30 font-mono">${story.priceText}</span>` : ''}
+              </div>
+
+              <!-- Bottom Content inside poster -->
+              <div class="absolute bottom-3 inset-x-3 z-10 space-y-1">
+                <h3 class="text-sm font-black text-white leading-tight drop-shadow-md">${story.title}</h3>
+                ${story.subtitle ? `<p class="text-[11px] text-slate-300 line-clamp-2 leading-snug drop-shadow">${story.subtitle}</p>` : ''}
+                ${linkedItem ? `
+                  <div class="flex items-center gap-1 text-[10px] text-orange-300 bg-orange-600/30 border border-orange-500/40 px-2 py-0.5 rounded-lg w-fit">
+                    <span>🍔</span>
+                    <span>طلب مباشر: ${linkedItem.name}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Management Card Footer -->
+            <div class="p-3 bg-white/[0.02] border-t border-white/5 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleStoryActive('${story.id}', ${isActive})" class="w-4 h-4 rounded text-pink-600 bg-black/40 border-white/20">
+                  <span class="text-[11px] font-bold ${isActive ? 'text-emerald-400' : 'text-slate-400'}">${isActive ? 'معروض للزبائن' : 'مخفي'}</span>
+                </label>
+                <div class="flex items-center gap-1">
+                  <button onclick="openEditStoryModal('${story.id}')" title="تعديل الستوري" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all text-xs">
+                    ✏️
+                  </button>
+                  <button onclick="confirmDeleteStory('${story.id}', '${story.title.replace(/'/g, "\\'")}')" title="حذف الستوري" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all text-xs">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateStoryLinkedItemsDropdown(selectedId = '') {
+      const select = document.getElementById('story-linked-item');
+      if (!select) return;
+
+      select.innerHTML = '<option value="">-- بدون ربط (عرض ترويجي فقط) --</option>';
+
+      if (currentRestaurant && currentRestaurant.categories) {
+        currentRestaurant.categories.forEach(cat => {
+          if (cat.items && cat.items.length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = `${cat.icon || '🍔'} ${cat.name}`;
+            cat.items.forEach(item => {
+              const opt = document.createElement('option');
+              opt.value = item.id;
+              opt.innerText = `${item.name} (${item.price} ج.م)`;
+              if (item.id === selectedId) opt.selected = true;
+              optgroup.appendChild(opt);
+            });
+            select.appendChild(optgroup);
+          }
+        });
+      }
+    }
+
+    function openAddStoryModal() {
+      document.getElementById('story-id').value = '';
+      document.getElementById('modal-story-title').innerHTML = '<span>✨</span><span>إضافة ستوري ترويجي جديد</span>';
+      document.getElementById('story-title').value = '';
+      document.getElementById('story-subtitle').value = '';
+      document.getElementById('story-img-url').value = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80';
+      document.getElementById('story-badge').value = 'الأكثر طلباً 🔥';
+      document.getElementById('story-price-text').value = 'من 60 ج.م';
+      document.getElementById('story-action-text').value = 'اطلب الآن 🚀';
+      document.getElementById('story-sort-order').value = allStories.length + 1;
+      document.getElementById('story-is-active').checked = true;
+
+      populateStoryLinkedItemsDropdown('');
+      updateStoryPreview();
+
+      const modal = document.getElementById('story-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openEditStoryModal(storyId) {
+      const story = allStories.find(s => s.id === storyId);
+      if (!story) return;
+
+      document.getElementById('story-id').value = story.id;
+      document.getElementById('modal-story-title').innerHTML = '<span>✏️</span><span>تعديل الستوري الترويجي</span>';
+      document.getElementById('story-title').value = story.title;
+      document.getElementById('story-subtitle').value = story.subtitle || '';
+      document.getElementById('story-img-url').value = story.imageUrl;
+      document.getElementById('story-badge').value = story.badge || '';
+      document.getElementById('story-price-text').value = story.priceText || '';
+      document.getElementById('story-action-text').value = story.actionText || 'اطلب الآن 🚀';
+      document.getElementById('story-sort-order').value = story.sortOrder || 1;
+      document.getElementById('story-is-active').checked = story.isActive !== false;
+
+      populateStoryLinkedItemsDropdown(story.linkedItemId || '');
+      updateStoryPreview();
+
+      const modal = document.getElementById('story-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeStoryModal() {
+      const modal = document.getElementById('story-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateStoryPreview() {
+      const title = document.getElementById('story-title').value || 'عنوان الستوري 🍕';
+      const sub = document.getElementById('story-subtitle').value || 'الوصف التشويقي يظهر هنا...';
+      const img = document.getElementById('story-img-url').value || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80';
+      const badge = document.getElementById('story-badge').value || 'الأكثر طلباً 🔥';
+      const price = document.getElementById('story-price-text').value || '';
+      const action = document.getElementById('story-action-text').value || 'اطلب الآن 🚀';
+
+      const mockImg = document.getElementById('preview-mock-img');
+      if (mockImg) mockImg.src = img;
+
+      const mockTitle = document.getElementById('preview-mock-title');
+      if (mockTitle) mockTitle.innerText = title;
+
+      const mockSub = document.getElementById('preview-mock-sub');
+      if (mockSub) mockSub.innerText = sub;
+
+      const mockBadge = document.getElementById('preview-mock-badge');
+      if (mockBadge) {
+        mockBadge.innerText = badge;
+        mockBadge.style.display = badge ? 'inline-block' : 'none';
+      }
+
+      const mockPrice = document.getElementById('preview-mock-price');
+      if (mockPrice) {
+        mockPrice.innerText = price;
+        mockPrice.style.display = price ? 'inline-block' : 'none';
+      }
+
+      const mockAction = document.getElementById('preview-mock-action');
+      if (mockAction) mockAction.innerText = action;
+    }
+
+    async function handleStoryImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        document.getElementById('preview-mock-img').src = previewUrl;
+
+        const res = await fetch('/api/v1/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url) {
+          document.getElementById('story-img-url').value = data.url;
+          document.getElementById('preview-mock-img').src = data.url;
+        }
+      } catch (err) {
+        console.error('Story Image Upload failed:', err);
+        alert('فشل رفع صورة الستوري، يرجى المحاولة مرة أخرى');
+      }
+    }
+
+    async function submitStory(e) {
+      e.preventDefault();
+      const storyId = document.getElementById('story-id').value;
+      const btn = document.getElementById('btn-save-story');
+      btn.disabled = true;
+      btn.innerText = 'جاري الحفظ... ⏳';
+
+      const payload = {
+        title: document.getElementById('story-title').value.trim(),
+        subtitle: document.getElementById('story-subtitle').value.trim(),
+        imageUrl: document.getElementById('story-img-url').value.trim(),
+        badge: document.getElementById('story-badge').value.trim(),
+        priceText: document.getElementById('story-price-text').value.trim(),
+        linkedItemId: document.getElementById('story-linked-item').value || null,
+        actionText: document.getElementById('story-action-text').value.trim() || 'اطلب الآن 🚀',
+        sortOrder: Number(document.getElementById('story-sort-order').value) || 0,
+        isActive: document.getElementById('story-is-active').checked
+      };
+
+      try {
+        if (storyId) {
+          await apiFetch(`/api/v1/restaurant/stories/${storyId}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+          });
+        } else {
+          await apiFetch('/api/v1/restaurant/stories', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+        }
+
+        closeStoryModal();
+        await loadStoriesData();
+        alert('تم حفظ الستوري بنجاح! سيظهر لزبائنك فوراً على الواجهة 🚀');
+      } catch (err) {
+        alert('فشل حفظ الستوري: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>حفظ الستوري 💾</span>';
+      }
+    }
+
+    async function toggleStoryActive(id, currentStatus) {
+      try {
+        await apiFetch(`/api/v1/restaurant/stories/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ isActive: !currentStatus })
+        });
+        await loadStoriesData();
+      } catch (err) {
+        alert('فشل تغيير حالة الستوري: ' + err.message);
+      }
+    }
+
+    async function confirmDeleteStory(id, title) {
+      if (!confirm(`هل أنت متأكد من حذف ستوري "${title}" نهائياً؟`)) return;
+      try {
+        await apiFetch(`/api/v1/restaurant/stories/${id}`, {
+          method: 'DELETE'
+        });
+        await loadStoriesData();
+        alert('تم حذف الستوري بنجاح 🗑️');
+      } catch (err) {
+        alert('فشل حذف الستوري: ' + err.message);
+      }
+    }
+
     // Initial boot
     loadLiveOrders();
     loadCaptains();
@@ -4743,6 +5246,7 @@
     loadUserProfile();
     loadCurrentShiftSummary();
     loadCustomersDirectory();
+    loadStoriesData();
 
     // Auto-refresh live orders and shift summary every 10 seconds
     setInterval(() => {

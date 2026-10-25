@@ -112,6 +112,27 @@ router.delete(
   RestaurantController.deleteMenuItem
 );
 
+// Story Management Routes
+router.get('/restaurant/stories', RestaurantController.getStories);
+router.post(
+  '/restaurant/stories',
+  authenticateToken,
+  authorizePermission('MENU'),
+  RestaurantController.createStory
+);
+router.put(
+  '/restaurant/stories/:id',
+  authenticateToken,
+  authorizePermission('MENU'),
+  RestaurantController.updateStory
+);
+router.delete(
+  '/restaurant/stories/:id',
+  authenticateToken,
+  authorizePermission('MENU'),
+  RestaurantController.deleteStory
+);
+
 // ==========================================
 // 4. ORDERS & KITCHEN SYSTEM
 // ==========================================

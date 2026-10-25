@@ -50,6 +50,7 @@ model Restaurant {
   phone           String?     @default("01210783175 - 01272022986") @db.VarChar(100)
   whatsappNumber  String?     @default("01210783175") @map("whatsapp_number") @db.VarChar(50)
   address         String?     @default("ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب") @db.VarChar(255)
+  googleMapsUrl   String?     @default("https://maps.google.com/?q=31.2156,29.9553") @map("google_maps_url") @db.Text
   deliveryFee     Decimal     @default(15.00) @map("delivery_fee") @db.Decimal(10, 2)
   minOrderAmount  Decimal     @default(0.00) @map("min_order_amount") @db.Decimal(10, 2)
   estimatedTime   String?     @default("30 - 45 دقيقة") @map("estimated_time") @db.VarChar(50)
@@ -82,6 +83,7 @@ model Restaurant {
   overheads          RestaurantOverhead[]
   customers          Customer[]
   pointTransactions  PointTransaction[]
+  stories            Story[]
 
   @@map("restaurants")
 }
@@ -344,5 +346,26 @@ model PointTransaction {
   @@index([restaurantId])
   @@index([customerId])
   @@map("point_transactions")
+}
+
+model Story {
+  id           String     @id @default(uuid()) @db.Uuid
+  restaurantId String     @map("restaurant_id") @db.Uuid
+  title        String     @db.VarChar(100)
+  subtitle     String?    @db.VarChar(255)
+  imageUrl     String     @map("image_url") @db.Text
+  badge        String?    @default("عرض خاص 🔥") @db.VarChar(50)
+  priceText    String?    @map("price_text") @db.VarChar(50)
+  linkedItemId String?    @map("linked_item_id") @db.Uuid
+  actionText   String?    @default("اطلب الآن 🚀") @map("action_text") @db.VarChar(50)
+  sortOrder    Int        @default(0) @map("sort_order")
+  isActive     Boolean    @default(true) @map("is_active")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@map("stories")
 }
 
