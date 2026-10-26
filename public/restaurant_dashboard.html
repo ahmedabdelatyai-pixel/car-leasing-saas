@@ -782,6 +782,7 @@
           <div class="bg-gradient-to-r from-amber-950/40 via-orange-950/30 to-black/60 border border-amber-500/30 p-3.5 rounded-2xl">
             <span class="text-[10px] text-amber-300 block font-bold">(=) صافي النقدية المفترضة بالدرج</span>
             <span id="rep-exp-net-drawer" class="text-lg font-black text-amber-300 font-mono">0 ج.م</span>
+            <span id="rep-exp-net-formula" class="text-[9px] text-slate-400 font-mono block mt-0.5">(العهدة + المبيعات - المصاريف)</span>
           </div>
         </div>
 
@@ -3894,7 +3895,8 @@
       try {
         const shift = await apiFetch('/api/v1/reports/current-shift');
         currentShiftData = shift;
-        currentOpeningDrawerFloat = Number(shift.openingDrawerFloat || 0);
+        const openFloat = Number(shift.openingDrawerFloat !== undefined ? shift.openingDrawerFloat : (shift.openingDrawer !== undefined ? shift.openingDrawer : 0));
+        currentOpeningDrawerFloat = openFloat;
 
         // POS Drawer float badge
         const posDrawerBadge = document.getElementById('pos-drawer-float-badge');
@@ -3902,13 +3904,13 @@
 
         // Settings shift card
         const salesEl = document.getElementById('shift-summary-sales');
-        if (salesEl) salesEl.innerText = `${shift.totalSales} ج.م`;
+        if (salesEl) salesEl.innerText = `${shift.totalSales || 0} ج.م`;
 
         const ordEl = document.getElementById('shift-summary-orders');
-        if (ordEl) ordEl.innerText = `${shift.orderCount} طلب`;
+        if (ordEl) ordEl.innerText = `${shift.orderCount || 0} طلب`;
 
         const typesEl = document.getElementById('shift-summary-types');
-        if (typesEl) typesEl.innerText = `${shift.deliveryCount} دليفري (${shift.deliverySales}ج) | ${shift.takeawayCount} تيك (${shift.takeawaySales}ج)`;
+        if (typesEl) typesEl.innerText = `${shift.deliveryCount || 0} دليفري (${shift.deliverySales || 0}ج) | ${shift.takeawayCount || 0} تيك (${shift.takeawaySales || 0}ج)`;
 
         const openEl = document.getElementById('shift-summary-opened');
         if (openEl) openEl.innerText = shift.openedAt ? new Date(shift.openedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '--';
@@ -3918,23 +3920,27 @@
         if (repExpOpening) repExpOpening.innerText = `${currentOpeningDrawerFloat} ج.م`;
 
         const repExpSales = document.getElementById('rep-exp-sales');
-        if (repExpSales) repExpSales.innerText = `${shift.totalSales} ج.م`;
+        if (repExpSales) repExpSales.innerText = `${shift.totalSales || 0} ج.م`;
 
         const repExpTotal = document.getElementById('rep-exp-total-expenses');
         if (repExpTotal) repExpTotal.innerText = `${shift.totalExpenses || 0} ج.م`;
 
+        const netVal = shift.netDrawerCash !== undefined ? shift.netDrawerCash : (currentOpeningDrawerFloat + (shift.totalSales || 0) - (shift.totalExpenses || 0));
         const repExpNet = document.getElementById('rep-exp-net-drawer');
-        if (repExpNet) repExpNet.innerText = `${shift.netDrawerCash !== undefined ? shift.netDrawerCash : (currentOpeningDrawerFloat + shift.totalSales - (shift.totalExpenses || 0))} ج.م`;
+        if (repExpNet) repExpNet.innerText = `${netVal} ج.م`;
+
+        const repExpFormula = document.getElementById('rep-exp-net-formula');
+        if (repExpFormula) repExpFormula.innerText = `(${currentOpeningDrawerFloat} عهدة + ${shift.totalSales || 0} مبيعات - ${shift.totalExpenses || 0} مصاريف)`;
 
         // Close Day Modal fields
         const modalSales = document.getElementById('close-modal-sales');
-        if (modalSales) modalSales.innerText = `${shift.totalSales} ج.م`;
+        if (modalSales) modalSales.innerText = `${shift.totalSales || 0} ج.م`;
 
         const modalOrders = document.getElementById('close-modal-orders');
-        if (modalOrders) modalOrders.innerText = `${shift.orderCount} طلب`;
+        if (modalOrders) modalOrders.innerText = `${shift.orderCount || 0} طلب`;
 
         const modalTypes = document.getElementById('close-modal-types');
-        if (modalTypes) modalTypes.innerText = `${shift.deliveryCount} دليفري (${shift.deliverySales} ج.م) | ${shift.takeawayCount} تيك واي (${shift.takeawaySales} ج.م)`;
+        if (modalTypes) modalTypes.innerText = `${shift.deliveryCount || 0} دليفري (${shift.deliverySales || 0} ج.م) | ${shift.takeawayCount || 0} تيك واي (${shift.takeawaySales || 0} ج.م)`;
 
         const modalExpenses = document.getElementById('close-modal-expenses');
         if (modalExpenses) modalExpenses.innerText = `${shift.totalExpenses || 0} ج.م`;
@@ -4058,7 +4064,12 @@
       try {
         const data = await apiFetch('/api/v1/expenses/current-shift');
         currentExpensesList = data.expenses || [];
-        currentOpeningDrawerFloat = Number(data.openingDrawerFloat || 0);
+        
+        if (data.openingDrawerFloat !== undefined) {
+          currentOpeningDrawerFloat = Number(data.openingDrawerFloat);
+        } else if (data.openingDrawer !== undefined) {
+          currentOpeningDrawerFloat = Number(data.openingDrawer);
+        }
 
         // Update Drawer Float in POS badge
         const posDrawerBadge = document.getElementById('pos-drawer-float-badge');
@@ -4068,14 +4079,21 @@
         const repExpOpening = document.getElementById('rep-exp-opening-drawer');
         if (repExpOpening) repExpOpening.innerText = `${currentOpeningDrawerFloat} ج.م`;
 
+        const salesVal = data.totalSales !== undefined ? Number(data.totalSales) : Number(currentShiftData?.totalSales || 0);
+        const expVal = data.totalExpenses !== undefined ? Number(data.totalExpenses) : Number(currentShiftData?.totalExpenses || 0);
+        const netVal = data.netDrawerCash !== undefined ? Number(data.netDrawerCash) : (currentOpeningDrawerFloat + salesVal - expVal);
+
         const repExpSales = document.getElementById('rep-exp-sales');
-        if (repExpSales) repExpSales.innerText = `${data.totalSales || 0} ج.م`;
+        if (repExpSales) repExpSales.innerText = `${salesVal} ج.م`;
 
         const repExpTotal = document.getElementById('rep-exp-total-expenses');
-        if (repExpTotal) repExpTotal.innerText = `${data.totalExpenses || 0} ج.م`;
+        if (repExpTotal) repExpTotal.innerText = `${expVal} ج.م`;
 
         const repExpNet = document.getElementById('rep-exp-net-drawer');
-        if (repExpNet) repExpNet.innerText = `${data.netDrawerCash || 0} ج.م`;
+        if (repExpNet) repExpNet.innerText = `${netVal} ج.م`;
+
+        const repExpFormula = document.getElementById('rep-exp-net-formula');
+        if (repExpFormula) repExpFormula.innerText = `(${currentOpeningDrawerFloat} عهدة + ${salesVal} مبيعات - ${expVal} مصاريف)`;
 
         renderExpensesTable(currentExpensesList);
       } catch (err) {
@@ -4260,9 +4278,9 @@
       try {
         const res = await apiFetch('/api/v1/expenses/opening-drawer', {
           method: 'POST',
-          body: JSON.stringify({ amount })
+          body: JSON.stringify({ amount, openingDrawerFloat: amount })
         });
-        currentOpeningDrawerFloat = res.openingDrawerFloat;
+        currentOpeningDrawerFloat = res.openingDrawerFloat !== undefined ? res.openingDrawerFloat : amount;
         closeSetOpeningDrawerModal();
         await loadExpensesData();
         await loadCurrentShiftSummary();

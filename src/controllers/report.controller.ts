@@ -108,6 +108,7 @@ export class ReportController {
         deliveryCount,
         takeawayCount,
         openingDrawer,
+        openingDrawerFloat: openingDrawer,
         totalExpenses: Math.round(totalExpenses * 100) / 100,
         expensesCount: expenses.length,
         netDrawerCash,

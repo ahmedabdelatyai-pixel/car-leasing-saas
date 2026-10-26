@@ -30,17 +30,33 @@ export class ExpenseController {
 
       const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
-      // Also get current opening drawer float
+      // Current opening drawer float
       const rest = await prisma.restaurant.findUnique({
         where: { id: restaurantId },
         select: { openingDrawerFloat: true }
       });
+      const openingDrawerFloat = Number(rest?.openingDrawerFloat || 0);
+
+      // Also calculate active shift sales so both endpoints are 100% consistent
+      const activeOrders = await prisma.order.findMany({
+        where: {
+          restaurantId,
+          closureId: null,
+          status: { not: 'CANCELLED' }
+        },
+        select: { totalAmount: true }
+      });
+      const totalSales = activeOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+      const netDrawerCash = Math.round((openingDrawerFloat + totalSales - totalExpenses) * 100) / 100;
 
       return res.json({
         expenses,
         count: expenses.length,
         totalExpenses: Math.round(totalExpenses * 100) / 100,
-        openingDrawerFloat: Number(rest?.openingDrawerFloat || 0)
+        totalSales: Math.round(totalSales * 100) / 100,
+        openingDrawerFloat,
+        openingDrawer: openingDrawerFloat,
+        netDrawerCash
       });
     } catch (err: any) {
       return res.status(500).json({ error: 'فشل جلب مصاريف الوردية الحالية', message: err.message });
@@ -153,11 +169,13 @@ export class ExpenseController {
   static async updateOpeningDrawer(req: Request, res: Response) {
     try {
       const restaurantId = await ExpenseController.getRestaurantId();
-      const { openingDrawerFloat } = req.body;
+      const val = req.body.openingDrawerFloat !== undefined 
+        ? req.body.openingDrawerFloat 
+        : (req.body.amount !== undefined ? req.body.amount : req.body.openingDrawer);
 
-      const numVal = Number(openingDrawerFloat);
+      const numVal = Number(val);
       if (isNaN(numVal) || numVal < 0) {
-        return res.status(400).json({ error: 'يرجى إدخال قيمة صحيحة لرصيد الدرج' });
+        return res.status(400).json({ error: 'يرجى إدخال قيمة صحيحة لرصيد الدرج (رقم موجب أو 0)' });
       }
 
       const updated = await prisma.restaurant.update({
@@ -168,7 +186,8 @@ export class ExpenseController {
 
       return res.json({
         message: 'تم تحديث رصيد بداية الدرج (الفكة) بنجاح 💰',
-        openingDrawerFloat: Number(updated.openingDrawerFloat)
+        openingDrawerFloat: Number(updated.openingDrawerFloat),
+        openingDrawer: Number(updated.openingDrawerFloat)
       });
     } catch (err: any) {
       return res.status(500).json({ error: 'فشل تحديث رصيد الدرج', message: err.message });
