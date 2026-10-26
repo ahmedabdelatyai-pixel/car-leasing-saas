@@ -4,6 +4,7 @@ import { RestaurantController } from '../controllers/restaurant.controller';
 import { OrderController } from '../controllers/order.controller';
 import { CaptainController } from '../controllers/captain.controller';
 import { ReportController } from '../controllers/report.controller';
+import { ExpenseController } from '../controllers/expense.controller';
 import { InventoryController } from '../controllers/inventory.controller';
 import { RecipeController } from '../controllers/recipe.controller';
 import { OverheadController } from '../controllers/overhead.controller';
@@ -272,6 +273,39 @@ router.get(
   authenticateToken,
   authorizePermission('REPORTS'),
   ReportController.getPeriodReport
+);
+
+// ==========================================
+// 7.B DAILY EXPENSES & DRAWER CASH (المصاريف اليومية وحركة الدرج)
+// ==========================================
+router.get(
+  '/expenses/current-shift',
+  authenticateToken,
+  ExpenseController.getCurrentShiftExpenses
+);
+
+router.post(
+  '/expenses',
+  authenticateToken,
+  ExpenseController.createExpense
+);
+
+router.put(
+  '/expenses/:id',
+  authenticateToken,
+  ExpenseController.updateExpense
+);
+
+router.delete(
+  '/expenses/:id',
+  authenticateToken,
+  ExpenseController.deleteExpense
+);
+
+router.post(
+  '/expenses/opening-drawer',
+  authenticateToken,
+  ExpenseController.updateOpeningDrawer
 );
 
 // ==========================================

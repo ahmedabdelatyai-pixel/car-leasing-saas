@@ -396,6 +396,25 @@
             </button>
           </div>
 
+          <!-- Drawer Float & Quick Expense Payout -->
+          <div class="pt-2 border-t border-white/5 space-y-2">
+            <div class="flex items-center justify-between text-[11px] bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+              <span class="text-slate-400 font-bold flex items-center gap-1">
+                <span>💰</span>
+                <span>فكة بداية الدرج:</span>
+              </span>
+              <div class="flex items-center gap-1.5">
+                <span id="pos-drawer-float-badge" class="font-mono font-bold text-amber-300">0 ج.م</span>
+                <button type="button" onclick="openSetOpeningDrawerModal()" title="تعديل رصيد بداية الدرج" class="text-[10px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5">✏️</button>
+              </div>
+            </div>
+
+            <button type="button" onclick="openAddExpenseModal()" class="w-full h-9 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-300 hover:text-amber-200 font-bold text-[11px] rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95">
+              <span>💸</span>
+              <span>صرف نقدية من الدرج / تسجيل مصروف</span>
+            </button>
+          </div>
+
         </div>
 
       </div>
@@ -514,6 +533,10 @@
           <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
             <button type="button" onclick="switchReportsSubTab('summary')" id="rep-subtab-btn-summary" class="px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all">
               📈 تقرير الفترة والأصناف
+            </button>
+            <button type="button" onclick="switchReportsSubTab('expenses')" id="rep-subtab-btn-expenses" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1">
+              <span>💸</span>
+              <span>حركة الدرج والمصروفات</span>
             </button>
             <button type="button" onclick="switchReportsSubTab('archive')" id="rep-subtab-btn-archive" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
               🔒 أرشيف الأيام المقفولة
@@ -725,6 +748,77 @@
                 </tr>
               </thead>
               <tbody id="daily-closures-table-body" class="divide-y divide-white/5">
+                <!-- populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           SUBVIEW 3: CASH DRAWER & DAILY EXPENSES
+           ============================================== -->
+      <div id="rep-subview-expenses" class="space-y-4 hidden">
+        <!-- 4 Quick Stats Badges for Drawer -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-black/40 border border-white/5 p-3.5 rounded-2xl flex justify-between items-center">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-bold">رصيد بداية الدرج (الفكة)</span>
+              <span id="rep-exp-opening-drawer" class="text-base font-black text-amber-300 font-mono">0 ج.م</span>
+            </div>
+            <button onclick="openSetOpeningDrawerModal()" title="تعديل رصيد بداية الدرج" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs flex items-center justify-center">✏️</button>
+          </div>
+
+          <div class="bg-black/40 border border-white/5 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-slate-400 block font-bold">(+) إجمالي مبيعات اليومية</span>
+            <span id="rep-exp-sales" class="text-base font-black text-emerald-400 font-mono">0 ج.م</span>
+          </div>
+
+          <div class="bg-black/40 border border-white/5 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-slate-400 block font-bold">(-) إجمالي المصروفات المنصرفة</span>
+            <span id="rep-exp-total-expenses" class="text-base font-black text-rose-400 font-mono">0 ج.م</span>
+          </div>
+
+          <div class="bg-gradient-to-r from-amber-950/40 via-orange-950/30 to-black/60 border border-amber-500/30 p-3.5 rounded-2xl">
+            <span class="text-[10px] text-amber-300 block font-bold">(=) صافي النقدية المفترضة بالدرج</span>
+            <span id="rep-exp-net-drawer" class="text-lg font-black text-amber-300 font-mono">0 ج.م</span>
+          </div>
+        </div>
+
+        <!-- Expenses Table & Actions -->
+        <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
+            <div>
+              <h3 class="text-xs font-black text-white flex items-center gap-2">
+                <span>💸</span> مصاريف الوردية الحالية والنثريات النقدية
+              </h3>
+              <p class="text-[10px] text-slate-400">سجل مشتريات البضاعة اليومية، مستهلكات التشغيل، ويوميات وسلف العمالة المنصرفة من الدرج</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="loadExpensesData()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+                <span>🔄</span> تحديث
+              </button>
+              <button onclick="openAddExpenseModal()" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
+                <span>+</span>
+                <span>تسجيل مصروف جديد</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+                  <th class="py-2.5 px-3">التوقيت</th>
+                  <th class="py-2.5 px-3">المبلغ</th>
+                  <th class="py-2.5 px-3">بند وتصنيف المصروف</th>
+                  <th class="py-2.5 px-3">البيان / تفاصيل الصرف</th>
+                  <th class="py-2.5 px-3">المستلم</th>
+                  <th class="py-2.5 px-3">المسجل</th>
+                  <th class="py-2.5 px-3 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="current-shift-expenses-table-body" class="divide-y divide-white/5">
                 <!-- populated dynamically -->
               </tbody>
             </table>
@@ -1728,19 +1822,174 @@
     </div>
   </div>
 
+  <!-- ADD EXPENSE MODAL -->
+  <div id="add-expense-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-amber-500/30 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center text-xl font-bold">
+            💸
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white">تسجيل مصروف من الخزينة / الدرج</h3>
+            <p class="text-[10px] text-slate-400">تسجيل نثريات أو مشتريات بضاعة مخصومة من نقدية الدرج</p>
+          </div>
+        </div>
+        <button onclick="closeAddExpenseModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="add-expense-form" onsubmit="submitCreateExpense(event)" class="space-y-3">
+        <!-- Quick Category Selectors -->
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1.5">تصنيفات سريعة:</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setExpenseCategory('مشتريات بضاعة وسوق')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-amber-600/20 text-slate-300 border border-white/10 hover:border-amber-500/40 transition-all">🛒 بضاعة وسوق</button>
+            <button type="button" onclick="setExpenseCategory('نثريات ومستهلكات تشغيل')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-amber-600/20 text-slate-300 border border-white/10 hover:border-amber-500/40 transition-all">🧻 نثريات ومستهلكات</button>
+            <button type="button" onclick="setExpenseCategory('يوميات وسلف عمالة')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-amber-600/20 text-slate-300 border border-white/10 hover:border-amber-500/40 transition-all">👨‍🍳 سلف ويوميات</button>
+            <button type="button" onclick="setExpenseCategory('صيانة وفواتير')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-amber-600/20 text-slate-300 border border-white/10 hover:border-amber-500/40 transition-all">🔧 صيانة وفواتير</button>
+            <button type="button" onclick="setExpenseCategory('أخرى')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-amber-600/20 text-slate-300 border border-white/10 hover:border-amber-500/40 transition-all">📝 أخرى</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] text-slate-400 block font-semibold mb-1">المبلغ (ج.م) *</label>
+            <input type="number" step="0.5" min="0.5" required id="expense-input-amount" placeholder="مثال: 150" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-amber-300 font-mono font-black focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block font-semibold mb-1">بند المصروف (يدوي أو اختر أعلاه) *</label>
+            <input type="text" required id="expense-input-category" placeholder="مثال: مشتريات بضاعة" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1">البيان / تفاصيل الصرف *</label>
+          <input type="text" required id="expense-input-desc" placeholder="مثال: شراء طماطم وخيار وسلطة من السوق، أو أكياس تيك واي" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1">المستلم / المورد (اختياري)</label>
+          <input type="text" id="expense-input-paidto" placeholder="مثال: عم شكري الخضري / الشيف أحمد" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" id="btn-submit-add-expense" class="flex-1 h-10 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
+            <span>💾</span>
+            <span>حفظ وصرف من الدرج</span>
+          </button>
+          <button type="button" onclick="closeAddExpenseModal()" class="flex-1 h-10 bg-white/5 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT EXPENSE MODAL -->
+  <div id="edit-expense-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-blue-500/30 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-xl font-bold">
+            ✏️
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white">تعديل بيانات المصروف</h3>
+            <p class="text-[10px] text-slate-400">تعديل قيمة أو تفاصيل المصروف المسجل</p>
+          </div>
+        </div>
+        <button onclick="closeEditExpenseModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="edit-expense-form" onsubmit="submitUpdateExpense(event)" class="space-y-3">
+        <input type="hidden" id="edit-expense-id">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] text-slate-400 block font-semibold mb-1">المبلغ (ج.م) *</label>
+            <input type="number" step="0.5" min="0.5" required id="edit-expense-amount" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-amber-300 font-mono font-black focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block font-semibold mb-1">بند المصروف *</label>
+            <input type="text" required id="edit-expense-category" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1">البيان / تفاصيل الصرف *</label>
+          <input type="text" required id="edit-expense-desc" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1">المستلم / المورد (اختياري)</label>
+          <input type="text" id="edit-expense-paidto" class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-slate-300 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" id="btn-submit-edit-expense" class="flex-1 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
+            <span>💾</span>
+            <span>حفظ التعديلات</span>
+          </button>
+          <button type="button" onclick="closeEditExpenseModal()" class="flex-1 h-10 bg-white/5 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SET OPENING DRAWER FLOAT MODAL -->
+  <div id="set-opening-drawer-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-amber-500/30 max-w-sm w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center text-xl font-bold">
+            💵
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white">رصيد بداية الدرج (الفكة)</h3>
+            <p class="text-[10px] text-slate-400">العهدة النقدية المودعة في الدرج مع بداية اليوم</p>
+          </div>
+        </div>
+        <button onclick="closeSetOpeningDrawerModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="set-opening-drawer-form" onsubmit="submitSetOpeningDrawer(event)" class="space-y-4">
+        <div>
+          <label class="text-[10px] text-slate-400 block font-semibold mb-1">مبلغ العهدة الافتتاحية (ج.م):</label>
+          <input type="number" step="0.5" min="0" required id="input-opening-drawer-amount" placeholder="مثال: 500" class="w-full p-3 rounded-xl text-base bg-white/5 border border-white/10 text-amber-300 font-mono font-black focus:outline-none focus:border-amber-500 text-center">
+        </div>
+
+        <p class="text-[11px] text-slate-400 leading-relaxed bg-black/30 p-2.5 rounded-xl border border-white/5">
+          💡 يُحسب هذا المبلغ تلقائياً مع المبيعات اليومية ناقص المصروفات لمعرفة صافي النقدية المفترض وجودها بالدرج عند إغلاق اليوم.
+        </p>
+
+        <div class="flex gap-2">
+          <button type="submit" id="btn-submit-opening-drawer" class="flex-1 h-10 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5">
+            <span>💾</span>
+            <span>حفظ العهدة</span>
+          </button>
+          <button type="button" onclick="closeSetOpeningDrawerModal()" class="flex-1 h-10 bg-white/5 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- CLOSE DAY CONFIRMATION MODAL -->
   <div id="close-day-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="bg-[#111827] border border-red-500/30 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+    <div class="bg-[#111827] border border-red-500/30 max-w-md w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[95vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center gap-3 border-b border-white/5 pb-3">
         <div class="w-10 h-10 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center text-xl font-bold">
           🔒
         </div>
         <div>
           <h3 class="text-sm font-black text-white">غلق اليوم المالي وتقفيل الوردية</h3>
-          <p class="text-[10px] text-slate-400">تأكيد إنهاء الوردية وتصفير عداد اليوم الحالي</p>
+          <p class="text-[10px] text-slate-400">تأكيد إنهاء الوردية وجرد النقدية وتصفير عداد اليوم الحالي</p>
         </div>
       </div>
 
+      <!-- Financial & Drawer Summary -->
       <div class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-xs">
         <div class="flex justify-between items-center">
           <span class="text-slate-400 font-bold">إجمالي مبيعات اليوم:</span>
@@ -1754,6 +2003,32 @@
           <span class="text-slate-400 font-bold">توزيع الطلبات:</span>
           <span class="text-slate-300 font-mono text-[11px]" id="close-modal-types">0 دليفري | 0 تيك واي</span>
         </div>
+
+        <div class="border-t border-white/10 pt-2 space-y-1.5">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400 font-bold">(+) عهدة بداية الدرج (الفكة):</span>
+            <input type="number" step="0.5" min="0" id="close-modal-opening-float" oninput="calculateCloseDayNetCash()" class="w-24 p-1 rounded-lg text-xs bg-white/5 border border-white/10 text-amber-300 font-mono font-bold text-center focus:outline-none focus:border-amber-500">
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400 font-bold">(-) إجمالي المصروفات المنصرفة:</span>
+            <span class="text-rose-400 font-black font-mono text-xs" id="close-modal-expenses">0 ج.م</span>
+          </div>
+          <div class="flex justify-between items-center bg-white/5 p-2 rounded-xl">
+            <span class="text-amber-300 font-bold">(=) صافي النقدية المتوقع بالدرج:</span>
+            <span class="text-amber-300 font-black font-mono text-sm" id="close-modal-net-cash">0 ج.م</span>
+          </div>
+        </div>
+
+        <!-- Cash Count Reconciliation -->
+        <div class="border-t border-white/10 pt-2 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-white font-bold">الجرد الفعلي للنقدية بالدرج:</span>
+            <input type="number" step="0.5" min="0" id="close-modal-actual-cash" oninput="calculateCloseDayNetCash()" placeholder="المبلغ الفعلي" class="w-32 p-1.5 rounded-lg text-xs bg-white/10 border border-white/20 text-emerald-300 font-mono font-bold text-center focus:outline-none focus:border-emerald-500">
+          </div>
+          <div id="close-modal-diff-container" class="hidden p-2 rounded-xl text-center text-xs font-bold border">
+            <span id="close-modal-diff-badge"></span>
+          </div>
+        </div>
       </div>
 
       <div class="space-y-1">
@@ -1763,7 +2038,7 @@
 
       <div class="text-[11px] text-amber-300/80 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 flex items-start gap-2">
         <span>⚠️</span>
-        <span>بمجرد الضغط على تأكيد، ستتحول طلبات اليوم الحالي إلى الأرشيف وسيبدأ عداد مبيعات جديد نظيف.</span>
+        <span>بمجرد الضغط على تأكيد، ستتحول طلبات ومصروفات اليوم الحالي إلى الأرشيف وسيبدأ عداد مبيعات ومصاريف جديد نظيف.</span>
       </div>
 
       <div class="flex gap-2 pt-2">
@@ -1812,6 +2087,48 @@
         <div class="flex justify-between text-[11px] text-gray-600">
           <span>المسؤول عن الإغلاق:</span>
           <span id="z-report-closed-by">--</span>
+        </div>
+      </div>
+
+      <!-- Cash Drawer Movement (حركة نقدية الدرج) -->
+      <div class="space-y-1.5 border-b pb-3 text-xs">
+        <div class="font-black text-center bg-gray-100 p-1 border border-black/20 text-[11px]">
+          💵 حركة نقدية الدرج والخزينة
+        </div>
+        <div class="flex justify-between">
+          <span>(+) عهدة بداية الدرج (الفكة):</span>
+          <span id="z-report-opening-float" class="font-bold">0 ج.م</span>
+        </div>
+        <div class="flex justify-between">
+          <span>(+) إجمالي المبيعات:</span>
+          <span id="z-report-drawer-sales" class="font-bold">0 ج.م</span>
+        </div>
+        <div class="flex justify-between">
+          <span>(-) إجمالي المصروفات المنصرفة:</span>
+          <span id="z-report-total-expenses" class="font-bold text-red-600">0 ج.م</span>
+        </div>
+        <div class="flex justify-between font-black border-t border-dashed pt-1">
+          <span>(=) صافي النقدية المتوقع بالدرج:</span>
+          <span id="z-report-net-cash" class="text-sm font-black">0 ج.م</span>
+        </div>
+        <div class="flex justify-between font-bold" id="z-report-actual-cash-row">
+          <span>الجرد الفعلي للنقدية:</span>
+          <span id="z-report-actual-cash">--</span>
+        </div>
+        <div class="flex justify-between font-black" id="z-report-diff-row">
+          <span>الفارق (عجز / زيادة):</span>
+          <span id="z-report-drawer-diff">--</span>
+        </div>
+      </div>
+
+      <!-- Expenses Breakdown (تفاصيل المصروفات المنصرفة) -->
+      <div class="space-y-2 border-b pb-3">
+        <div class="font-bold text-[11px] flex justify-between bg-gray-50 p-1 border-b">
+          <span>البند والتفاصيل</span>
+          <span>المستلم | المبلغ</span>
+        </div>
+        <div id="z-report-expenses-list" class="space-y-1 text-[11px] max-h-40 overflow-y-auto">
+          <!-- populated dynamically -->
         </div>
       </div>
 
@@ -3306,25 +3623,38 @@
     // 5. REPORTS, PERIOD ANALYTICS & DAILY CLOSURE
     // ==============================================
     let currentShiftData = null;
+    let currentExpensesList = [];
+    let currentOpeningDrawerFloat = 0;
     let activeReportsSubTab = 'summary';
 
     function switchReportsSubTab(subtab) {
       activeReportsSubTab = subtab;
       const btnSummary = document.getElementById('rep-subtab-btn-summary');
+      const btnExpenses = document.getElementById('rep-subtab-btn-expenses');
       const btnArchive = document.getElementById('rep-subtab-btn-archive');
       const viewSummary = document.getElementById('rep-subview-summary');
+      const viewExpenses = document.getElementById('rep-subview-expenses');
       const viewArchive = document.getElementById('rep-subview-archive');
 
+      // Reset all buttons
+      [btnSummary, btnExpenses, btnArchive].forEach(b => {
+        if (b) b.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
+      });
+      // Hide all subviews
+      [viewSummary, viewExpenses, viewArchive].forEach(v => {
+        if (v) v.classList.add('hidden');
+      });
+
       if (subtab === 'summary') {
-        btnSummary.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
-        btnArchive.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
-        viewSummary.classList.remove('hidden');
-        viewArchive.classList.add('hidden');
-      } else {
-        btnArchive.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
-        btnSummary.className = "px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all";
-        viewSummary.classList.add('hidden');
-        viewArchive.classList.remove('hidden');
+        if (btnSummary) btnSummary.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
+        if (viewSummary) viewSummary.classList.remove('hidden');
+      } else if (subtab === 'expenses') {
+        if (btnExpenses) btnExpenses.className = "px-3 py-1 rounded-lg text-xs font-bold bg-amber-600/30 text-amber-400 border border-amber-500/30 transition-all";
+        if (viewExpenses) viewExpenses.classList.remove('hidden');
+        loadExpensesData();
+      } else if (subtab === 'archive') {
+        if (btnArchive) btnArchive.className = "px-3 py-1 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-400 border border-orange-500/30 transition-all";
+        if (viewArchive) viewArchive.classList.remove('hidden');
         loadDailyClosuresArchive();
       }
     }
@@ -3558,10 +3888,17 @@
     // ==============================================
     // 5.B DAILY CLOSURES ARCHIVE & DAY SHIFT CLOSE
     // ==============================================
+    // 5.B DAILY CLOSURES ARCHIVE, DRAWER CASH & EXPENSES
+    // ==============================================
     async function loadCurrentShiftSummary() {
       try {
         const shift = await apiFetch('/api/v1/reports/current-shift');
         currentShiftData = shift;
+        currentOpeningDrawerFloat = Number(shift.openingDrawerFloat || 0);
+
+        // POS Drawer float badge
+        const posDrawerBadge = document.getElementById('pos-drawer-float-badge');
+        if (posDrawerBadge) posDrawerBadge.innerText = `${currentOpeningDrawerFloat} ج.م`;
 
         // Settings shift card
         const salesEl = document.getElementById('shift-summary-sales');
@@ -3576,6 +3913,19 @@
         const openEl = document.getElementById('shift-summary-opened');
         if (openEl) openEl.innerText = shift.openedAt ? new Date(shift.openedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '--';
 
+        // Expenses Tab Stats
+        const repExpOpening = document.getElementById('rep-exp-opening-drawer');
+        if (repExpOpening) repExpOpening.innerText = `${currentOpeningDrawerFloat} ج.م`;
+
+        const repExpSales = document.getElementById('rep-exp-sales');
+        if (repExpSales) repExpSales.innerText = `${shift.totalSales} ج.م`;
+
+        const repExpTotal = document.getElementById('rep-exp-total-expenses');
+        if (repExpTotal) repExpTotal.innerText = `${shift.totalExpenses || 0} ج.م`;
+
+        const repExpNet = document.getElementById('rep-exp-net-drawer');
+        if (repExpNet) repExpNet.innerText = `${shift.netDrawerCash !== undefined ? shift.netDrawerCash : (currentOpeningDrawerFloat + shift.totalSales - (shift.totalExpenses || 0))} ج.م`;
+
         // Close Day Modal fields
         const modalSales = document.getElementById('close-modal-sales');
         if (modalSales) modalSales.innerText = `${shift.totalSales} ج.م`;
@@ -3586,13 +3936,64 @@
         const modalTypes = document.getElementById('close-modal-types');
         if (modalTypes) modalTypes.innerText = `${shift.deliveryCount} دليفري (${shift.deliverySales} ج.م) | ${shift.takeawayCount} تيك واي (${shift.takeawaySales} ج.م)`;
 
+        const modalExpenses = document.getElementById('close-modal-expenses');
+        if (modalExpenses) modalExpenses.innerText = `${shift.totalExpenses || 0} ج.م`;
+
+        const modalOpeningInput = document.getElementById('close-modal-opening-float');
+        if (modalOpeningInput && !modalOpeningInput.value) {
+          modalOpeningInput.value = currentOpeningDrawerFloat;
+        }
+
+        calculateCloseDayNetCash();
+
       } catch (err) {
         console.error('Failed to load shift summary:', err);
       }
     }
 
+    function calculateCloseDayNetCash() {
+      if (!currentShiftData) return;
+      const opening = Number(document.getElementById('close-modal-opening-float')?.value || 0);
+      const sales = Number(currentShiftData.totalSales || 0);
+      const expenses = Number(currentShiftData.totalExpenses || 0);
+      const net = (opening + sales) - expenses;
+
+      const netEl = document.getElementById('close-modal-net-cash');
+      if (netEl) netEl.innerText = `${net} ج.م`;
+
+      const actualInput = document.getElementById('close-modal-actual-cash');
+      const diffContainer = document.getElementById('close-modal-diff-container');
+      const diffBadge = document.getElementById('close-modal-diff-badge');
+
+      if (actualInput && actualInput.value !== '') {
+        const actual = Number(actualInput.value);
+        const diff = actual - net;
+        if (diffContainer) diffContainer.classList.remove('hidden');
+
+        if (diff === 0) {
+          diffContainer.className = "p-2 rounded-xl text-center text-xs font-bold border bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+          diffBadge.innerText = '✅ مطابقة تامة: النقدية الفعلية تطابق تماماً الصافي المحسوب (0 ج.م فارق)';
+        } else if (diff > 0) {
+          diffContainer.className = "p-2 rounded-xl text-center text-xs font-bold border bg-blue-500/10 border-blue-500/30 text-blue-400";
+          diffBadge.innerText = `📈 زيادة في نقدية الدرج بمقدار: +${diff} ج.م`;
+        } else {
+          diffContainer.className = "p-2 rounded-xl text-center text-xs font-bold border bg-red-500/10 border-red-500/30 text-red-400";
+          diffBadge.innerText = `⚠️ عجز في نقدية الدرج بمقدار: ${diff} ج.م`;
+        }
+      } else {
+        if (diffContainer) diffContainer.classList.add('hidden');
+      }
+    }
+
     function openCloseDayModal() {
       loadCurrentShiftSummary();
+      const modalOpeningInput = document.getElementById('close-modal-opening-float');
+      if (modalOpeningInput) modalOpeningInput.value = currentOpeningDrawerFloat || 0;
+      const actualInput = document.getElementById('close-modal-actual-cash');
+      if (actualInput) actualInput.value = '';
+      const diffContainer = document.getElementById('close-modal-diff-container');
+      if (diffContainer) diffContainer.classList.add('hidden');
+
       const modal = document.getElementById('close-day-modal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -3610,17 +4011,22 @@
       btn.innerText = 'جاري الإغلاق... ⏳';
 
       const notes = document.getElementById('close-day-notes')?.value?.trim() || '';
+      const openingDrawer = Number(document.getElementById('close-modal-opening-float')?.value || 0);
+      const actualDrawerVal = document.getElementById('close-modal-actual-cash')?.value;
+      const actualDrawerCash = (actualDrawerVal !== '' && actualDrawerVal !== null && actualDrawerVal !== undefined)
+        ? Number(actualDrawerVal)
+        : null;
 
       try {
         const res = await apiFetch('/api/v1/reports/close-day', {
           method: 'POST',
-          body: JSON.stringify({ notes })
+          body: JSON.stringify({ notes, openingDrawer, actualDrawerCash })
         });
 
         if (res.alreadyClosed) {
           alert('الوردية الحالية مغلقة ومصفرة بالفعل (0 طلبات حالية) 🔒✨');
         } else {
-          alert('تم غلق اليوم المالي وتصفير الوردية بنجاح 🔒✅');
+          alert('تم غلق اليوم المالي وتصفير مبيعات ومصروفات الوردية بنجاح 🔒✅');
         }
         closeCloseDayModal();
         
@@ -3629,8 +4035,9 @@
           renderClosureDetails(res.closure);
         }
 
-        // Refresh live stats & orders
-        loadCurrentShiftSummary();
+        // Refresh live stats, orders, and expenses
+        await loadCurrentShiftSummary();
+        await loadExpensesData();
         loadLiveOrders();
         loadReportsData();
         loadDailyClosuresArchive();
@@ -3640,6 +4047,231 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<span>🔒</span><span>تأكيد الإغلاق والأرشفة</span>';
+      }
+    }
+
+    // ----------------------------------------------
+    // EXPENSES & CASH DRAWER CRUD
+    // ----------------------------------------------
+    async function loadExpensesData() {
+      const tbody = document.getElementById('current-shift-expenses-table-body');
+      try {
+        const data = await apiFetch('/api/v1/expenses/current-shift');
+        currentExpensesList = data.expenses || [];
+        currentOpeningDrawerFloat = Number(data.openingDrawerFloat || 0);
+
+        // Update Drawer Float in POS badge
+        const posDrawerBadge = document.getElementById('pos-drawer-float-badge');
+        if (posDrawerBadge) posDrawerBadge.innerText = `${currentOpeningDrawerFloat} ج.م`;
+
+        // Update Reports Stats Badges
+        const repExpOpening = document.getElementById('rep-exp-opening-drawer');
+        if (repExpOpening) repExpOpening.innerText = `${currentOpeningDrawerFloat} ج.م`;
+
+        const repExpSales = document.getElementById('rep-exp-sales');
+        if (repExpSales) repExpSales.innerText = `${data.totalSales || 0} ج.م`;
+
+        const repExpTotal = document.getElementById('rep-exp-total-expenses');
+        if (repExpTotal) repExpTotal.innerText = `${data.totalExpenses || 0} ج.م`;
+
+        const repExpNet = document.getElementById('rep-exp-net-drawer');
+        if (repExpNet) repExpNet.innerText = `${data.netDrawerCash || 0} ج.م`;
+
+        renderExpensesTable(currentExpensesList);
+      } catch (err) {
+        console.error('Failed to load shift expenses:', err);
+      }
+    }
+
+    function renderExpensesTable(list) {
+      const tbody = document.getElementById('current-shift-expenses-table-body');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-500">لا توجد أي مصروفات مسجلة في الوردية الحالية بعد. 💵✨</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-white/5 transition-all text-xs">
+          <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">
+            ${new Date(item.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+          </td>
+          <td class="py-2.5 px-3 font-mono font-black text-rose-400 text-sm">
+            ${item.amount} ج.م
+          </td>
+          <td class="py-2.5 px-3 font-bold text-amber-300">
+            ${item.category}
+          </td>
+          <td class="py-2.5 px-3 text-white max-w-xs truncate" title="${item.description}">
+            ${item.description}
+          </td>
+          <td class="py-2.5 px-3 text-slate-300">
+            ${item.paidTo || '<span class="text-slate-500 text-[10px]">--</span>'}
+          </td>
+          <td class="py-2.5 px-3 text-slate-400 text-[11px]">
+            ${item.createdBy || 'الإدارة'}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button type="button" onclick="openEditExpenseModal('${item.id}')" title="تعديل المصروف" class="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs flex items-center justify-center transition-all">
+                ✏️
+              </button>
+              <button type="button" onclick="deleteExpenseItem('${item.id}')" title="حذف المصروف" class="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center transition-all">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openAddExpenseModal() {
+      const form = document.getElementById('add-expense-form');
+      if (form) form.reset();
+      const modal = document.getElementById('add-expense-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAddExpenseModal() {
+      const modal = document.getElementById('add-expense-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setExpenseCategory(cat) {
+      const input = document.getElementById('expense-input-category');
+      if (input) input.value = cat;
+    }
+
+    async function submitCreateExpense(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-add-expense');
+      btn.disabled = true;
+      btn.innerText = 'جاري الحفظ... ⏳';
+
+      const amount = Number(document.getElementById('expense-input-amount').value);
+      const category = document.getElementById('expense-input-category').value.trim();
+      const description = document.getElementById('expense-input-desc').value.trim();
+      const paidTo = document.getElementById('expense-input-paidto').value.trim();
+
+      try {
+        await apiFetch('/api/v1/expenses', {
+          method: 'POST',
+          body: JSON.stringify({ amount, category, description, paidTo })
+        });
+        closeAddExpenseModal();
+        await loadExpensesData();
+        await loadCurrentShiftSummary();
+        alert('تم تسجيل وصرف المصروف بنجاح 💸✅');
+      } catch (err) {
+        alert('فشل حفظ المصروف: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span><span>حفظ وصرف من الدرج</span>';
+      }
+    }
+
+    function openEditExpenseModal(id) {
+      const item = currentExpensesList.find(x => x.id === id);
+      if (!item) return;
+
+      document.getElementById('edit-expense-id').value = item.id;
+      document.getElementById('edit-expense-amount').value = item.amount;
+      document.getElementById('edit-expense-category').value = item.category;
+      document.getElementById('edit-expense-desc').value = item.description;
+      document.getElementById('edit-expense-paidto').value = item.paidTo || '';
+
+      const modal = document.getElementById('edit-expense-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditExpenseModal() {
+      const modal = document.getElementById('edit-expense-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitUpdateExpense(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-expense-id').value;
+      const btn = document.getElementById('btn-submit-edit-expense');
+      btn.disabled = true;
+      btn.innerText = 'جاري التعديل... ⏳';
+
+      const amount = Number(document.getElementById('edit-expense-amount').value);
+      const category = document.getElementById('edit-expense-category').value.trim();
+      const description = document.getElementById('edit-expense-desc').value.trim();
+      const paidTo = document.getElementById('edit-expense-paidto').value.trim();
+
+      try {
+        await apiFetch(`/api/v1/expenses/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ amount, category, description, paidTo })
+        });
+        closeEditExpenseModal();
+        await loadExpensesData();
+        await loadCurrentShiftSummary();
+        alert('تم تعديل المصروف بنجاح ✏️✅');
+      } catch (err) {
+        alert('فشل تعديل المصروف: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span><span>حفظ التعديلات</span>';
+      }
+    }
+
+    async function deleteExpenseItem(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا المصروف؟ سيُعاد المبلغ لحساب رصيد الدرج.')) return;
+      try {
+        await apiFetch(`/api/v1/expenses/${id}`, { method: 'DELETE' });
+        await loadExpensesData();
+        await loadCurrentShiftSummary();
+        alert('تم حذف المصروف بنجاح 🗑️');
+      } catch (err) {
+        alert('فشل حذف المصروف: ' + err.message);
+      }
+    }
+
+    function openSetOpeningDrawerModal() {
+      const input = document.getElementById('input-opening-drawer-amount');
+      if (input) input.value = currentOpeningDrawerFloat || 0;
+      const modal = document.getElementById('set-opening-drawer-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSetOpeningDrawerModal() {
+      const modal = document.getElementById('set-opening-drawer-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitSetOpeningDrawer(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-opening-drawer');
+      btn.disabled = true;
+      btn.innerText = 'جاري الحفظ... ⏳';
+
+      const amount = Number(document.getElementById('input-opening-drawer-amount').value);
+
+      try {
+        const res = await apiFetch('/api/v1/expenses/opening-drawer', {
+          method: 'POST',
+          body: JSON.stringify({ amount })
+        });
+        currentOpeningDrawerFloat = res.openingDrawerFloat;
+        closeSetOpeningDrawerModal();
+        await loadExpensesData();
+        await loadCurrentShiftSummary();
+        alert('تم تحديث رصيد بداية الدرج بنجاح 💵✅');
+      } catch (err) {
+        alert('فشل تحديث رصيد بداية الدرج: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾</span><span>حفظ العهدة</span>';
       }
     }
 
@@ -3708,6 +4340,63 @@
       document.getElementById('z-report-delivery-sales').innerText = `${c.deliverySales} ج.م (${c.deliveryCount} طلب)`;
       document.getElementById('z-report-takeaway-sales').innerText = `${c.takeawaySales} ج.م (${c.takeawayCount} طلب)`;
       document.getElementById('z-report-closed-by').innerText = c.closedBy || 'الإدارة';
+
+      // Cash Drawer Movement in Thermal Z-Report
+      const openFloat = c.openingDrawer !== undefined && c.openingDrawer !== null ? Number(c.openingDrawer) : 0;
+      const totExpenses = c.totalExpenses !== undefined && c.totalExpenses !== null ? Number(c.totalExpenses) : 0;
+      const netCash = c.netDrawerCash !== undefined && c.netDrawerCash !== null ? Number(c.netDrawerCash) : (openFloat + Number(c.totalSales) - totExpenses);
+
+      document.getElementById('z-report-opening-float').innerText = `${openFloat} ج.م`;
+      document.getElementById('z-report-drawer-sales').innerText = `${c.totalSales} ج.م`;
+      document.getElementById('z-report-total-expenses').innerText = `${totExpenses} ج.م`;
+      document.getElementById('z-report-net-cash').innerText = `${netCash} ج.م`;
+
+      const actualCashRow = document.getElementById('z-report-actual-cash-row');
+      const diffRow = document.getElementById('z-report-diff-row');
+      if (c.actualDrawerCash !== undefined && c.actualDrawerCash !== null) {
+        if (actualCashRow) actualCashRow.style.display = 'flex';
+        if (diffRow) diffRow.style.display = 'flex';
+        document.getElementById('z-report-actual-cash').innerText = `${c.actualDrawerCash} ج.م`;
+        const diff = Number(c.drawerDifference || 0);
+        const diffEl = document.getElementById('z-report-drawer-diff');
+        if (diffEl) {
+          if (diff === 0) {
+            diffEl.innerText = '0 ج.م (مطابق تماماً)';
+            diffEl.className = 'font-bold text-gray-800';
+          } else if (diff > 0) {
+            diffEl.innerText = `+${diff} ج.م (زيادة)`;
+            diffEl.className = 'font-bold text-blue-600';
+          } else {
+            diffEl.innerText = `${diff} ج.م (عجز)`;
+            diffEl.className = 'font-bold text-red-600';
+          }
+        }
+      } else {
+        if (actualCashRow) actualCashRow.style.display = 'none';
+        if (diffRow) diffRow.style.display = 'none';
+      }
+
+      // Expenses breakdown in thermal Z-report
+      const expensesContainer = document.getElementById('z-report-expenses-list');
+      const expList = Array.isArray(c.expenses) && c.expenses.length > 0 
+        ? c.expenses 
+        : (Array.isArray(c.expensesBreakdown) ? c.expensesBreakdown : []);
+        
+      if (expensesContainer) {
+        if (expList.length === 0) {
+          expensesContainer.innerHTML = '<p class="text-gray-400 py-1 text-center">لا توجد مصاريف مسجلة في هذه الوردية.</p>';
+        } else {
+          expensesContainer.innerHTML = expList.map(exp => `
+            <div class="border-b border-gray-100 pb-1">
+              <div class="flex justify-between font-bold">
+                <span>${exp.category}: ${exp.description}</span>
+                <span class="text-red-600 font-mono">-${exp.amount} ج.م</span>
+              </div>
+              ${exp.paidTo ? `<div class="text-[9px] text-gray-500">المستلم: ${exp.paidTo}</div>` : ''}
+            </div>
+          `).join('');
+        }
+      }
 
       const notesRow = document.getElementById('z-report-notes-row');
       if (c.notes) {
@@ -5370,13 +6059,17 @@
     loadMenuData();
     loadUserProfile();
     loadCurrentShiftSummary();
+    loadExpensesData();
     loadCustomersDirectory();
     loadStoriesData();
 
-    // Auto-refresh live orders and shift summary every 10 seconds
+    // Auto-refresh live orders, shift summary, and expenses every 10 seconds
     setInterval(() => {
       loadLiveOrders();
       loadCurrentShiftSummary();
+      if (activeReportsSubTab === 'expenses') {
+        loadExpensesData();
+      }
     }, 10000);
   </script>
 </body>

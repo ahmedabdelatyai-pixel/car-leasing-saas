@@ -78,8 +78,26 @@ export class ReportController {
       const grossMarginPercent = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
       const openedAt = orders.length > 0 ? orders[0].createdAt : new Date();
 
+      // Current Shift Expenses & Drawer Cash
+      const expenses = await prisma.expense.findMany({
+        where: {
+          restaurantId,
+          closureId: null
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
+
+      const rest = await prisma.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { openingDrawerFloat: true }
+      });
+      const openingDrawer = Number(rest?.openingDrawerFloat || 0);
+      const netDrawerCash = Math.round((openingDrawer + totalRevenue - totalExpenses) * 100) / 100;
+
       return res.json({
-        hasActiveShift: orders.length > 0,
+        hasActiveShift: orders.length > 0 || expenses.length > 0,
         orderCount: orders.length,
         totalSales: Math.round(totalRevenue * 100) / 100,
         totalFoodCost: Math.round(totalFoodCost * 100) / 100,
@@ -89,6 +107,11 @@ export class ReportController {
         takeawaySales: Math.round(takeawayRevenue * 100) / 100,
         deliveryCount,
         takeawayCount,
+        openingDrawer,
+        totalExpenses: Math.round(totalExpenses * 100) / 100,
+        expensesCount: expenses.length,
+        netDrawerCash,
+        expenses: expenses.slice(-10),
         openedAt,
         latestOrderAt: orders.length > 0 ? orders[orders.length - 1].createdAt : null,
         recentOrders: orders.slice(-10).reverse()
@@ -105,7 +128,7 @@ export class ReportController {
     try {
       const restaurantId = await ReportController.getRestaurantId();
       const userPayload = (req as any).user;
-      const { notes } = req.body;
+      const { notes, openingDrawer, actualDrawerCash } = req.body;
 
       // Find all unclosed active orders
       const orders = await prisma.order.findMany({
@@ -120,7 +143,26 @@ export class ReportController {
         orderBy: { createdAt: 'asc' }
       });
 
-      if (orders.length === 0) {
+      // Find all unclosed expenses in current shift
+      const expenses = await prisma.expense.findMany({
+        where: {
+          restaurantId,
+          closureId: null
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
+      const expensesBreakdown = expenses.map(exp => ({
+        id: exp.id,
+        amount: Number(exp.amount),
+        category: exp.category,
+        description: exp.description,
+        paidTo: exp.paidTo,
+        createdAt: exp.createdAt
+      }));
+
+      if (orders.length === 0 && expenses.length === 0) {
         // Close any orphan cancelled orders if present
         const cancelledOrders = await prisma.order.findMany({
           where: { restaurantId, closureId: null, status: 'CANCELLED' }
@@ -139,7 +181,7 @@ export class ReportController {
         }
 
         return res.status(200).json({
-          message: 'الوردية الحالية مغلقة ومصفرة بالفعل (0 طلبات حالية) 🔒✨',
+          message: 'الوردية الحالية مغلقة ومصفرة بالفعل (0 طلبات و 0 مصاريف) 🔒✨',
           alreadyClosed: true
         });
       }
@@ -171,12 +213,30 @@ export class ReportController {
         }
       }
 
+      // Drawer Float and Net Cash Calculations
+      let numOpening = openingDrawer !== undefined && openingDrawer !== null && openingDrawer !== ''
+        ? Number(openingDrawer)
+        : null;
+      if (numOpening === null) {
+        const rest = await prisma.restaurant.findUnique({
+          where: { id: restaurantId },
+          select: { openingDrawerFloat: true }
+        });
+        numOpening = Number(rest?.openingDrawerFloat || 0);
+      }
+
+      const netCash = Math.round((numOpening + totalRevenue - totalExpenses) * 100) / 100;
+      const actualCash = actualDrawerCash !== undefined && actualDrawerCash !== null && actualDrawerCash !== ''
+        ? Number(actualDrawerCash)
+        : null;
+      const difference = actualCash !== null ? Math.round((actualCash - netCash) * 100) / 100 : null;
+
       const itemsBreakdown = Array.from(itemSalesMap.values()).sort((a, b) => b.quantity - a.quantity);
-      const openedAt = orders[0].createdAt;
+      const openedAt = orders.length > 0 ? orders[0].createdAt : (expenses.length > 0 ? expenses[0].createdAt : new Date());
       const closedAt = new Date();
       const closedBy = userPayload?.fullName || userPayload?.email || 'الإدارة';
 
-      // Create Daily Closure record & link orders in a transaction
+      // Create Daily Closure record & link orders and expenses in a transaction
       const closure = await prisma.$transaction(async (tx) => {
         const createdClosure = await tx.dailyClosure.create({
           data: {
@@ -192,19 +252,27 @@ export class ReportController {
             takeawayCount,
             itemsBreakdown: itemsBreakdown as any,
             closedBy,
-            notes: notes || null
+            notes: notes || null,
+            openingDrawer: numOpening,
+            totalExpenses: totalExpenses,
+            netDrawerCash: netCash,
+            actualDrawerCash: actualCash,
+            drawerDifference: difference,
+            expensesBreakdown: expensesBreakdown as any
           }
         });
 
         const orderIds = orders.map(o => o.id);
         // Mark all active orders belonging to this shift as DELIVERED and link to closure
-        await tx.order.updateMany({
-          where: { id: { in: orderIds } },
-          data: {
-            closureId: createdClosure.id,
-            status: 'DELIVERED'
-          }
-        });
+        if (orderIds.length > 0) {
+          await tx.order.updateMany({
+            where: { id: { in: orderIds } },
+            data: {
+              closureId: createdClosure.id,
+              status: 'DELIVERED'
+            }
+          });
+        }
 
         // Also close any cancelled orders belonging to this shift
         await tx.order.updateMany({
@@ -216,11 +284,20 @@ export class ReportController {
           data: { closureId: createdClosure.id }
         });
 
+        // Also close all expenses belonging to this shift
+        await tx.expense.updateMany({
+          where: {
+            restaurantId,
+            closureId: null
+          },
+          data: { closureId: createdClosure.id }
+        });
+
         return createdClosure;
       }, { timeout: 20000, maxWait: 10000 });
 
       return res.status(201).json({
-        message: 'تم إغلاق اليوم المالي وتصفير الوردية الحالية بنجاح 🔒✅',
+        message: 'تم إغلاق اليوم المالي وحساب صافي الدرج وتصفير الوردية بنجاح 🔒✅',
         closure
       });
     } catch (err: any) {
@@ -261,6 +338,9 @@ export class ReportController {
               items: true,
               captain: true
             },
+            orderBy: { createdAt: 'asc' }
+          },
+          expenses: {
             orderBy: { createdAt: 'asc' }
           }
         }

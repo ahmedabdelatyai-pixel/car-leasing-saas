@@ -68,6 +68,7 @@ model Restaurant {
   subscriptionPlan   String               @default("PREMIUM") @map("subscription_plan") @db.VarChar(50)
   subscriptionExpiresAt DateTime?         @map("subscription_expires_at")
   enabledFeatures    String?              @default("POS,MENU,REPORTS,CAPTAINS,CUSTOMERS,QR,INVENTORY,RECIPES,LOYALTY") @map("enabled_features") @db.Text
+  openingDrawerFloat Decimal          @default(0.00) @map("opening_drawer_float") @db.Decimal(10, 2)
   notes              String?              @db.Text
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
@@ -79,6 +80,7 @@ model Restaurant {
   orders             Order[]
   captains           Captain[]
   dailyClosures      DailyClosure[]
+  expenses           Expense[]
   inventoryItems     InventoryItem[]
   recipes            Recipe[]
   overheads          RestaurantOverhead[]
@@ -230,14 +232,41 @@ model DailyClosure {
   itemsBreakdown  Json?       @map("items_breakdown")
   closedBy        String?     @map("closed_by") @db.VarChar(150)
   notes           String?     @db.Text
+  openingDrawer   Decimal     @default(0.00) @map("opening_drawer") @db.Decimal(10, 2)
+  totalExpenses   Decimal     @default(0.00) @map("total_expenses") @db.Decimal(10, 2)
+  netDrawerCash   Decimal     @default(0.00) @map("net_drawer_cash") @db.Decimal(10, 2)
+  actualDrawerCash Decimal?   @map("actual_drawer_cash") @db.Decimal(10, 2)
+  drawerDifference Decimal?   @map("drawer_difference") @db.Decimal(10, 2)
+  expensesBreakdown Json?     @map("expenses_breakdown")
   createdAt       DateTime    @default(now()) @map("created_at")
 
   restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   orders          Order[]
+  expenses        Expense[]
 
   @@index([restaurantId])
   @@index([closureDate])
   @@map("daily_closures")
+}
+
+model Expense {
+  id              String        @id @default(uuid()) @db.Uuid
+  restaurantId    String        @map("restaurant_id") @db.Uuid
+  closureId       String?       @map("closure_id") @db.Uuid
+  amount          Decimal       @db.Decimal(10, 2)
+  category        String        @default("نثريات ومستهلكات") @db.VarChar(100)
+  description     String?       @db.VarChar(255)
+  paidTo          String?       @map("paid_to") @db.VarChar(150)
+  createdBy       String?       @map("created_by") @db.VarChar(150)
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  restaurant      Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  dailyClosure    DailyClosure? @relation(fields: [closureId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([closureId])
+  @@index([createdAt])
+  @@map("expenses")
 }
 
 model InventoryItem {
