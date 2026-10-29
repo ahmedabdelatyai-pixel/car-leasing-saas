@@ -52,9 +52,37 @@
         box-shadow: none !important;
       }
 
+      main, .sheet-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        display: block !important;
+      }
+
+      .sheet-wrapper > * + * {
+        margin-top: 0 !important;
+      }
+
       .page-break {
+        display: none !important;
+      }
+
+      /* Sheet 1: forces page break after it */
+      .sheet-page-1 {
         page-break-after: always !important;
         break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Sheet 2: strictly avoids breaking, prevents any 3rd/4th blank pages */
+      .sheet-page-2 {
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        break-after: avoid !important;
+        break-before: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
 
       /* Exact Sheet Lock in Print */
@@ -64,12 +92,10 @@
         max-height: 200mm !important;
         min-height: 200mm !important;
         margin: 0 auto !important;
-        padding: 4mm !important;
+        padding: 3.5mm !important;
         border: none !important;
         box-shadow: none !important;
-        page-break-after: always !important;
         page-break-inside: avoid !important;
-        break-after: page !important;
         break-inside: avoid !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
@@ -81,12 +107,10 @@
         max-height: 285mm !important;
         min-height: 285mm !important;
         margin: 0 auto !important;
-        padding: 6mm !important;
+        padding: 5mm !important;
         border: none !important;
         box-shadow: none !important;
-        page-break-after: always !important;
         page-break-inside: avoid !important;
-        break-after: page !important;
         break-inside: avoid !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
@@ -337,7 +361,7 @@
     <div id="view-trifold" class="sheet-wrapper flex flex-col items-center space-y-8 hidden">
       
       <!-- Side A: Outer Side (Flap 3: Offers & Burgers | Flap 2: Delivery & Back | Flap 1: Front Cover) -->
-      <div class="relative">
+      <div class="relative sheet-page-1">
         <div class="no-print text-center text-xs font-black text-orange-400 mb-2 flex items-center justify-center gap-2">
           <span>📄 الوجه الأول (الخارجي) • ينطوي ليصبح الغلاف وأرقام التوصيل والعروض</span>
         </div>
@@ -346,7 +370,7 @@
           
           <!-- Column 1 (Left on Arabic layout): Inside Flap (الطية الداخلية عند فتح البروشور: عروض ضجة والبرجر) -->
           <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
-            <div class="space-y-2">
+            <div class="space-y-1.5">
               <!-- Offers Header -->
               <div>
                 <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1.5 flex items-center justify-center gap-1 text-[11px]">
@@ -370,10 +394,18 @@
               </div>
             </div>
 
-            <!-- Quality Box -->
-            <div class="bg-orange-50 border border-orange-200 p-2 rounded-xl text-center space-y-0.5 mt-2">
-              <span class="font-black text-orange-900 text-[10px] block">🥩 لحوم بلدي وفراخ طازجة يومياً</span>
-              <p class="text-[8.5px] text-gray-600 leading-tight">تتبيلة ضجة السرية مع الخبز الطازج المخبوز خصيصاً لمطعمنا.</p>
+            <!-- Dajja Quality & Authenticity Badge with Logo (Fills empty bottom space) -->
+            <div class="bg-gradient-to-b from-orange-50 via-amber-50/50 to-white border border-orange-300 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 shadow-sm mt-1.5">
+              <div class="flex items-center gap-2">
+                <img src="/dajja_logo_badge.png" alt="لوجو مطعم ضجة" class="w-10 h-10 object-contain drop-shadow-sm flex-shrink-0">
+                <div class="text-right">
+                  <span class="font-black text-orange-950 text-[10px] block leading-tight">مطعم ضجة 🔥 طعم اللمة الإسكندراني</span>
+                  <span class="text-[8.5px] font-bold text-orange-700 block">لحوم وفراخ بلدي طازجة 100% يومياً</span>
+                </div>
+              </div>
+              <p class="text-[8px] text-gray-600 leading-tight border-t border-orange-200/70 pt-1 w-full text-center">
+                تتبيلة ضجة السرية مع الخبز الطازج المخبوز خصيصاً لمطعمنا.
+              </p>
             </div>
           </div>
 
@@ -464,11 +496,8 @@
         </div>
       </div>
 
-      <!-- Page Break for Printing -->
-      <div class="page-break"></div>
-
       <!-- Side B: Inner Side (Flap 1: Sandwiches & Mixes | Flap 2: Pizza Table | Flap 3: Hawawshi, Grill & Extras) -->
-      <div class="relative">
+      <div class="relative sheet-page-2">
         <div class="no-print text-center text-xs font-black text-orange-400 mb-2 flex items-center justify-center gap-2">
           <span>📄 الوجه الثاني (الداخلي الكامل) • القائمة الرئيسية عند فرد البروشور</span>
         </div>
@@ -477,7 +506,7 @@
           
           <!-- Column 1: السندوتشات والميكسات -->
           <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
-            <div class="space-y-2">
+            <div class="space-y-1.5">
               <div>
                 <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
                   <span>🌯</span>
@@ -498,11 +527,20 @@
                 </div>
               </div>
             </div>
+
+            <!-- Dajja Sandwiches Seal (Fills empty bottom space) -->
+            <div class="mt-1 bg-amber-50/90 border border-amber-200 rounded-lg p-1.5 flex items-center gap-2">
+              <img src="/dajja_logo_badge.png" alt="لوجو ضجة" class="w-7 h-7 object-contain flex-shrink-0">
+              <div class="text-[8px] text-amber-950 leading-tight">
+                <span class="font-black block">سندوتشات وميكسات ضجة 🌯</span>
+                <span>بالعيش السوري المقرمش • الفينو الطري • عيش الردة البلدي</span>
+              </div>
+            </div>
           </div>
 
           <!-- Column 2: بيتزا ضجة بجميع المقاسات -->
           <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
-            <div class="space-y-1.5">
+            <div class="space-y-1">
               <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
                 <span>🍕</span>
                 <span>بيتزا ضجة (إيطالي وشرقي)</span>
@@ -516,15 +554,33 @@
               </div>
             </div>
 
+            <!-- Dajja Pizza Centerpiece with Clean Logo (Fills the large empty space below pizza table) -->
+            <div class="bg-gradient-to-b from-orange-50/80 via-amber-50/40 to-white border border-orange-200 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 my-1 shadow-sm">
+              <div class="w-12 h-12 p-1 bg-white rounded-full shadow-sm border border-orange-200 flex items-center justify-center">
+                <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-full h-full object-contain">
+              </div>
+              <div class="space-y-0.5">
+                <h4 class="font-black text-[10.5px] text-gray-900 leading-tight">بيتزا وميكسات مطعم ضجة 🍕🔥</h4>
+                <p class="text-[8.5px] font-bold text-orange-600">عجائن إيطالية طازجة وموتزاريلا طبيعية 100%</p>
+                <div class="flex items-center justify-center gap-1.5 text-[7.5px] text-gray-600 pt-0.5 border-t border-orange-200/60 mt-0.5">
+                  <span>🌿 صوص طماطم بالأعشاب</span>
+                  <span>•</span>
+                  <span>🧀 بدون دهون مهدرجة</span>
+                  <span>•</span>
+                  <span>🔥 تسوية فورية</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Footer note inside column 2 -->
-            <div class="text-center text-[8.5px] text-gray-500 border-t pt-1">
+            <div class="text-center text-[8px] text-gray-500 border-t pt-0.5">
               <span>جميع أنواع البيتزا مخبوزة بجبنة موتزاريلا طبيعية 100% 🍕</span>
             </div>
           </div>
 
           <!-- Column 3: حواوشي ضجة + المشويات على الفحم + الإضافات -->
           <div class="flex flex-col justify-between h-full overflow-hidden">
-            <div class="space-y-2">
+            <div class="space-y-1.5">
               <div>
                 <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
                   <span>🫓</span>
@@ -555,6 +611,15 @@
                 </div>
               </div>
             </div>
+
+            <!-- Dajja Grill Seal (Fills empty bottom space) -->
+            <div class="mt-1 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-1.5 flex items-center gap-2">
+              <img src="/dajja_logo_badge.png" alt="لوجو ضجة" class="w-7 h-7 object-contain flex-shrink-0">
+              <div class="text-[8px] text-orange-950 leading-tight">
+                <span class="font-black block">مشويات ضجة عالفحم 🥩🔥</span>
+                <span>تسوية على الفحم الطبيعي بتتبيلة ضجة الإسكندراني الأصيلة</span>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -568,7 +633,7 @@
     <div id="view-classic" class="sheet-wrapper flex flex-col items-center space-y-8 hidden">
       
       <!-- Classic Page 1 (Front: Header + Offers + Sandwiches + Mixes + Burgers) -->
-      <div class="relative">
+      <div class="relative sheet-page-1">
         <div class="no-print text-center text-xs font-black text-orange-400 mb-2">
           📄 الصفحة الأولى (A4 وش بالطول) • السندوتشات والميكسات والبرجر والعروض
         </div>
@@ -592,27 +657,38 @@
 
           <!-- Page 1 Columns -->
           <div class="grid grid-cols-2 gap-3.5 my-2.5 flex-1 overflow-hidden">
-            <!-- Left Col: Offers + Burgers + Mixes -->
-            <div class="space-y-2">
-              <div>
-                <div class="bg-orange-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
-                  <span>🔥</span> <span>عروض ضجة التوفير</span>
+            <!-- Left Col: Offers + Burgers + Mixes + Dajja Badge -->
+            <div class="space-y-2 flex flex-col justify-between h-full">
+              <div class="space-y-2">
+                <div>
+                  <div class="bg-orange-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                    <span>🔥</span> <span>عروض ضجة التوفير</span>
+                  </div>
+                  <div id="classic-col-offers" class="space-y-0.5"></div>
                 </div>
-                <div id="classic-col-offers" class="space-y-0.5"></div>
+
+                <div>
+                  <div class="bg-red-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                    <span>🍔</span> <span>برجر ضجة الفاخر</span>
+                  </div>
+                  <div id="classic-col-burgers" class="space-y-0.5"></div>
+                </div>
+
+                <div>
+                  <div class="bg-amber-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                    <span>🔥</span> <span>ميكسات ضجة الخاصة</span>
+                  </div>
+                  <div id="classic-col-mixes" class="space-y-0.5"></div>
+                </div>
               </div>
 
-              <div>
-                <div class="bg-red-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
-                  <span>🍔</span> <span>برجر ضجة الفاخر</span>
+              <!-- Dajja Badge Box (Fills bottom space of Left Col) -->
+              <div class="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-2 flex items-center gap-2.5 mt-2">
+                <img src="/dajja_logo_badge.png" alt="لوجو ضجة" class="w-10 h-10 object-contain flex-shrink-0">
+                <div>
+                  <span class="font-black text-orange-950 text-[10px] block">مطعم ضجة 🔥 أصل السندوتشات الإسكندراني</span>
+                  <span class="text-[8.5px] text-gray-600 block">جميع المكونات طازجة يومياً مع العيش المخبوز خصيصاً لمطعمنا</span>
                 </div>
-                <div id="classic-col-burgers" class="space-y-0.5"></div>
-              </div>
-
-              <div>
-                <div class="bg-amber-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
-                  <span>🔥</span> <span>ميكسات ضجة الخاصة</span>
-                </div>
-                <div id="classic-col-mixes" class="space-y-0.5"></div>
               </div>
             </div>
 
@@ -635,11 +711,8 @@
         </div>
       </div>
 
-      <!-- Page Break for Printing -->
-      <div class="page-break"></div>
-
       <!-- Classic Page 2 (Back: Pizza + Hawawshi + Grill + Extras + Contacts) -->
-      <div class="relative">
+      <div class="relative sheet-page-2">
         <div class="no-print text-center text-xs font-black text-orange-400 mb-2">
           📄 الصفحة الثانية (A4 ظهر بالطول) • البيتزا والحواوشي والمشويات والإضافات
         </div>
@@ -658,12 +731,22 @@
 
           <!-- Page 2 Columns -->
           <div class="grid grid-cols-2 gap-3.5 my-2.5 flex-1 overflow-hidden">
-            <!-- Left Col: Pizza Table -->
-            <div>
-              <div class="bg-red-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
-                <span>🍕</span> <span>بيتزا ضجة (إيطالي وشرقي)</span>
+            <!-- Left Col: Pizza Table + Dajja Centerpiece Card -->
+            <div class="flex flex-col justify-between h-full">
+              <div>
+                <div class="bg-red-600 text-white p-1 rounded-lg text-center font-black mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                  <span>🍕</span> <span>بيتزا ضجة (إيطالي وشرقي)</span>
+                </div>
+                <div id="classic-col-pizza"></div>
               </div>
-              <div id="classic-col-pizza"></div>
+
+              <!-- Dajja Centerpiece Card (Fills space below pizza table) -->
+              <div class="bg-gradient-to-b from-orange-50/90 to-amber-50/40 border border-orange-200 rounded-xl p-2.5 text-center flex flex-col items-center justify-center gap-1 shadow-sm mt-2">
+                <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain">
+                <h4 class="font-black text-[10.5px] text-gray-900 leading-tight">بيتزا ومشويات مطعم ضجة 🍕🔥</h4>
+                <p class="text-[8.5px] text-orange-700 font-bold">عجائن إيطالية طازجة 100% وتسوية على الفحم الطبيعي</p>
+                <p class="text-[8px] text-gray-600 font-mono">الطلبات والدليفري: 01210783175 - 01272022986</p>
+              </div>
             </div>
 
             <!-- Right Col: Hawawshi Table + Grill + Extras -->
