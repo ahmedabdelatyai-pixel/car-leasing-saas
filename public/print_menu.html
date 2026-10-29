@@ -136,6 +136,14 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
+
+      /* Prevent browser rasterization blur and jagged edges on print/PDF */
+      img {
+        filter: none !important;
+        -webkit-filter: none !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: high-quality !important;
+      }
     }
 
     /* Screen display wrappers */
@@ -348,7 +356,7 @@
       
       <!-- Brand & Title -->
       <div class="flex items-center gap-3">
-        <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain bg-black/40 rounded-xl p-1 border border-orange-500/40">
+        <img src="/dajja_logo_highres.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain bg-black/40 rounded-xl p-1 border border-orange-500/40">
         <div>
           <h1 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
             <span>🖨️</span> منيو مطعم ضجة المحدث (جاهز ومضبوط للطباعة والـ PDF)
@@ -451,8 +459,8 @@
 
             <!-- Top / Center Hero: Big Circular Dajja Emblem -->
             <div class="w-full flex flex-col items-center pt-2">
-              <div class="w-48 h-48 sm:w-52 sm:h-52 rounded-full p-2 bg-white shadow-xl border-4 border-orange-500/20 flex items-center justify-center my-auto transition-transform">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-full h-full object-contain drop-shadow-md">
+              <div class="w-48 h-48 sm:w-52 sm:h-52 rounded-full bg-white shadow-xl border-2 border-orange-500/30 flex items-center justify-center my-auto overflow-hidden">
+                <img src="/dajja_logo_highres.png" alt="لوجو مطعم ضجة" class="w-full h-full object-contain">
               </div>
 
               <!-- Brand Title & Tagline -->
@@ -514,7 +522,7 @@
             <div class="space-y-2">
               <!-- Delivery Header -->
               <div class="border-b-2 border-orange-500 pb-1.5">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-12 h-12 mx-auto object-contain">
+                <img src="/dajja_logo_highres.png" alt="لوجو ضجة" class="w-12 h-12 mx-auto object-contain">
                 <h3 class="font-black text-sm text-gray-900 mt-0.5">خدمة التوصيل السريع بالإسكندرية 🛵</h3>
                 <p class="text-[10px] text-orange-600 font-bold">طعامك يوصلك ساخن وطازج في أسرع وقت</p>
               </div>
@@ -693,7 +701,7 @@
             <!-- Dajja Pizza Centerpiece with Clean Logo -->
             <div class="bg-gradient-to-b from-orange-50/90 via-amber-50/50 to-white border border-orange-200 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 my-1 shadow-sm">
               <div class="w-12 h-12 p-0.5 bg-white rounded-full shadow-sm border border-orange-200 flex items-center justify-center">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-full h-full object-contain">
+                <img src="/dajja_logo_highres.png" alt="لوجو ضجة" class="w-full h-full object-contain">
               </div>
               <div class="space-y-0.5">
                 <h4 class="font-black text-[10.5px] text-gray-900 leading-tight">بيتزا وميكسات مطعم ضجة 🍕🔥</h4>
@@ -778,7 +786,7 @@
           <!-- Page 1 Header -->
           <div class="border-b-2 border-orange-500 pb-2.5 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-              <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain">
+              <img src="/dajja_logo_highres.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain">
               <div>
                 <h2 class="text-lg font-black text-gray-900 leading-tight">مطعم ضجة 🔥</h2>
                 <p class="text-[11px] font-bold text-orange-600">أصل السندوتشات والمشويات على الفحم بالإسكندرية</p>
@@ -878,7 +886,7 @@
 
               <!-- Dajja Centerpiece Card (Fills space below pizza table) -->
               <div class="bg-gradient-to-b from-orange-50/90 to-amber-50/40 border border-orange-200 rounded-xl p-2.5 text-center flex flex-col items-center justify-center gap-1 shadow-sm mt-2">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain">
+                <img src="/dajja_logo_highres.png" alt="لوجو مطعم ضجة" class="w-12 h-12 object-contain">
                 <h4 class="font-black text-[10.5px] text-gray-900 leading-tight">بيتزا ومشويات مطعم ضجة 🍕🔥</h4>
                 <p class="text-[8.5px] text-orange-700 font-bold">عجائن إيطالية طازجة 100% وتسوية على الفحم الطبيعي</p>
                 <p class="text-[8px] text-gray-600 font-mono">الطلبات والدليفري: 01210783175 - 01272022986</p>
