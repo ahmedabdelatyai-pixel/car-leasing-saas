@@ -23,7 +23,7 @@
   <style id="dynamic-print-page-style">
     @page {
       size: A4 landscape;
-      margin: 4mm;
+      margin: 0;
     }
   </style>
 
@@ -52,10 +52,23 @@
         box-shadow: none !important;
       }
 
-      main, .sheet-wrapper {
+      /* HIDE INACTIVE LAYOUT COMPLETELY TO PREVENT EXTRA PAGES */
+      .sheet-wrapper.hidden,
+      #view-trifold.hidden,
+      #view-classic.hidden {
+        display: none !important;
+      }
+
+      main {
         margin: 0 !important;
         padding: 0 !important;
-        gap: 0 !important;
+        width: 100% !important;
+        display: block !important;
+      }
+
+      .sheet-wrapper:not(.hidden) {
+        margin: 0 !important;
+        padding: 0 !important;
         display: block !important;
       }
 
@@ -85,29 +98,32 @@
         break-inside: avoid !important;
       }
 
-      /* Exact Sheet Lock in Print */
+      /* Exact Sheet Lock in Print: Full A4 Dimensions */
       .trifold-sheet {
-        width: 289mm !important;
-        height: 200mm !important;
-        max-height: 200mm !important;
-        min-height: 200mm !important;
+        width: 297mm !important;
+        height: 210mm !important;
+        max-height: 210mm !important;
+        min-height: 210mm !important;
         margin: 0 auto !important;
-        padding: 3.5mm !important;
+        padding: 4mm 5mm !important;
         border: none !important;
         box-shadow: none !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 0 !important;
       }
 
       .classic-sheet {
-        width: 200mm !important;
-        height: 285mm !important;
-        max-height: 285mm !important;
-        min-height: 285mm !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        min-height: 297mm !important;
         margin: 0 auto !important;
-        padding: 5mm !important;
+        padding: 5mm 6mm !important;
         border: none !important;
         box-shadow: none !important;
         page-break-inside: avoid !important;
@@ -135,6 +151,9 @@
       background: #ffffff;
       box-sizing: border-box;
       overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
     }
 
     /* Classic A4 Dimensions (A4 Portrait: 210mm x 297mm) */
@@ -179,22 +198,32 @@
     .menu-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10px;
+      table-layout: fixed;
+      font-size: 9px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      overflow: hidden;
     }
     .menu-table th {
-      background-color: #f8fafc;
+      background-color: #f1f5f9;
       border-bottom: 1.5px solid #ea580c;
-      padding: 2.5px 3px;
+      border-left: 1px solid #cbd5e1;
+      padding: 2px 2px;
       font-weight: 900;
       text-align: center;
-      color: #1e293b;
+      color: #0f172a;
     }
     .menu-table th:first-child {
       text-align: right;
+      padding-right: 4px;
+    }
+    .menu-table th:last-child {
+      border-left: none;
     }
     .menu-table td {
-      padding: 2.5px 3px;
-      border-bottom: 1px solid #f1f5f9;
+      padding: 1.5px 2px;
+      border-bottom: 1px solid #e2e8f0;
+      border-left: 1px solid #cbd5e1;
       text-align: center;
       font-family: monospace;
       font-weight: 800;
@@ -202,29 +231,70 @@
     }
     .menu-table td:first-child {
       text-align: right;
+      padding-right: 4px;
       font-family: 'Cairo', sans-serif;
       font-weight: 700;
       color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .menu-table td:last-child {
+      border-left: none;
+    }
+    .menu-table tr:nth-child(even) {
+      background-color: #f8fafc;
     }
     .menu-table tr:hover {
       background-color: #fff7ed;
     }
 
-    /* Fold guide lines on screen */
-    .fold-guide {
+    /* Clean, visible dashed fold guide lines between the 3 panels */
+    .fold-col-right {
       position: relative;
+      border-left: 1.5px dashed rgba(234, 88, 12, 0.45);
+      padding-left: 3.5mm;
+      padding-right: 1.5mm;
     }
-    @media screen {
-      .fold-guide::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 1px;
-        border-left: 1px dashed rgba(234, 88, 12, 0.35);
-        pointer-events: none;
-      }
+    .fold-col-center {
+      position: relative;
+      border-left: 1.5px dashed rgba(234, 88, 12, 0.45);
+      padding-left: 3.5mm;
+      padding-right: 3.5mm;
+    }
+    .fold-col-left {
+      position: relative;
+      padding-right: 3.5mm;
+      padding-left: 1.5mm;
+    }
+
+    .fold-mark-top {
+      position: absolute;
+      top: -3mm;
+      left: -7mm;
+      font-size: 7px;
+      color: #ea580c;
+      font-family: monospace;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+      background: white;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .fold-mark-bottom {
+      position: absolute;
+      bottom: -3mm;
+      left: -7mm;
+      font-size: 7px;
+      color: #ea580c;
+      font-family: monospace;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+      background: white;
+      padding: 0 2px;
+      border-radius: 2px;
     }
 
     /* Dark theme overrides */
@@ -360,117 +430,33 @@
          ============================================== -->
     <div id="view-trifold" class="sheet-wrapper flex flex-col items-center space-y-8 hidden">
       
-      <!-- Side A: Outer Side (Flap 3: Offers & Burgers | Flap 2: Delivery & Back | Flap 1: Front Cover) -->
+      <!-- Side A: Outer Side (Col 1: Front Cover on Right | Col 2: Back Cover in Center | Col 3: Inside Flap on Left) -->
       <div class="relative sheet-page-1">
         <div class="no-print text-center text-xs font-black text-orange-400 mb-2 flex items-center justify-center gap-2">
-          <span>📄 الوجه الأول (الخارجي) • ينطوي ليصبح الغلاف وأرقام التوصيل والعروض</span>
+          <span>📄 الوجه الأول (الخارجي) • ينطوي ليصبح الغلاف على اليمين والظهر في المنتصف والعروض بالداخل</span>
         </div>
         
-        <div class="trifold-sheet border border-gray-300 rounded-2xl shadow-2xl p-3.5 grid grid-cols-3 gap-3 text-xs">
+        <div class="trifold-sheet border border-gray-300 rounded-2xl shadow-2xl p-3 grid grid-cols-3 gap-0 text-xs">
           
-          <!-- Column 1 (Left on Arabic layout): Inside Flap (الطية الداخلية عند فتح البروشور: عروض ضجة والبرجر) -->
-          <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
+          <!-- Column 1 (Right on RTL): Front Cover (الغلاف الأمامي الرئيسي عند طي البروشور) -->
+          <div class="fold-col-right flex flex-col justify-between h-full overflow-hidden text-center pt-1 pb-1">
+            <div class="fold-mark-top">✂️ خط طي</div>
+            <div class="fold-mark-bottom">✂️ خط طي</div>
+
             <div class="space-y-1.5">
-              <!-- Offers Header -->
-              <div>
-                <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1.5 flex items-center justify-center gap-1 text-[11px]">
-                  <span>🔥</span>
-                  <span>عروض ضجة التوفير</span>
-                </div>
-                <div id="trifold-col-offers" class="space-y-1">
-                  <!-- populated dynamically -->
-                </div>
-              </div>
-
-              <!-- Burgers Header -->
-              <div class="pt-1">
-                <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1.5 flex items-center justify-center gap-1 text-[11px]">
-                  <span>🍔</span>
-                  <span>برجر ضجة الفاخر</span>
-                </div>
-                <div id="trifold-col-burgers" class="space-y-1">
-                  <!-- populated dynamically -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Dajja Quality & Authenticity Badge with Logo (Fills empty bottom space) -->
-            <div class="bg-gradient-to-b from-orange-50 via-amber-50/50 to-white border border-orange-300 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 shadow-sm mt-1.5">
-              <div class="flex items-center gap-2">
-                <img src="/dajja_logo_badge.png" alt="لوجو مطعم ضجة" class="w-10 h-10 object-contain drop-shadow-sm flex-shrink-0">
-                <div class="text-right">
-                  <span class="font-black text-orange-950 text-[10px] block leading-tight">مطعم ضجة 🔥 طعم اللمة الإسكندراني</span>
-                  <span class="text-[8.5px] font-bold text-orange-700 block">لحوم وفراخ بلدي طازجة 100% يومياً</span>
-                </div>
-              </div>
-              <p class="text-[8px] text-gray-600 leading-tight border-t border-orange-200/70 pt-1 w-full text-center">
-                تتبيلة ضجة السرية مع الخبز الطازج المخبوز خصيصاً لمطعمنا.
-              </p>
-            </div>
-          </div>
-
-          <!-- Column 2 (Center): Back Cover (ظهر البروشور: أرقام التوصيل، العنوان، ومناطق إسكندرية) -->
-          <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden text-center">
-            <div class="space-y-2">
-              <!-- Delivery Header -->
-              <div class="border-b border-orange-500 pb-1.5">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-12 h-12 mx-auto object-contain">
-                <h3 class="font-black text-xs text-gray-900 mt-0.5">خدمة التوصيل السريع بالإسكندرية 🛵</h3>
-                <p class="text-[9px] text-orange-600 font-bold">طعامك يوصلك ساخن وطازج في أسرع وقت</p>
-              </div>
-
-              <!-- Phone & WhatsApp Badges -->
-              <div class="space-y-1 text-right">
-                <div class="bg-orange-600 text-white p-1.5 rounded-lg text-center font-black font-mono text-xs tracking-wider shadow">
-                  📞 <span id="trifold-phone-1">01210783175 - 01272022986</span>
-                </div>
-                <div class="bg-emerald-600 text-white p-1 rounded-lg text-center font-bold font-mono text-[11px] shadow flex items-center justify-center gap-1">
-                  <span>💬 واتساب:</span>
-                  <span id="trifold-whatsapp">01210783175</span>
-                </div>
-              </div>
-
-              <!-- Address -->
-              <div class="bg-gray-50 border border-gray-200 p-1.5 rounded-lg text-right text-[9px] space-y-0.5">
-                <span class="font-black text-gray-800 block">📍 عنوان الفرع:</span>
-                <p id="trifold-address" class="text-gray-600 leading-tight">
-                  ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب - الإسكندرية
-                </p>
-              </div>
-
-              <!-- Delivery Zones -->
-              <div class="bg-orange-50/70 border border-orange-200 p-1.5 rounded-lg text-right text-[8.5px] space-y-0.5">
-                <span class="font-black text-orange-800 block">⚡ مناطق التوصيل بالإسكندرية:</span>
-                <p id="trifold-zones" class="text-gray-700 leading-tight">
-                  العصافرة قبلي وبحري • ميامي وجمال عبد الناصر • المندرة • سيدي بشر • شارع 45 • محيط الإسكندرية
-                </p>
-              </div>
-            </div>
-
-            <!-- QR Code Section -->
-            <div class="border-t border-gray-200 pt-1.5 flex flex-col items-center">
-              <div id="qrcode-trifold-back" class="p-1 bg-white border border-gray-300 rounded-lg shadow-sm mb-0.5 inline-block"></div>
-              <span class="font-black text-[9px] text-gray-800 block">امسح الكود بكاميرا الموبايل 📲</span>
-              <span class="text-[8px] text-orange-600 font-bold">واطلب أونلاين بضغطة واحدة</span>
-            </div>
-          </div>
-
-          <!-- Column 3 (Right on Arabic layout): Front Cover (الغلاف الأمامي الرئيسي) -->
-          <div class="flex flex-col justify-between h-full overflow-hidden text-center pt-2">
-            <div class="space-y-2">
-              <div class="w-20 h-20 mx-auto p-1.5 bg-gradient-to-b from-orange-500/10 to-transparent rounded-2xl border border-orange-500/20 shadow-sm flex items-center justify-center">
+              <div class="w-16 h-16 mx-auto p-1 bg-gradient-to-b from-orange-500/10 to-transparent rounded-2xl border border-orange-500/20 shadow-sm flex items-center justify-center">
                 <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-full h-full object-contain">
               </div>
 
               <div>
-                <h2 class="text-lg font-black text-gray-900 tracking-tight">مطعم ضجة 🔥</h2>
-                <p class="text-[11px] font-black text-orange-600">أصل السندوتشات والمشويات على الفحم</p>
-                <div class="w-10 h-0.5 bg-orange-600 mx-auto my-1 rounded-full"></div>
-                <p class="text-[9px] text-gray-500 italic">طعم المشويات على أصوله .. ميكسات، حواوشي، وبيتزا معمولة بمزاج</p>
+                <h2 class="text-base font-black text-gray-900 tracking-tight">مطعم ضجة 🔥</h2>
+                <p class="text-[10px] font-black text-orange-600">أصل السندوتشات والمشويات على الفحم</p>
+                <div class="w-8 h-0.5 bg-orange-600 mx-auto my-0.5 rounded-full"></div>
+                <p class="text-[8.5px] text-gray-500 italic">طعم المشويات على أصوله .. ميكسات، حواوشي، وبيتزا معمولة بمزاج</p>
               </div>
 
               <!-- Highlights list -->
-              <div class="bg-gray-100/80 p-2 rounded-xl border border-gray-200 space-y-1 text-right text-[9.5px]">
+              <div class="bg-gray-100/90 p-2 rounded-xl border border-gray-200 space-y-1 text-right text-[9px]">
                 <div class="flex items-center gap-1.5 text-gray-800 font-bold">
                   <span>🍕</span> <span>بيتزا ضجة الإيطالية والشرقية</span>
                 </div>
@@ -484,12 +470,107 @@
                   <span>🥩</span> <span>مشويات على الفحم بالكيلو</span>
                 </div>
               </div>
+
+              <!-- Working Hours Badge -->
+              <div class="bg-amber-50 border border-amber-200 p-1 rounded-lg text-center text-[8px] font-bold text-amber-900">
+                <span>⏰ مفتوح يومياً لخدمتكم: من 12 ظهراً حتى 3 فجراً</span>
+              </div>
             </div>
 
             <!-- Footer Hotline -->
             <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-1.5 rounded-xl shadow-md text-center space-y-0.5">
-              <span class="text-[8.5px] uppercase tracking-wider block font-bold text-orange-200">الخط الساخن والدليفري</span>
-              <span class="text-xs font-black font-mono tracking-wider block">01210783175</span>
+              <span class="text-[8px] uppercase tracking-wider block font-bold text-orange-200">الخط الساخن والدليفري بالإسكندرية</span>
+              <span class="text-[11px] font-black font-mono tracking-wider block">01210783175 - 01272022986</span>
+            </div>
+          </div>
+
+          <!-- Column 2 (Center on RTL): Back Cover (ظهر البروشور: أرقام التوصيل، العنوان، ومناطق إسكندرية) -->
+          <div class="fold-col-center flex flex-col justify-between h-full overflow-hidden text-center pt-1 pb-1">
+            <div class="fold-mark-top">✂️ خط طي</div>
+            <div class="fold-mark-bottom">✂️ خط طي</div>
+
+            <div class="space-y-1.5">
+              <!-- Delivery Header -->
+              <div class="border-b border-orange-500 pb-1">
+                <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-10 h-10 mx-auto object-contain">
+                <h3 class="font-black text-[11px] text-gray-900 mt-0.5">خدمة التوصيل السريع بالإسكندرية 🛵</h3>
+                <p class="text-[8.5px] text-orange-600 font-bold">طعامك يوصلك ساخن وطازج في أسرع وقت</p>
+              </div>
+
+              <!-- Phone & WhatsApp Badges -->
+              <div class="space-y-1 text-right">
+                <div class="bg-orange-600 text-white p-1 rounded-lg text-center font-black font-mono text-[11px] tracking-wider shadow">
+                  📞 <span id="trifold-phone-1">01210783175 - 01272022986</span>
+                </div>
+                <div class="bg-emerald-600 text-white p-1 rounded-lg text-center font-bold font-mono text-[10px] shadow flex items-center justify-center gap-1">
+                  <span>💬 واتساب:</span>
+                  <span id="trifold-whatsapp">01210783175</span>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="bg-gray-50 border border-gray-200 p-1.5 rounded-lg text-right text-[8.5px] space-y-0.5">
+                <span class="font-black text-gray-800 block">📍 عنوان الفرع:</span>
+                <p id="trifold-address" class="text-gray-600 leading-tight">
+                  ارض الفضالي موازي لشارع 34 متفرع من ش مسجد حمزه برج عماد الرحمن 3 ب - الإسكندرية
+                </p>
+              </div>
+
+              <!-- Delivery Zones -->
+              <div class="bg-orange-50/70 border border-orange-200 p-1.5 rounded-lg text-right text-[8px] space-y-0.5">
+                <span class="font-black text-orange-800 block">⚡ مناطق التوصيل بالإسكندرية:</span>
+                <p id="trifold-zones" class="text-gray-700 leading-tight">
+                  العصافرة قبلي وبحري • ميامي وجمال عبد الناصر • المندرة • سيدي بشر • شارع 45 • محيط الإسكندرية
+                </p>
+              </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="border-t border-gray-200 pt-1 flex flex-col items-center">
+              <div id="qrcode-trifold-back" class="p-1 bg-white border border-gray-300 rounded-lg shadow-sm mb-0.5 inline-block"></div>
+              <span class="font-black text-[8.5px] text-gray-800 block">امسح الكود بكاميرا الموبايل 📲</span>
+              <span class="text-[7.5px] text-orange-600 font-bold">واطلب أونلاين بضغطة واحدة</span>
+            </div>
+          </div>
+
+          <!-- Column 3 (Left on RTL): Inside Flap (الطية الداخلية عند فتح البروشور: عروض ضجة والبرجر) -->
+          <div class="fold-col-left flex flex-col justify-between h-full overflow-hidden pt-1 pb-1">
+            <div class="space-y-1.5">
+              <!-- Offers Header -->
+              <div>
+                <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                  <span>🔥</span>
+                  <span>عروض ضجة التوفير</span>
+                </div>
+                <div id="trifold-col-offers" class="space-y-0.5">
+                  <!-- populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Burgers Header -->
+              <div class="pt-0.5">
+                <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                  <span>🍔</span>
+                  <span>برجر ضجة الفاخر</span>
+                </div>
+                <div id="trifold-col-burgers" class="space-y-0.5">
+                  <!-- populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Dajja Quality & Authenticity Badge with Logo (Fills empty bottom space) -->
+            <div class="bg-gradient-to-b from-orange-50 via-amber-50/50 to-white border border-orange-300 rounded-xl p-1.5 text-center flex flex-col items-center justify-center gap-1 shadow-sm mt-1">
+              <div class="flex items-center gap-2">
+                <img src="/dajja_logo_badge.png" alt="لوجو مطعم ضجة" class="w-9 h-9 object-contain drop-shadow-sm flex-shrink-0">
+                <div class="text-right">
+                  <span class="font-black text-orange-950 text-[9.5px] block leading-tight">مطعم ضجة 🔥 طعم اللمة الإسكندراني</span>
+                  <span class="text-[8px] font-bold text-orange-700 block">لحوم وفراخ بلدي طازجة 100% يومياً</span>
+                </div>
+              </div>
+              <p class="text-[7.5px] text-gray-600 leading-tight border-t border-orange-200/70 pt-0.5 w-full text-center">
+                تتبيلة ضجة السرية مع الخبز الطازج المخبوز خصيصاً لمطعمنا.
+              </p>
             </div>
           </div>
 
@@ -502,13 +583,16 @@
           <span>📄 الوجه الثاني (الداخلي الكامل) • القائمة الرئيسية عند فرد البروشور</span>
         </div>
 
-        <div class="trifold-sheet border border-gray-300 rounded-2xl shadow-2xl p-3.5 grid grid-cols-3 gap-3 text-xs">
+        <div class="trifold-sheet border border-gray-300 rounded-2xl shadow-2xl p-3 grid grid-cols-3 gap-0 text-xs">
           
-          <!-- Column 1: السندوتشات والميكسات -->
-          <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
+          <!-- Column 1 (Right on RTL): السندوتشات والميكسات -->
+          <div class="fold-col-right flex flex-col justify-between h-full overflow-hidden pt-1 pb-1">
+            <div class="fold-mark-top">✂️ خط طي</div>
+            <div class="fold-mark-bottom">✂️ خط طي</div>
+
             <div class="space-y-1.5">
               <div>
-                <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10px]">
                   <span>🌯</span>
                   <span>سندوتشات ضجة (سوري • ردة • فينو)</span>
                 </div>
@@ -517,8 +601,8 @@
                 </div>
               </div>
 
-              <div class="pt-1">
-                <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+              <div class="pt-0.5">
+                <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10px]">
                   <span>🔥</span>
                   <span>ميكسات ضجة الخاصة</span>
                 </div>
@@ -528,7 +612,7 @@
               </div>
             </div>
 
-            <!-- Dajja Sandwiches Seal (Fills empty bottom space) -->
+            <!-- Dajja Sandwiches Seal -->
             <div class="mt-1 bg-amber-50/90 border border-amber-200 rounded-lg p-1.5 flex items-center gap-2">
               <img src="/dajja_logo_badge.png" alt="لوجو ضجة" class="w-7 h-7 object-contain flex-shrink-0">
               <div class="text-[8px] text-amber-950 leading-tight">
@@ -538,10 +622,13 @@
             </div>
           </div>
 
-          <!-- Column 2: بيتزا ضجة بجميع المقاسات -->
-          <div class="fold-guide pl-2.5 flex flex-col justify-between h-full overflow-hidden">
+          <!-- Column 2 (Center on RTL): بيتزا ضجة بجميع المقاسات -->
+          <div class="fold-col-center flex flex-col justify-between h-full overflow-hidden pt-1 pb-1">
+            <div class="fold-mark-top">✂️ خط طي</div>
+            <div class="fold-mark-bottom">✂️ خط طي</div>
+
             <div class="space-y-1">
-              <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+              <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10px]">
                 <span>🍕</span>
                 <span>بيتزا ضجة (إيطالي وشرقي)</span>
               </div>
@@ -549,14 +636,14 @@
                 <!-- populated with smart grouped table: صغير | وسط | كبير -->
               </div>
 
-              <div class="bg-amber-50 border border-amber-200 p-1 rounded-lg text-center text-[8.5px] font-bold text-amber-900">
+              <div class="bg-amber-50 border border-amber-200 p-0.5 rounded-lg text-center text-[8px] font-bold text-amber-900">
                 <span>🧀 متوفر إضافة أطراف محشية أو موتزاريلا إكسترا (+15 ج)</span>
               </div>
             </div>
 
-            <!-- Dajja Pizza Centerpiece with Clean Logo (Fills the large empty space below pizza table) -->
-            <div class="bg-gradient-to-b from-orange-50/80 via-amber-50/40 to-white border border-orange-200 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 my-1 shadow-sm">
-              <div class="w-12 h-12 p-1 bg-white rounded-full shadow-sm border border-orange-200 flex items-center justify-center">
+            <!-- Dajja Pizza Centerpiece with Clean Logo -->
+            <div class="bg-gradient-to-b from-orange-50/90 via-amber-50/50 to-white border border-orange-200 rounded-xl p-2 text-center flex flex-col items-center justify-center gap-1 my-1 shadow-sm">
+              <div class="w-12 h-12 p-0.5 bg-white rounded-full shadow-sm border border-orange-200 flex items-center justify-center">
                 <img src="/dajja_logo_full_clean.png" alt="لوجو ضجة" class="w-full h-full object-contain">
               </div>
               <div class="space-y-0.5">
@@ -573,16 +660,16 @@
             </div>
 
             <!-- Footer note inside column 2 -->
-            <div class="text-center text-[8px] text-gray-500 border-t pt-0.5">
+            <div class="text-center text-[7.5px] text-gray-500 border-t pt-0.5">
               <span>جميع أنواع البيتزا مخبوزة بجبنة موتزاريلا طبيعية 100% 🍕</span>
             </div>
           </div>
 
-          <!-- Column 3: حواوشي ضجة + المشويات على الفحم + الإضافات -->
-          <div class="flex flex-col justify-between h-full overflow-hidden">
-            <div class="space-y-1.5">
+          <!-- Column 3 (Left on RTL): حواوشي ضجة + المشويات على الفحم + الإضافات -->
+          <div class="fold-col-left flex flex-col justify-between h-full overflow-hidden pt-1 pb-1">
+            <div class="space-y-1">
               <div>
-                <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10px]">
                   <span>🫓</span>
                   <span>حواوشي ضجة على الفحم</span>
                 </div>
@@ -592,7 +679,7 @@
               </div>
 
               <div>
-                <div class="bg-gradient-to-r from-amber-700 to-orange-700 text-white py-1 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10.5px]">
+                <div class="bg-gradient-to-r from-amber-700 to-orange-700 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-0.5 flex items-center justify-center gap-1 text-[9.5px]">
                   <span>🥩</span>
                   <span>مشويات على الفحم بالكيلو</span>
                 </div>
@@ -602,17 +689,17 @@
               </div>
 
               <div>
-                <div class="bg-gradient-to-r from-slate-700 to-gray-800 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-1 flex items-center justify-center gap-1 text-[10px]">
+                <div class="bg-gradient-to-r from-slate-700 to-gray-800 text-white py-0.5 px-2 rounded-lg text-center font-black shadow-sm mb-0.5 flex items-center justify-center gap-1 text-[9.5px]">
                   <span>🍟</span>
                   <span>المقبلات والإضافات</span>
                 </div>
-                <div id="trifold-extras-list" class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[9px]">
+                <div id="trifold-extras-list" class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[8.5px]">
                   <!-- populated with compact 2-column pills -->
                 </div>
               </div>
             </div>
 
-            <!-- Dajja Grill Seal (Fills empty bottom space) -->
+            <!-- Dajja Grill Seal -->
             <div class="mt-1 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-1.5 flex items-center gap-2">
               <img src="/dajja_logo_badge.png" alt="لوجو ضجة" class="w-7 h-7 object-contain flex-shrink-0">
               <div class="text-[8px] text-orange-950 leading-tight">
@@ -840,7 +927,7 @@
       for (const [name, prices] of Object.entries(grouped)) {
         rowsHtml += `
           <tr>
-            <td>${name}</td>
+            <td title="${name}">${name}</td>
             <td>${prices.small !== '-' ? prices.small + ' ج' : '-'}</td>
             <td>${prices.med !== '-' ? prices.med + ' ج' : '-'}</td>
             <td class="text-orange-600 font-black">${prices.large !== '-' ? prices.large + ' ج' : '-'}</td>
@@ -850,6 +937,12 @@
 
       return `
         <table class="menu-table">
+          <colgroup>
+            <col style="width: 43%;">
+            <col style="width: 19%;">
+            <col style="width: 19%;">
+            <col style="width: 19%;">
+          </colgroup>
           <thead>
             <tr>
               <th>نوع البيتزا</th>
@@ -880,7 +973,7 @@
       for (const [name, prices] of Object.entries(grouped)) {
         rowsHtml += `
           <tr>
-            <td>${name}</td>
+            <td title="${name}">${name}</td>
             <td>${prices.fino !== '-' ? prices.fino + ' ج' : '-'}</td>
             <td>${prices.radda !== '-' ? prices.radda + ' ج' : '-'}</td>
             <td class="text-orange-600 font-black">${prices.souri !== '-' ? prices.souri + ' ج' : '-'}</td>
@@ -890,6 +983,12 @@
 
       return `
         <table class="menu-table">
+          <colgroup>
+            <col style="width: 43%;">
+            <col style="width: 19%;">
+            <col style="width: 19%;">
+            <col style="width: 19%;">
+          </colgroup>
           <thead>
             <tr>
               <th>السندوتش</th>
@@ -928,7 +1027,7 @@
       for (const [name, prices] of Object.entries(grouped)) {
         rowsHtml += `
           <tr>
-            <td>${name}</td>
+            <td title="${name}">${name}</td>
             <td>${prices.half !== '-' ? prices.half + ' ج' : '-'}</td>
             <td>${prices.small !== '-' ? prices.small + ' ج' : '-'}</td>
             <td>${prices.med !== '-' ? prices.med + ' ج' : '-'}</td>
@@ -939,6 +1038,13 @@
 
       return `
         <table class="menu-table">
+          <colgroup>
+            <col style="width: 36%;">
+            <col style="width: 16%;">
+            <col style="width: 16%;">
+            <col style="width: 16%;">
+            <col style="width: 16%;">
+          </colgroup>
           <thead>
             <tr>
               <th>الحواوشي</th>
@@ -970,11 +1076,11 @@
         viewTrifold.classList.remove('hidden');
         viewClassic.classList.add('hidden');
         
-        // Force Landscape in Print
+        // Force Landscape in Print with zero default margin
         styleTag.innerHTML = `
           @page {
             size: A4 landscape;
-            margin: 4mm;
+            margin: 0;
           }
         `;
       } else {
@@ -983,11 +1089,11 @@
         viewClassic.classList.remove('hidden');
         viewTrifold.classList.add('hidden');
 
-        // Force Portrait in Print
+        // Force Portrait in Print with zero default margin
         styleTag.innerHTML = `
           @page {
             size: A4 portrait;
-            margin: 6mm;
+            margin: 0;
           }
         `;
       }
