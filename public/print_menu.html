@@ -444,60 +444,64 @@
         
         <div class="trifold-sheet border border-gray-300 rounded-2xl shadow-2xl p-3 grid grid-cols-3 gap-0 text-xs">
           
-          <!-- Column 1 (Right on RTL): Front Cover (الغلاف الأمامي الرئيسي عند طي البروشور) -->
-          <div class="fold-col-right flex flex-col justify-between h-full overflow-hidden text-center pt-2 pb-1.5">
+          <!-- Column 1 (Right on RTL): Front Cover (الغلاف الأمامي الرئيسي عند طي البروشور - يطابق الموك اب تماماً) -->
+          <div class="fold-col-right flex flex-col justify-between items-center h-full overflow-hidden text-center px-3 py-4 bg-white">
             <div class="fold-mark-top">✂️ خط طي</div>
             <div class="fold-mark-bottom">✂️ خط طي</div>
 
-            <!-- Top Header & Brand -->
-            <div class="space-y-1.5">
-              <div class="w-24 h-24 mx-auto p-1.5 bg-gradient-to-b from-orange-500/15 via-amber-500/10 to-transparent rounded-3xl border-2 border-orange-500/30 shadow-md flex items-center justify-center">
-                <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-full h-full object-contain drop-shadow">
+            <!-- Top / Center Hero: Big Circular Dajja Emblem -->
+            <div class="w-full flex flex-col items-center pt-2">
+              <div class="w-48 h-48 sm:w-52 sm:h-52 rounded-full p-2 bg-white shadow-xl border-4 border-orange-500/20 flex items-center justify-center my-auto transition-transform">
+                <img src="/dajja_logo_full_clean.png" alt="لوجو مطعم ضجة" class="w-full h-full object-contain drop-shadow-md">
               </div>
 
-              <div>
-                <h2 class="text-2xl font-black text-gray-900 tracking-tight">مطعم ضجة 🔥</h2>
-                <p class="text-xs font-black text-orange-600 mt-0.5">أصل السندوتشات والمشويات على الفحم</p>
-                <div class="w-12 h-1 bg-gradient-to-r from-orange-500 to-amber-500 mx-auto my-1 rounded-full"></div>
-                <p class="text-[9.5px] text-gray-600 font-bold italic">طعم المشويات على أصوله .. ميكسات، حواوشي، وبيتزا معمولة بمزاج</p>
-              </div>
-
-              <!-- Highlights Cards -->
-              <div class="bg-gray-50/90 p-2.5 rounded-2xl border border-gray-200/80 space-y-1.5 text-right text-[10px] shadow-xs">
-                <div class="flex items-center gap-2 text-gray-800 font-bold border-b border-gray-200/60 pb-1">
-                  <span class="text-base">🍕</span> <span>بيتزا ضجة الإيطالية والشرقية (موتزاريلا طبيعية 100%)</span>
-                </div>
-                <div class="flex items-center gap-2 text-gray-800 font-bold border-b border-gray-200/60 pb-1">
-                  <span class="text-base">🫓</span> <span>حواوشي إسكندراني على الفحم (بالتتبيلة والخلطة السرية)</span>
-                </div>
-                <div class="flex items-center gap-2 text-gray-800 font-bold border-b border-gray-200/60 pb-1">
-                  <span class="text-base">🌯</span> <span>سندوتشات وميكسات ضجة (عيش سوري • فينو • عيش ردة)</span>
-                </div>
-                <div class="flex items-center gap-2 text-gray-800 font-bold">
-                  <span class="text-base">🥩</span> <span>مشويات على الفحم بالكيلو (طعم الفحم البلدي الأصلي)</span>
+              <!-- Brand Title & Tagline -->
+              <div class="mt-4 space-y-1">
+                <h2 class="text-3xl font-black text-gray-900 tracking-tight">مطعم ضجة</h2>
+                <p class="text-base font-black text-gray-700">طعم اللمة الإسكندراني</p>
+                <div class="flex items-center justify-center gap-1.5 text-orange-600 font-bold text-[10.5px] pt-1">
+                  <span>مشويات عالفحم</span>
+                  <span>•</span>
+                  <span>سندوتشات وميكسات</span>
+                  <span>•</span>
+                  <span>بيتزا وحواوشي</span>
                 </div>
               </div>
             </div>
 
-            <!-- Middle Feature: Quality Guarantee Card (Fills middle void) -->
-            <div class="my-1.5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-2.5 flex items-center gap-2.5 shadow-xs">
-              <img src="/dajja_logo_badge.png" alt="شارة ضجة" class="w-12 h-12 object-contain flex-shrink-0 drop-shadow-sm">
-              <div class="text-right">
-                <span class="font-black text-orange-950 text-xs block leading-tight">🔥 سر الصنعة واللقمة الهنية الإسكندراني</span>
-                <span class="text-[9px] text-gray-700 block leading-tight mt-0.5">لحوم وفراخ بلدي طازجة 100% يومياً بتتبيلة ضجة الأصلية مع الخبز الطازج المخبوز خصيصاً لمطعمنا.</span>
-              </div>
-            </div>
+            <!-- Bottom Section: Fast Delivery & Hotline (Exact layout from Mockup) -->
+            <div class="w-full border-t border-gray-100 pt-3 space-y-2">
+              <div class="bg-gray-50/90 border border-gray-200/90 rounded-2xl p-2.5 shadow-sm flex items-center justify-between gap-2.5">
+                
+                <!-- Fast Delivery Graphic Badge -->
+                <div class="flex flex-col items-center justify-center bg-gradient-to-br from-orange-600 to-red-600 text-white rounded-xl px-3 py-2 shadow-sm flex-shrink-0">
+                  <span class="text-lg leading-none">🛵</span>
+                  <span class="text-[11px] font-black tracking-tighter uppercase font-sans mt-0.5">Fast</span>
+                  <span class="text-[9px] font-black tracking-tight uppercase leading-none text-amber-200">Delivery</span>
+                </div>
 
-            <!-- Bottom: Working Hours & Hotline -->
-            <div class="space-y-1">
-              <div class="bg-amber-100/90 border border-amber-300 py-1.5 px-3 rounded-xl text-center text-[10px] font-black text-amber-950 shadow-xs">
-                <span>⏰ مفتوح يومياً لخدمتكم: من 12 ظهراً حتى 3 فجراً</span>
+                <!-- Phone Numbers Stacked with icons -->
+                <div class="flex-1 space-y-1 text-left font-mono font-black text-[11px] text-gray-800" dir="ltr">
+                  <div class="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-lg border border-gray-200/80 shadow-xs">
+                    <span class="text-orange-600 text-xs">📞</span>
+                    <span id="front-phone-1" class="tracking-wider text-xs">01210783175</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-lg border border-gray-200/80 shadow-xs">
+                    <span class="text-orange-600 text-xs">📞</span>
+                    <span id="front-phone-2" class="tracking-wider text-xs">01272022986</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/80 shadow-xs text-emerald-800">
+                    <span class="text-xs">💬</span>
+                    <span id="front-whatsapp" class="tracking-wider text-xs">01210783175</span>
+                  </div>
+                </div>
+
               </div>
 
-              <!-- Footer Hotline -->
-              <div class="bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 text-white p-2.5 rounded-2xl shadow-md text-center space-y-0.5">
-                <span class="text-[9px] uppercase tracking-wider block font-bold text-orange-200">الخط الساخن والدليفري بالإسكندرية 🛵</span>
-                <span class="text-sm font-black font-mono tracking-wider block">01210783175 - 01272022986</span>
+              <!-- Working Hours Note -->
+              <div class="text-[9px] font-bold text-gray-500 flex items-center justify-center gap-1">
+                <span>⏰</span>
+                <span>مفتوح يومياً لخدمتكم والتوصيل السريع من 12 ظهراً حتى 3 فجراً</span>
               </div>
             </div>
           </div>
@@ -1236,9 +1240,19 @@
       // Populate Restaurant Contact Info
       if (data.phone) {
         document.getElementById('trifold-phone-1').innerText = data.phone;
+        const phones = data.phone.split(/[-–—/]/).map(p => p.trim());
+        if (phones[0] && document.getElementById('front-phone-1')) {
+          document.getElementById('front-phone-1').innerText = phones[0];
+        }
+        if (phones[1] && document.getElementById('front-phone-2')) {
+          document.getElementById('front-phone-2').innerText = phones[1];
+        }
       }
       if (data.whatsappNumber) {
         document.getElementById('trifold-whatsapp').innerText = data.whatsappNumber;
+        if (document.getElementById('front-whatsapp')) {
+          document.getElementById('front-whatsapp').innerText = data.whatsappNumber;
+        }
       }
       if (data.address) {
         document.getElementById('trifold-address').innerText = data.address;
