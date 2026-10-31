@@ -13,29 +13,61 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
+      /* LIGHT MODE */
       --bg-canvas: #F5F3EE;
       --bg-surface: #FFFFFF;
       --bg-surface-subtle: #FAF8F5;
-      --border-stone: #E6E2D9;
-      --text-main: #252A28;
-      --text-muted: #59605C;
+      --border-stone: #D1CBBF;
+      --text-main: #111827;
+      --text-muted: #374151;
+      --text-soft: #4B5563;
       --primary-green: #183B32;
       --primary-green-hover: #122D26;
-      --accent-gold: #C5A878;
+      --accent-gold: #B89255;
       --accent-gold-soft: #F4EFE6;
+      --card-shadow: 0 4px 20px -2px rgba(24, 59, 50, 0.06);
+      --table-header-bg: #EFEBE1;
+      --table-header-text: #183B32;
+      --table-row-even: #F9F8F5;
+    }
+
+    body.dark-theme, [data-theme="dark"], html[data-theme="dark"] body {
+      /* DARK MODE */
+      --bg-canvas: #0F1412;
+      --bg-surface: #18221D;
+      --bg-surface-subtle: #131B17;
+      --border-stone: #2F3E37;
+      --text-main: #FFFFFF;
+      --text-muted: #E2E8F0;
+      --text-soft: #CBD5E1;
+      --primary-green: #236B51;
+      --primary-green-hover: #1B5741;
+      --accent-gold: #DFBE8A;
+      --accent-gold-soft: rgba(223, 190, 138, 0.15);
+      --card-shadow: 0 4px 25px -2px rgba(0, 0, 0, 0.45);
+      --table-header-bg: #1E2B25;
+      --table-header-text: #DFBE8A;
+      --table-row-even: #141C18;
     }
 
     body {
       font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
       background-color: var(--bg-canvas) !important;
       color: var(--text-main) !important;
+      font-weight: 600 !important;
       -webkit-tap-highlight-color: transparent;
       letter-spacing: -0.01em;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .text-xs, .text-sm, .text-\[10px\], .text-\[11px\], .text-\[9px\] {
+      font-weight: 600 !important;
     }
 
     .font-mono, [id*="total"], [id*="price"], [id*="cost"], [id*="stock"], [id*="qty"] {
       font-family: 'Inter', 'IBM Plex Sans Arabic', monospace !important;
       font-variant-numeric: tabular-nums !important;
+      font-weight: 800 !important;
     }
 
     header {
@@ -48,16 +80,17 @@
     }
     header p {
       color: #E6E2D9 !important;
+      font-weight: 600 !important;
     }
 
     .bg-\[\#111827\],
     .bg-\[\#0b0f19\],
     .bg-slate-900,
     .bg-slate-800 {
-      background-color: #FFFFFF !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
-      box-shadow: 0 4px 20px -2px rgba(24, 59, 50, 0.04) !important;
+      background-color: var(--bg-surface) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
+      box-shadow: var(--card-shadow) !important;
     }
 
     .bg-black\/40,
@@ -65,72 +98,79 @@
     .bg-black\/20,
     .bg-slate-950,
     .bg-white\/5 {
-      background-color: #FAF8F5 !important;
-      border-color: #E6E2D9 !important;
+      background-color: var(--bg-surface-subtle) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
     }
 
     input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
-      background-color: #FAF8F5 !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
+      background-color: var(--bg-surface-subtle) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
+      font-weight: 600 !important;
     }
     input:focus,
     select:focus,
     textarea:focus {
-      background-color: #FFFFFF !important;
-      border-color: #183B32 !important;
+      background-color: var(--bg-surface) !important;
+      border-color: var(--primary-green) !important;
       outline: none !important;
-      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.08) !important;
+      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.15) !important;
     }
 
     main .text-white {
-      color: #252A28 !important;
+      color: var(--text-main) !important;
+      font-weight: 700 !important;
     }
     main .text-slate-400,
     main .text-slate-500 {
-      color: #59605C !important;
+      color: var(--text-muted) !important;
+      font-weight: 600 !important;
     }
     main .text-slate-300,
     main .text-slate-200 {
-      color: #252A28 !important;
+      color: var(--text-main) !important;
+      font-weight: 600 !important;
     }
 
     .bg-gradient-to-r.from-orange-600,
     .bg-orange-600,
     .glow-orange {
-      background: #183B32 !important;
+      background: var(--primary-green) !important;
       background-image: none !important;
       color: #FFFFFF !important;
-      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.2) !important;
-      border-color: #183B32 !important;
+      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.22) !important;
+      border-color: var(--primary-green) !important;
+      font-weight: 800 !important;
     }
     .bg-gradient-to-r.from-orange-600:hover,
     .bg-orange-600:hover {
-      background: #122D26 !important;
-      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.28) !important;
+      background: var(--primary-green-hover) !important;
+      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.3) !important;
     }
 
     table {
-      border-color: #E6E2D9 !important;
+      border-color: var(--border-stone) !important;
     }
     thead th {
-      background-color: #F4EFE6 !important;
-      color: #183B32 !important;
-      font-weight: 700 !important;
-      border-color: #E6E2D9 !important;
+      background-color: var(--table-header-bg) !important;
+      color: var(--table-header-text) !important;
+      font-weight: 800 !important;
+      border-color: var(--border-stone) !important;
     }
     tbody tr {
-      background-color: #FFFFFF !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
+      background-color: var(--bg-surface) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
+      font-weight: 600 !important;
     }
     tbody tr:nth-child(even) {
-      background-color: #FAF8F5 !important;
+      background-color: var(--table-row-even) !important;
     }
     tbody tr:hover {
-      background-color: rgba(244, 239, 230, 0.6) !important;
+      background-color: var(--accent-gold-soft) !important;
     }
 
     .custom-scrollbar::-webkit-scrollbar {
@@ -138,7 +178,7 @@
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #D8D2C4;
+      background: var(--border-stone);
       border-radius: 10px;
     }
     @keyframes pulseSlow {
@@ -149,6 +189,34 @@
       animation: pulseSlow 2s infinite ease-in-out;
     }
   </style>
+  <script>
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      localStorage.setItem('dajja_theme', theme);
+      const icon = document.getElementById('theme-toggle-icon');
+      if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+    }
+    function toggleTheme() {
+      const current = localStorage.getItem('dajja_theme') || 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+    (function() {
+      const saved = localStorage.getItem('dajja_theme') || 'light';
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        applyTheme(saved);
+      });
+    })();
+  </script>
 </head>
 <body class="min-h-screen bg-[#F5F3EE] flex flex-col custom-scrollbar">
 
@@ -168,6 +236,9 @@
       </div>
 
       <nav class="flex items-center gap-1.5 sm:gap-2">
+        <button id="btn-theme-toggle" onclick="toggleTheme()" title="تبديل الإضاءة (داكن / فاتح)" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-sm active:scale-95">
+          <span id="theme-toggle-icon">🌙</span>
+        </button>
         <a href="/dashboard" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
           <span>🖥️</span> <span class="hidden sm:inline">الكاشير / الطلبات</span>
         </a>

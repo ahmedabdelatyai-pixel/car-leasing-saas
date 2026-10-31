@@ -21,35 +21,83 @@
   
   <style>
     :root {
+      /* LIGHT MODE: Luxury European Ivory & Deep Forest Green */
       --bg-canvas: #F5F3EE;
       --bg-surface: #FFFFFF;
       --bg-surface-subtle: #FAF8F5;
-      --border-stone: #E6E2D9;
-      --border-stone-strong: #D6D0C2;
-      --text-main: #252A28;
-      --text-muted: #59605C;
-      --text-soft: #7A827E;
+      --border-stone: #D1CBBF;
+      --border-stone-strong: #B8B0A0;
+      --text-main: #111827;
+      --text-muted: #374151;
+      --text-soft: #4B5563;
       --primary-green: #183B32;
       --primary-green-hover: #122D26;
-      --accent-gold: #C5A878;
+      --accent-gold: #B89255;
       --accent-gold-soft: #F4EFE6;
       --status-success: #1E6B52;
       --status-danger: #B93838;
       --status-warning: #B45309;
+      --card-shadow: 0 4px 20px -2px rgba(24, 59, 50, 0.06);
+      --input-bg: #FFFFFF;
+      --input-border: #D1CBBF;
+      --input-text: #111827;
+      --table-header-bg: #EFEBE1;
+      --table-header-text: #183B32;
+      --table-row-even: #F9F8F5;
+      --nav-bar-bg: #FFFFFF;
+      --nav-tab-inactive: #374151;
+      --nav-tab-active-bg: rgba(24, 59, 50, 0.06);
+    }
+
+    body.dark-theme, [data-theme="dark"], html[data-theme="dark"] body {
+      /* DARK MODE: Luxury Midnight Charcoal & Emerald Gold */
+      --bg-canvas: #0F1412;
+      --bg-surface: #18221D;
+      --bg-surface-subtle: #131B17;
+      --border-stone: #2F3E37;
+      --border-stone-strong: #405249;
+      --text-main: #FFFFFF;
+      --text-muted: #E2E8F0;
+      --text-soft: #CBD5E1;
+      --primary-green: #236B51;
+      --primary-green-hover: #1B5741;
+      --accent-gold: #DFBE8A;
+      --accent-gold-soft: rgba(223, 190, 138, 0.15);
+      --status-success: #34D399;
+      --status-danger: #F87171;
+      --status-warning: #FBBF24;
+      --card-shadow: 0 4px 25px -2px rgba(0, 0, 0, 0.45);
+      --input-bg: #111714;
+      --input-border: #3A4C42;
+      --input-text: #FFFFFF;
+      --table-header-bg: #1E2B25;
+      --table-header-text: #DFBE8A;
+      --table-row-even: #141C18;
+      --nav-bar-bg: #141C18;
+      --nav-tab-inactive: #CBD5E1;
+      --nav-tab-active-bg: rgba(35, 107, 81, 0.25);
     }
 
     body {
       font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
       background-color: var(--bg-canvas) !important;
       color: var(--text-main) !important;
+      font-weight: 600 !important; /* Thick, clear base weight - eliminates any faintness! */
       -webkit-tap-highlight-color: transparent;
       letter-spacing: -0.01em;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* All small text, muted labels, and subtitles are given bolder weight and high contrast */
+    .text-xs, .text-sm, .text-\[10px\], .text-\[11px\], .text-\[9px\] {
+      font-weight: 600 !important;
     }
 
     /* Tabular numbers for clean Swiss financial alignment */
     .font-mono, [id*="total"], [id*="subtotal"], [id*="amount"], [id*="fee"], [id*="price"] {
       font-family: 'Inter', 'IBM Plex Sans Arabic', monospace !important;
       font-variant-numeric: tabular-nums !important;
+      font-weight: 800 !important;
     }
 
     /* Scrollbars */
@@ -58,14 +106,14 @@
       height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-      background: #F5F3EE;
+      background: var(--bg-canvas);
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #D8D2C4;
+      background: var(--border-stone);
       border-radius: 999px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #C5A878;
+      background: var(--accent-gold);
     }
 
     /* Header styling */
@@ -79,37 +127,47 @@
     }
     header .text-slate-400, header .text-gray-400 {
       color: #E6E2D9 !important;
+      font-weight: 600 !important;
     }
     header .text-orange-400 {
       color: #F4EFE6 !important;
+      font-weight: 700 !important;
     }
 
     /* Navigation Tabs Bar */
     .nav-tabs-bar {
-      background-color: #FFFFFF !important;
-      border-bottom: 1px solid #E6E2D9 !important;
-      box-shadow: 0 1px 3px rgba(37, 42, 40, 0.03) !important;
+      background-color: var(--nav-bar-bg) !important;
+      border-bottom: 1.5px solid var(--border-stone) !important;
+      box-shadow: 0 1px 3px rgba(37, 42, 40, 0.05) !important;
+      transition: background-color 0.2s ease;
     }
     .nav-tab {
       font-family: 'IBM Plex Sans Arabic', sans-serif !important;
-      font-size: 12px !important;
-      font-weight: 600 !important;
-      color: #59605C !important;
-      border-bottom: 2.5px solid transparent !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      color: var(--nav-tab-inactive) !important;
+      border-bottom: 3px solid transparent !important;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
       padding: 12px 16px !important;
     }
     .nav-tab:hover {
-      color: #183B32 !important;
-      background-color: #FAF8F5 !important;
+      color: var(--text-main) !important;
+      background-color: var(--bg-surface-subtle) !important;
     }
     /* When active tab is selected */
     .nav-tab.border-orange-500,
     .nav-tab.text-orange-400 {
-      border-bottom-color: #183B32 !important;
-      color: #183B32 !important;
-      font-weight: 700 !important;
-      background-color: rgba(24, 59, 50, 0.04) !important;
+      border-bottom-color: var(--primary-green) !important;
+      color: var(--primary-green) !important;
+      font-weight: 800 !important;
+      background-color: var(--nav-tab-active-bg) !important;
+    }
+    body.dark-theme .nav-tab.border-orange-500,
+    body.dark-theme .nav-tab.text-orange-400,
+    html[data-theme="dark"] .nav-tab.border-orange-500,
+    html[data-theme="dark"] .nav-tab.text-orange-400 {
+      color: var(--accent-gold) !important;
+      border-bottom-color: var(--accent-gold) !important;
     }
 
     /* Universal Surface & Card Overrides for European Minimalist Feel */
@@ -117,10 +175,10 @@
     .bg-\[\#1e293b\],
     .bg-slate-900,
     .bg-slate-800 {
-      background-color: #FFFFFF !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
-      box-shadow: 0 4px 24px -2px rgba(24, 59, 50, 0.04) !important;
+      background-color: var(--bg-surface) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
+      box-shadow: var(--card-shadow) !important;
     }
 
     /* Inner subtle cards / sub-boxes */
@@ -129,66 +187,78 @@
     .bg-black\/20,
     .bg-slate-950,
     .bg-white\/5 {
-      background-color: #FAF8F5 !important;
-      border-color: #E6E2D9 !important;
+      background-color: var(--bg-surface-subtle) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
     }
 
     /* Input & Select fields */
     input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
-      background-color: #FAF8F5 !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
+      background-color: var(--input-bg) !important;
+      border-color: var(--input-border) !important;
+      color: var(--input-text) !important;
+      font-weight: 600 !important;
     }
     input:focus,
     select:focus,
     textarea:focus {
-      background-color: #FFFFFF !important;
-      border-color: #183B32 !important;
+      border-color: var(--primary-green) !important;
       outline: none !important;
-      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.08) !important;
+      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.15) !important;
     }
     input::placeholder,
     textarea::placeholder {
-      color: #8C9490 !important;
+      color: var(--text-soft) !important;
+      font-weight: 500 !important;
+      opacity: 0.85 !important;
     }
 
-    /* Headings and Text adjustments */
+    /* Headings and Text adjustments - Bold & High Contrast */
     main .text-white {
-      color: #252A28 !important;
+      color: var(--text-main) !important;
+      font-weight: 700 !important;
     }
     main .text-slate-400,
     main .text-slate-500,
     main .text-gray-400,
-    main .text-gray-500 {
-      color: #59605C !important;
-    }
+    main .text-gray-500,
     main .text-slate-300,
-    main .text-slate-200 {
-      color: #252A28 !important;
+    main .text-slate-200,
+    main .text-gray-600 {
+      color: var(--text-muted) !important;
+      font-weight: 600 !important;
     }
 
     /* Primary Buttons: European Forest Green & Soft Glow */
     .bg-gradient-to-r.from-orange-600,
     .bg-orange-600,
     .glow-orange {
-      background: #183B32 !important;
+      background: var(--primary-green) !important;
       background-image: none !important;
       color: #FFFFFF !important;
-      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.18) !important;
-      border-color: #183B32 !important;
+      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.22) !important;
+      border-color: var(--primary-green) !important;
+      font-weight: 800 !important;
     }
     .bg-gradient-to-r.from-orange-600:hover,
     .bg-orange-600:hover {
-      background: #122D26 !important;
-      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.25) !important;
+      background: var(--primary-green-hover) !important;
+      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.3) !important;
     }
 
     /* Accent & Price text */
     main .text-orange-400,
     main .text-orange-500 {
-      color: #183B32 !important;
+      color: var(--primary-green) !important;
+      font-weight: 800 !important;
+    }
+    body.dark-theme main .text-orange-400,
+    body.dark-theme main .text-orange-500,
+    html[data-theme="dark"] main .text-orange-400,
+    html[data-theme="dark"] main .text-orange-500 {
+      color: var(--accent-gold) !important;
       font-weight: 800 !important;
     }
 
@@ -196,65 +266,72 @@
     .fixed.inset-0.bg-black\/80,
     .fixed.inset-0.bg-black\/70,
     .fixed.inset-0.bg-black\/60 {
-      background-color: rgba(37, 42, 40, 0.6) !important;
-      backdrop-filter: blur(6px) !important;
+      background-color: rgba(15, 20, 18, 0.75) !important;
+      backdrop-filter: blur(8px) !important;
     }
 
     /* Tables */
     table {
-      border-color: #E6E2D9 !important;
+      border-color: var(--border-stone) !important;
     }
     thead th {
-      background-color: #F4EFE6 !important;
-      color: #183B32 !important;
-      font-weight: 700 !important;
-      border-color: #E6E2D9 !important;
+      background-color: var(--table-header-bg) !important;
+      color: var(--table-header-text) !important;
+      font-weight: 800 !important;
+      border-color: var(--border-stone) !important;
     }
     tbody tr {
-      background-color: #FFFFFF !important;
-      border-color: #E6E2D9 !important;
-      color: #252A28 !important;
+      background-color: var(--bg-surface) !important;
+      border-color: var(--border-stone) !important;
+      color: var(--text-main) !important;
+      font-weight: 600 !important;
       transition: background-color 0.15s ease !important;
     }
     tbody tr:nth-child(even) {
-      background-color: #FAF8F5 !important;
+      background-color: var(--table-row-even) !important;
     }
     tbody tr:hover {
-      background-color: rgba(244, 239, 230, 0.6) !important;
+      background-color: var(--accent-gold-soft) !important;
     }
 
     /* Badges & Tags */
     .bg-emerald-500\/20,
     .bg-emerald-600\/20,
     .bg-emerald-950\/80 {
-      background-color: rgba(30, 107, 82, 0.1) !important;
-      color: #1E6B52 !important;
-      border-color: rgba(30, 107, 82, 0.25) !important;
+      background-color: rgba(30, 107, 82, 0.15) !important;
+      color: var(--status-success) !important;
+      border-color: rgba(30, 107, 82, 0.35) !important;
+      font-weight: 700 !important;
     }
     .text-emerald-400,
     .text-emerald-300 {
-      color: #1E6B52 !important;
+      color: var(--status-success) !important;
+      font-weight: 700 !important;
     }
     .bg-amber-500\/10,
     .bg-amber-500\/20 {
-      background-color: rgba(197, 168, 120, 0.15) !important;
-      color: #8C6B32 !important;
-      border-color: rgba(197, 168, 120, 0.3) !important;
+      background-color: rgba(184, 146, 85, 0.18) !important;
+      color: var(--status-warning) !important;
+      border-color: rgba(184, 146, 85, 0.35) !important;
+      font-weight: 700 !important;
     }
     .text-amber-400,
     .text-amber-300 {
-      color: #8C6B32 !important;
+      color: var(--status-warning) !important;
+      font-weight: 700 !important;
     }
     .bg-rose-500\/10,
     .bg-rose-500\/20,
     .bg-rose-600\/20 {
-      background-color: rgba(185, 56, 56, 0.08) !important;
-      color: #B93838 !important;
-      border-color: rgba(185, 56, 56, 0.25) !important;
+      background-color: rgba(185, 56, 56, 0.12) !important;
+      color: var(--status-danger) !important;
+      border-color: rgba(185, 56, 56, 0.3) !important;
+      font-weight: 700 !important;
     }
     .text-rose-400,
     .text-rose-300 {
-      color: #B93838 !important;
+      color: var(--status-danger) !important;
+      font-weight: 700 !important;
     }
     .glow-emerald {
       box-shadow: 0 0 20px rgba(30, 107, 82, 0.25);
@@ -364,8 +441,40 @@
         background: #ffffff !important;
         color: #000000 !important;
       }
-    }
   </style>
+  <script>
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      localStorage.setItem('dajja_theme', theme);
+
+      const icon = document.getElementById('theme-toggle-icon');
+      const label = document.getElementById('theme-toggle-label');
+      if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+      if (label) label.textContent = isDark ? 'الوضع النهاري' : 'الوضع الليلي';
+    }
+
+    function toggleDashboardTheme() {
+      const current = localStorage.getItem('dajja_theme') || 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    (function() {
+      const saved = localStorage.getItem('dajja_theme') || 'light';
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        applyTheme(saved);
+      });
+    })();
+  </script>
 </head>
 <body class="min-h-screen flex flex-col bg-[#F5F3EE]">
 
@@ -400,6 +509,10 @@
         </div>
       </div>
       <div class="flex items-center gap-1.5">
+        <button id="btn-theme-toggle" onclick="toggleDashboardTheme()" title="تبديل الإضاءة (داكن / فاتح)" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <span id="theme-toggle-icon">🌙</span>
+          <span id="theme-toggle-label" class="hidden md:inline">الوضع الليلي</span>
+        </button>
         <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
           <span id="sound-toggle-icon">🔔</span>
           <span id="sound-toggle-label" class="hidden sm:inline">صوت التنبيه: مفعّل</span>

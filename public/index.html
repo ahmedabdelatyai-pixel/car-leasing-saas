@@ -16,32 +16,54 @@
 
   <style>
     :root {
+      /* LIGHT MODE */
       --bg-canvas: #F5F3EE;
       --bg-surface: #FFFFFF;
-      --bg-surface-subtle: #FAF8F5;
-      --border-stone: #E6E2D9;
-      --text-main: #252A28;
-      --text-muted: #59605C;
+      --border-stone: #D1CBBF;
+      --text-main: #111827;
+      --text-muted: #374151;
       --primary-green: #183B32;
       --primary-green-hover: #122D26;
-      --accent-gold: #C5A878;
-      --accent-gold-soft: #F4EFE6;
+      --accent-gold: #B89255;
+    }
+
+    body.dark-theme, [data-theme="dark"], html[data-theme="dark"] body {
+      /* DARK MODE */
+      --bg-canvas: #0F1412;
+      --bg-surface: #18221D;
+      --border-stone: #2F3E37;
+      --text-main: #FFFFFF;
+      --text-muted: #E2E8F0;
+      --primary-green: #236B51;
+      --primary-green-hover: #1B5741;
+      --accent-gold: #DFBE8A;
     }
 
     body {
       font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
       background-color: var(--bg-canvas) !important;
       color: var(--text-main) !important;
+      font-weight: 600 !important;
       -webkit-tap-highlight-color: transparent;
       letter-spacing: -0.01em;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .glow-gold {
       box-shadow: 0 10px 30px rgba(197, 168, 120, 0.25);
     }
   </style>
+  <script>
+    (function() {
+      const saved = localStorage.getItem('dajja_theme') || 'light';
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-theme'));
+      }
+    })();
+  </script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-[#F5F3EE]">
+<body class="min-h-screen flex items-center justify-center p-4">
 
   <!-- Subtle Ambient Glows -->
   <div class="fixed top-1/4 -right-20 w-80 h-80 rounded-full bg-[#183B32]/10 blur-3xl pointer-events-none"></div>
