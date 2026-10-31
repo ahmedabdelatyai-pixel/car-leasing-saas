@@ -421,14 +421,95 @@ export class OrderController {
   }
 
   /**
-   * Delete / Cancel an order.
+   * Delete / Cancel an order permanently (e.g. error or test order).
+   * Restores deducted inventory ingredients and rolls back customer totals.
    */
   static async deleteOrder(req: Request, res: Response) {
     try {
       const { id } = req.params;
+
+      const order = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          items: true
+        }
+      });
+
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // 1. Restore inventory ingredients that were deducted when the order was created
+      try {
+        for (const itm of order.items) {
+          if (!itm.menuItemId) continue;
+
+          const recipe = await prisma.recipe.findUnique({
+            where: { productId: itm.menuItemId },
+            include: {
+              ingredients: true
+            }
+          });
+
+          if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
+            const orderQty = Number(itm.quantity) || 1;
+            for (const ing of recipe.ingredients) {
+              const toRestore = Number(ing.quantityUsed) * orderQty;
+              if (toRestore > 0 && ing.inventoryItemId) {
+                await prisma.inventoryItem.update({
+                  where: { id: ing.inventoryItemId },
+                  data: {
+                    currentStock: { increment: toRestore }
+                  }
+                });
+              }
+            }
+          }
+        }
+      } catch (invErr) {
+        console.warn('Inventory rollback warning upon order deletion:', invErr);
+      }
+
+      // 2. Rollback customer spend and points if customer exists
+      try {
+        const cleanPhone = (order.customerPhone || '').replace(/[\s-]/g, '');
+        if (cleanPhone) {
+          const customer = await prisma.customer.findUnique({
+            where: {
+              restaurantId_phone: {
+                restaurantId: order.restaurantId,
+                phone: cleanPhone
+              }
+            }
+          });
+
+          if (customer) {
+            const netPoints = (order.pointsEarned || 0) - (order.pointsRedeemed || 0);
+            await prisma.customer.update({
+              where: { id: customer.id },
+              data: {
+                pointsBalance: Math.max(0, customer.pointsBalance - netPoints),
+                lifetimePoints: Math.max(0, customer.lifetimePoints - (order.pointsEarned || 0)),
+                totalSpent: { decrement: Number(order.totalAmount) },
+                totalOrders: { decrement: 1 }
+              }
+            });
+
+            await prisma.pointTransaction.deleteMany({
+              where: { orderId: order.id }
+            });
+          }
+        }
+      } catch (custErr) {
+        console.warn('Customer points rollback warning upon order deletion:', custErr);
+      }
+
+      // 3. Delete the order (cascades to order_items)
       await prisma.order.delete({ where: { id } });
-      return res.json({ message: 'Order deleted successfully' });
+
+      return res.json({ message: 'تم حذف الطلب نهائياً واسترجاع المكونات للمخزون بنجاح' });
     } catch (err: any) {
+      console.error('Failed to delete order:', err);
       return res.status(500).json({ error: 'Failed to delete order', message: err.message });
     }
   }

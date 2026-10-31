@@ -158,7 +158,7 @@ router.put(
 router.delete(
   '/orders/:id',
   authenticateToken,
-  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN]),
+  authorizeRoles([Role.SUPER_ADMIN, Role.RESTAURANT_ADMIN, Role.CASHIER]),
   OrderController.deleteOrder
 );
 
