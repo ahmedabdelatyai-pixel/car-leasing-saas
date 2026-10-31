@@ -43,6 +43,20 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(234, 88, 12, 0.2);
     }
+    @keyframes slideUpCart {
+      from { transform: translateY(100%); opacity: 0.7; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-cart-drawer {
+      animation: slideUpCart 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes islandPulse {
+      0%, 100% { transform: translateY(0); box-shadow: 0 10px 30px rgba(249, 115, 22, 0.45); }
+      50% { transform: translateY(-3px); box-shadow: 0 14px 45px rgba(249, 115, 22, 0.7), 0 0 25px rgba(234, 88, 12, 0.5); }
+    }
+    .animate-island-pulse {
+      animation: islandPulse 3s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col pb-28">
@@ -198,111 +212,239 @@
     </footer>
   </main>
 
-  <!-- STICKY BOTTOM CART BAR -->
-  <div id="sticky-cart-bar" class="fixed bottom-0 inset-x-0 p-4 z-40 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/95 to-transparent hidden">
-    <button onclick="openCartModal()" class="w-full h-14 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-sm rounded-2xl flex justify-between items-center px-6 shadow-2xl glow-orange active:scale-[0.99] transition-all">
+  <!-- FLOATING LUXURY CART ISLAND -->
+  <div id="sticky-cart-bar" class="fixed bottom-20 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md z-40 hidden animate-slide-up">
+    <button type="button" onclick="openCartModal()" class="w-full h-14 bg-gradient-to-r from-orange-600 via-amber-600 to-red-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-2xl flex items-center justify-between px-4 sm:px-5 shadow-2xl border border-white/20 active:scale-[0.98] transition-all backdrop-blur-md animate-island-pulse">
       <div class="flex items-center gap-3">
-        <span class="w-8 h-8 rounded-xl bg-black/30 flex items-center justify-center text-sm" id="cart-total-qty">0</span>
-        <span>عرض سلة الوجبات</span>
+        <div class="relative">
+          <span class="w-9 h-9 rounded-xl bg-black/40 border border-white/20 flex items-center justify-center text-sm font-black text-amber-300 font-mono shadow-inner" id="cart-total-qty">0</span>
+          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black animate-ping"></span>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-black block text-white flex items-center gap-1.5">
+            <span>سلة الطلبات</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-white/20 text-white font-bold" id="cart-quick-count-label">0 وجبة</span>
+          </span>
+          <span class="text-[10px] text-amber-200 block font-medium">اضغط للمعاينة والدفع 🛒</span>
+        </div>
       </div>
-      <span class="text-base font-black" id="cart-total-price">0 ج.م</span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-black font-mono text-white bg-black/35 px-2.5 py-1.5 rounded-xl border border-white/10" id="cart-total-price">0 ج.م</span>
+        <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs">⬅️</span>
+      </div>
     </button>
   </div>
 
-  <!-- CART & CHECKOUT MODAL -->
-  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-end sm:items-center justify-center transition-all duration-300">
-    <div class="bg-[#111827] border border-white/10 w-full sm:max-w-md max-h-[90vh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+  <!-- CART & CHECKOUT DRAWER MODAL -->
+  <div id="cart-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-end sm:items-center justify-center transition-all duration-300">
+    <div class="bg-[#0f172a] border border-white/15 w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] rounded-t-[32px] sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl relative animate-cart-drawer">
+      
+      <!-- Top Mobile Drag Handle -->
+      <div class="w-12 h-1 rounded-full bg-white/20 mx-auto mt-2.5 mb-1 sm:hidden"></div>
+
       <!-- Header -->
-      <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b0f19]/60">
+      <div class="p-3.5 sm:p-4 border-b border-white/10 flex justify-between items-center bg-[#0b0f19]/80">
         <div class="flex items-center gap-2.5">
-          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-7 h-7 rounded-full object-cover border border-orange-500/30">
-          <h3 class="text-sm font-black text-white">سلة طلبات مطعم ضجة</h3>
+          <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-9 h-9 rounded-2xl object-cover border border-orange-500/40 shadow-sm">
+          <div>
+            <h3 class="text-xs sm:text-sm font-black text-white flex items-center gap-1.5">
+              <span>سلة طلباتك الشهية</span>
+              <span class="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-bold">مطعم ضجة</span>
+            </h3>
+            <p class="text-[10px] text-slate-400">تحكم بوجباتك وأكمل بيانات الاستلام بكل سهولة</p>
+          </div>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="clearEntireCart()" title="تفريغ السلة بالكامل" class="text-[11px] text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1 rounded-xl border border-red-500/20 font-bold transition-all flex items-center gap-1">
+          <button type="button" onclick="clearEntireCart()" id="btn-clear-cart" title="تفريغ السلة بالكامل" class="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-xl border border-rose-500/20 font-bold transition-all flex items-center gap-1">
             <span>🗑️</span>
-            <span>مسح السلة</span>
+            <span>تفريغ</span>
           </button>
-          <button type="button" onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+          <button type="button" onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-all text-sm">✕</button>
         </div>
       </div>
 
-      <!-- Items List -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar" id="cart-items-container">
-        <!-- populated dynamically -->
-      </div>
-
-      <!-- Customer Checkout Details Form -->
-      <form onsubmit="submitCustomerOrder(event)" class="p-4 border-t border-white/10 bg-[#0b0f19]/80 space-y-3">
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">اسم العميل بالكامل *</label>
-          <input type="text" id="cust-name" required placeholder="مثال: أحمد محمد" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">رقم الهاتف للتواصل *</label>
-          <div class="relative">
-            <input type="tel" id="cust-phone" required oninput="handleCustomerPhoneInput(this.value)" placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
-            <span id="cust-phone-spinner" class="hidden absolute left-3 top-2.5 text-xs text-orange-400 animate-spin">⏳</span>
-          </div>
-        </div>
-
-        <!-- Dynamic Loyalty Points Box in Checkout -->
-        <div id="checkout-loyalty-box" class="hidden bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-black p-3 rounded-2xl border border-amber-500/30 space-y-2">
-          <div class="flex justify-between items-center">
-            <div class="flex items-center gap-1.5">
-              <span>🎁</span>
-              <span class="text-xs font-bold text-white" id="cust-loyalty-name">أهلاً بك</span>
-            </div>
-            <div class="text-xs font-black text-amber-400 font-mono">
-              رصيدك: <span id="cust-points-balance">0</span> نقطة
-            </div>
-          </div>
-          <div class="text-[11px] text-emerald-400 font-bold flex items-center justify-between" id="cust-points-earn-preview">
-            <span>✨ هذا الطلب يمنحك:</span>
-            <span id="cust-earned-points-text" class="font-mono text-xs">+0 نقطة</span>
-          </div>
-          <div id="cust-redeem-options" class="hidden pt-2 border-t border-white/10 space-y-1.5">
-            <!-- populated if customer has redeemable points -->
-          </div>
-        </div>
-
-        <!-- Table Number Group (Visible for Dine-In) -->
-        <div id="table-number-group" class="hidden space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">رقم الطاولة في الصالة *</label>
-          <input type="number" id="cust-table-number" min="1" max="100" placeholder="مثال: 5" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
-        </div>
-
-        <div id="delivery-address-group" class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">عنوان التوصيل بالتفصيل (الشارع، العمارة، الشقة) *</label>
-          <input type="text" id="cust-address" placeholder="مثال: شارع الجمهورية - عمارة 15 - الدور الثالث" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">ملاحظات إضافية على الطلب</label>
-          <input type="text" id="cust-notes" placeholder="مثال: زيادة كاتشب، الاتصال عند الوصول" class="w-full h-9 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white">
-        </div>
-
-        <!-- Summary Totals -->
-        <div class="bg-black/40 rounded-xl p-3 border border-white/5 space-y-1 text-xs">
-          <div class="flex justify-between text-slate-400">
-            <span>مجموع الوجبات:</span>
-            <span id="summary-subtotal" class="font-bold text-slate-200">0 ج.م</span>
-          </div>
-          <div class="flex justify-between text-slate-400" id="summary-fee-row">
-            <span>رسوم التوصيل:</span>
-            <span id="summary-delivery-fee" class="font-bold text-orange-400">15 ج.م</span>
-          </div>
-          <div class="flex justify-between text-white font-black pt-1 border-t border-white/5 text-sm">
-            <span>الإجمالي النهائي للدفع:</span>
-            <span id="summary-total" class="text-orange-400 font-black">0 ج.م</span>
-          </div>
-        </div>
-
-        <button type="submit" id="btn-submit-order" class="w-full h-12 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-xl shadow-lg glow-orange flex items-center justify-center gap-2 transition-all">
-          <span>تأكيد وإرسال الطلب الآن 🚀</span>
+      <!-- Stepped Navigation Tabs (1. الوجبات | 2. بيانات الاستلام) -->
+      <div class="px-3 py-2 bg-[#0b0f19]/90 border-b border-white/10 flex items-center gap-2">
+        <button type="button" onclick="goToCartStep(1)" id="tab-step-items" class="flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md">
+          <span>🛒</span>
+          <span>1. مراجعة الأصناف</span>
+          <span id="tab-step-items-badge" class="px-1.5 py-0.2 rounded-full bg-black/40 text-[10px] font-mono text-amber-300">0</span>
         </button>
-      </form>
+        <button type="button" onclick="goToCartStep(2)" id="tab-step-checkout" class="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white bg-white/5">
+          <span>📍</span>
+          <span>2. بيانات الاستلام والدفع</span>
+        </button>
+      </div>
+
+      <!-- STEP 1 VIEW: CART ITEMS REVIEW -->
+      <div id="cart-view-items" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Order Type Selector Bar (Inside Step 1) -->
+        <div class="p-3 bg-black/30 border-b border-white/5">
+          <div class="text-[10px] text-slate-400 mb-1.5 font-bold flex justify-between items-center">
+            <span>اختر طريقة استلام الطلب:</span>
+            <span class="text-orange-400 font-bold text-[11px]" id="cart-type-badge-preview">🛵 دليفري وتوصيل</span>
+          </div>
+          <div class="bg-white/5 p-1 rounded-2xl border border-white/10 flex gap-1">
+            <button type="button" onclick="setOrderType('DELIVERY')" id="cart-btn-delivery" class="flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md">
+              <span>🛵 دليفري</span>
+            </button>
+            <button type="button" onclick="setOrderType('TAKEAWAY')" id="cart-btn-takeaway" class="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all text-slate-400 hover:text-white">
+              <span>🥡 تيك واي</span>
+            </button>
+            <button type="button" onclick="setOrderType('DINE_IN')" id="cart-btn-dinein" class="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all text-slate-400 hover:text-white">
+              <span>🍽️ صالة</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable items list -->
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 custom-scrollbar" id="cart-items-container">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Recommended Addons Strip -->
+        <div id="cart-addons-section" class="hidden px-3 py-2 bg-black/40 border-t border-white/5">
+          <div class="text-[10px] text-amber-300 font-bold mb-1.5 flex items-center gap-1">
+            <span>✨</span>
+            <span>مقبلات وصوصات تحلي وجبتك:</span>
+          </div>
+          <div class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar" id="cart-addons-container">
+            <!-- Dynamically populated with quick + buttons -->
+          </div>
+        </div>
+
+        <!-- Step 1 Bottom Sticky Summary & Next Step Button -->
+        <div class="p-3 sm:p-4 bg-[#0b0f19]/95 border-t border-white/10 space-y-2.5">
+          <!-- Mini breakdown -->
+          <div class="bg-white/5 rounded-xl p-2.5 border border-white/5 space-y-1 text-xs">
+            <div class="flex justify-between text-slate-400">
+              <span>مجموع الأصناف:</span>
+              <span id="step1-subtotal" class="font-bold text-white font-mono">0 ج.م</span>
+            </div>
+            <div class="flex justify-between text-slate-400" id="step1-fee-row">
+              <span>خدمة التوصيل:</span>
+              <span id="step1-delivery-fee" class="font-bold text-emerald-400 font-mono">15 ج.م</span>
+            </div>
+            <div class="flex justify-between text-white font-black pt-1 border-t border-white/5 text-sm">
+              <span>الإجمالي:</span>
+              <span id="step1-total" class="text-orange-400 font-black font-mono">0 ج.م</span>
+            </div>
+          </div>
+
+          <!-- Go to Step 2 Button -->
+          <button type="button" onclick="goToCartStep(2)" id="btn-goto-step2" class="w-full h-12 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg glow-orange flex items-center justify-between px-5 transition-all active:scale-[0.99]">
+            <span class="flex items-center gap-2">
+              <span>متابعة بيانات التوصيل والدفع</span>
+              <span>⬅️</span>
+            </span>
+            <span class="font-mono text-sm font-black bg-black/30 px-2.5 py-1 rounded-lg" id="step1-btn-total">0 ج.م</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2 VIEW: CUSTOMER CHECKOUT FORM -->
+      <div id="cart-view-checkout" class="flex-1 flex flex-col overflow-hidden hidden">
+        <!-- Form Scrollable area -->
+        <form onsubmit="submitCustomerOrder(event)" id="customer-order-form" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 custom-scrollbar flex flex-col">
+          <!-- Back to Step 1 Button -->
+          <button type="button" onclick="goToCartStep(1)" class="w-fit text-xs text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1.5 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/20 transition-all mb-1">
+            <span>➡️</span>
+            <span>العودة لتعديل الوجبات في السلة</span>
+          </button>
+
+          <!-- Customer Name -->
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-300 block font-bold flex items-center gap-1">
+              <span>👤</span>
+              <span>اسم العميل بالكامل *</span>
+            </label>
+            <input type="text" id="cust-name" required placeholder="مثال: أحمد محمد" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white transition-all">
+          </div>
+
+          <!-- Customer Phone -->
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-300 block font-bold flex items-center gap-1">
+              <span>📱</span>
+              <span>رقم الهاتف للتواصل والمتابعة *</span>
+            </label>
+            <div class="relative">
+              <input type="tel" id="cust-phone" required oninput="handleCustomerPhoneInput(this.value)" placeholder="01xxxxxxxxx" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono transition-all">
+              <span id="cust-phone-spinner" class="hidden absolute left-3 top-2.5 text-xs text-orange-400 animate-spin">⏳</span>
+            </div>
+          </div>
+
+          <!-- Loyalty Points Box -->
+          <div id="checkout-loyalty-box" class="hidden bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-black p-3 rounded-2xl border border-amber-500/30 space-y-2">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-1.5">
+                <span>🎁</span>
+                <span class="text-xs font-bold text-white" id="cust-loyalty-name">أهلاً بك</span>
+              </div>
+              <div class="text-xs font-black text-amber-400 font-mono">
+                رصيدك: <span id="cust-points-balance">0</span> نقطة
+              </div>
+            </div>
+            <div class="text-[11px] text-emerald-400 font-bold flex items-center justify-between" id="cust-points-earn-preview">
+              <span>✨ هذا الطلب يمنحك:</span>
+              <span id="cust-earned-points-text" class="font-mono text-xs">+0 نقطة</span>
+            </div>
+            <div id="cust-redeem-options" class="hidden pt-2 border-t border-white/10 space-y-1.5">
+              <!-- populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Table Number (Dine In) -->
+          <div id="table-number-group" class="hidden space-y-1">
+            <label class="text-[10px] text-amber-300 block font-bold flex items-center gap-1">
+              <span>🍽️</span>
+              <span>رقم الطاولة في الصالة *</span>
+            </label>
+            <input type="number" id="cust-table-number" min="1" max="100" placeholder="مثال: 5" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white font-mono">
+          </div>
+
+          <!-- Delivery Address (Delivery) -->
+          <div id="delivery-address-group" class="space-y-1">
+            <label class="text-[10px] text-slate-300 block font-bold flex items-center gap-1">
+              <span>📍</span>
+              <span>عنوان التوصيل بالتفصيل (المنطقة، الشارع، العمارة، الشقة) *</span>
+            </label>
+            <input type="text" id="cust-address" placeholder="مثال: شارع الجمهورية - عمارة 15 - الدور الثالث" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white transition-all">
+          </div>
+
+          <!-- Notes -->
+          <div class="space-y-1">
+            <label class="text-[10px] text-slate-300 block font-bold flex items-center gap-1">
+              <span>📝</span>
+              <span>ملاحظات إضافية على التوصيل</span>
+            </label>
+            <input type="text" id="cust-notes" placeholder="مثال: زيادة كاتشب، الاتصال عند الوصول..." class="w-full h-9 px-3 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-orange-500 focus:outline-none text-white transition-all">
+          </div>
+
+          <!-- Final Summary Totals Card -->
+          <div class="bg-black/40 rounded-2xl p-3 border border-white/10 space-y-1.5 text-xs mt-2">
+            <div class="flex justify-between text-slate-400">
+              <span>مجموع الوجبات:</span>
+              <span id="summary-subtotal" class="font-bold text-slate-200 font-mono">0 ج.م</span>
+            </div>
+            <div class="flex justify-between text-slate-400" id="summary-fee-row">
+              <span>رسوم التوصيل:</span>
+              <span id="summary-delivery-fee" class="font-bold text-orange-400 font-mono">15 ج.م</span>
+            </div>
+            <div class="flex justify-between text-white font-black pt-2 border-t border-white/10 text-sm">
+              <span>المبلغ المطلوب للدفع:</span>
+              <span id="summary-total" class="text-orange-400 font-black font-mono text-base">0 ج.م</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2 sticky bottom-0 bg-[#0f172a] pb-1">
+            <button type="submit" id="btn-submit-order" class="w-full h-13 bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-500 hover:from-emerald-500 hover:to-green-500 text-white font-black text-sm rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+              <span>تأكيد وإرسال الطلب الآن 🚀</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
     </div>
   </div>
 
@@ -819,21 +961,63 @@
       showQuickToast('تم تفريغ السلة بنجاح');
     }
 
+    let currentCartStep = 1;
+
+    function goToCartStep(step) {
+      if (step === 2 && cart.length === 0) {
+        showQuickToast('⚠️ السلة فارغة، أضف بعض الوجبات أولاً');
+        return;
+      }
+      currentCartStep = step;
+      const view1 = document.getElementById('cart-view-items');
+      const view2 = document.getElementById('cart-view-checkout');
+      const tab1 = document.getElementById('tab-step-items');
+      const tab2 = document.getElementById('tab-step-checkout');
+
+      const activeTabClass = "flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
+      const inactiveTabClass = "flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white bg-white/5";
+
+      if (step === 1) {
+        if (view1) view1.classList.remove('hidden');
+        if (view2) view2.classList.add('hidden');
+        if (tab1) tab1.className = activeTabClass;
+        if (tab2) tab2.className = inactiveTabClass;
+      } else {
+        if (view1) view1.classList.add('hidden');
+        if (view2) view2.classList.remove('hidden');
+        if (tab1) tab1.className = inactiveTabClass;
+        if (tab2) tab2.className = activeTabClass;
+      }
+    }
+
+    function updateCartItemNote(id, noteText) {
+      const it = cart.find(i => i.id === id);
+      if (it) {
+        it.notes = (noteText || '').trim();
+      }
+    }
+
     function updateCartUI() {
       const totalQty = cart.reduce((acc, it) => acc + it.quantity, 0);
       const subtotal = cart.reduce((acc, it) => acc + (it.price * it.quantity), 0);
       const deliveryFee = currentOrderType === 'DELIVERY' ? Number(restaurantData?.deliveryFee || 15) : 0;
       const total = Math.max(0, subtotal + deliveryFee);
 
-      // Bottom bar
+      // Bottom floating island
       const bar = document.getElementById('sticky-cart-bar');
       if (totalQty > 0) {
         bar.classList.remove('hidden');
         document.getElementById('cart-total-qty').innerText = totalQty;
         document.getElementById('cart-total-price').innerText = `${total} ج.م`;
+        const quickCount = document.getElementById('cart-quick-count-label');
+        if (quickCount) quickCount.innerText = `${totalQty} وجبة`;
       } else {
         bar.classList.add('hidden');
       }
+
+      // Step badges
+      const tabBadge = document.getElementById('tab-step-items-badge');
+      if (tabBadge) tabBadge.innerText = totalQty;
 
       // Floating Dock Bar update
       const dockQty = document.getElementById('dock-cart-qty');
@@ -841,13 +1025,23 @@
       const dockTotal = document.getElementById('dock-cart-total');
       if (dockTotal) dockTotal.innerText = `${total} ج.م`;
 
-      // Re-render menu cards to sync inline +/- counters
-      renderMenuCards();
+      // Step 1 Summary
+      const s1Subtotal = document.getElementById('step1-subtotal');
+      if (s1Subtotal) s1Subtotal.innerText = `${subtotal} ج.م`;
+      const s1Fee = document.getElementById('step1-delivery-fee');
+      if (s1Fee) s1Fee.innerText = currentOrderType === 'DELIVERY' ? `${deliveryFee} ج.م` : 'مجاناً 🎁';
+      const s1Total = document.getElementById('step1-total');
+      if (s1Total) s1Total.innerText = `${total} ج.م`;
+      const s1BtnTotal = document.getElementById('step1-btn-total');
+      if (s1BtnTotal) s1BtnTotal.innerText = `${total} ج.م`;
 
-      // Inside Modal
-      document.getElementById('summary-subtotal').innerText = `${subtotal} ج.م`;
-      document.getElementById('summary-delivery-fee').innerText = `${deliveryFee} ج.م`;
-      document.getElementById('summary-total').innerText = `${total} ج.م`;
+      // Step 2 Summary
+      const sumSub = document.getElementById('summary-subtotal');
+      if (sumSub) sumSub.innerText = `${subtotal} ج.م`;
+      const sumFee = document.getElementById('summary-delivery-fee');
+      if (sumFee) sumFee.innerText = currentOrderType === 'DELIVERY' ? `${deliveryFee} ج.م` : 'مجاناً 🎁';
+      const sumTotal = document.getElementById('summary-total');
+      if (sumTotal) sumTotal.innerText = `${total} ج.م`;
 
       // Update Points Earn Preview
       const spendRatio = Number(restaurantData?.loyaltySpendRatio || 10);
@@ -857,37 +1051,92 @@
         earnEl.innerText = `+${pointsToEarn} نقطة`;
       }
 
+      // Re-render menu cards to sync inline +/- counters
+      renderMenuCards();
+
+      // Inside Modal Items
       const container = document.getElementById('cart-items-container');
+      if (!container) return;
+
       if (cart.length === 0) {
-        container.innerHTML = '<p class="text-center text-xs text-slate-500 py-6">سلة الطلبات فارغة.</p>';
-      } else {
-        container.innerHTML = cart.map(it => `
-          <div class="bg-black/30 border border-white/5 rounded-2xl p-3 flex justify-between items-center gap-3">
-            <img src="${it.imageUrl}" class="w-12 h-12 rounded-xl object-cover shrink-0">
-            <div class="flex-1">
-              <h5 class="text-xs font-black text-white">${it.name}</h5>
-              <div class="flex items-center gap-2 mt-0.5">
-                <span class="text-[11px] text-orange-400 font-bold font-mono">${it.price * it.quantity} ج.م</span>
-                <span class="text-[10px] text-slate-500 font-mono">(${it.price} ج.م × ${it.quantity})</span>
-              </div>
+        container.innerHTML = `
+          <div class="py-12 px-4 text-center space-y-3.5 bg-white/[0.02] border border-white/5 rounded-3xl">
+            <div class="w-16 h-16 mx-auto rounded-3xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-3xl animate-bounce">
+              🛒
             </div>
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1.5 bg-white/5 rounded-xl border border-white/10 px-2 py-1">
-                <button type="button" onclick="updateCartItemQty('${it.id}', -1)" title="تقليل الكمية" class="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-bold flex items-center justify-center transition-all text-xs">-</button>
-                <span class="text-xs font-black text-white w-5 text-center font-mono">${it.quantity}</span>
-                <button type="button" onclick="updateCartItemQty('${it.id}', 1)" title="زيادة الكمية" class="w-6 h-6 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold flex items-center justify-center transition-all text-xs">+</button>
+            <div>
+              <h4 class="text-sm font-black text-white">سلة طلباتك فارغة حالياً</h4>
+              <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1">اختر أشهى وجبات وسندوتشات دجاج ضجة المقرمشة واستمتع بأقوى طعم!</p>
+            </div>
+            <button type="button" onclick="closeCartModal(); scrollToMenu();" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-black shadow-lg transition-all active:scale-95">
+              🍗 تصفح المنيو الآن
+            </button>
+          </div>
+        `;
+        const gotoBtn = document.getElementById('btn-goto-step2');
+        if (gotoBtn) gotoBtn.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        const gotoBtn = document.getElementById('btn-goto-step2');
+        if (gotoBtn) gotoBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+        container.innerHTML = cart.map(it => `
+          <div class="bg-black/40 border border-white/10 hover:border-orange-500/30 rounded-2xl p-3 space-y-2.5 transition-all shadow-sm">
+            <div class="flex items-center gap-3">
+              <img src="${it.imageUrl || '/dajja_logo.jpg'}" class="w-14 h-14 rounded-xl object-cover shrink-0 border border-white/10 shadow">
+              <div class="flex-1 min-w-0">
+                <h5 class="text-xs font-black text-white truncate">${it.name}</h5>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-xs text-orange-400 font-black font-mono">${it.price * it.quantity} ج.م</span>
+                  <span class="text-[10px] text-slate-400 font-mono">(${it.price} ج.م × ${it.quantity})</span>
+                </div>
               </div>
-              <button type="button" onclick="removeCartItem('${it.id}')" title="حذف الصنف نهائياً" class="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 hover:text-red-300 flex items-center justify-center transition-all text-sm active:scale-90">
-                🗑️
+              <div class="flex items-center gap-1.5 bg-white/5 rounded-xl border border-white/10 p-1">
+                <button type="button" onclick="updateCartItemQty('${it.id}', -1)" title="تقليل أو حذف" class="w-7 h-7 rounded-lg bg-black/50 hover:bg-black/80 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-90">-</button>
+                <span class="text-xs font-black text-white w-5 text-center font-mono">${it.quantity}</span>
+                <button type="button" onclick="updateCartItemQty('${it.id}', 1)" title="زيادة الكمية" class="w-7 h-7 rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold flex items-center justify-center transition-all text-xs active:scale-90 shadow-sm">+</button>
+              </div>
+              <button type="button" onclick="removeCartItem('${it.id}')" title="حذف الوجبة من السلة" class="w-7 h-7 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs transition-all active:scale-90">
+                ✕
               </button>
+            </div>
+
+            <!-- Item Custom Note -->
+            <div class="pt-1.5 border-t border-white/5 flex items-center gap-2">
+              <span class="text-[10px] text-slate-400 shrink-0">📝 ملاحظة:</span>
+              <input type="text" placeholder="مثال: بدون بصل / زيادة صوص سبايسي..." value="${it.notes || ''}" onchange="updateCartItemNote('${it.id}', this.value)" class="flex-1 h-7 px-2.5 rounded-lg text-[10px] bg-white/5 border border-white/5 focus:border-orange-500 focus:outline-none text-slate-200">
             </div>
           </div>
         `).join('');
       }
 
-      // Re-render menu cards to keep count indicators synchronized
-      if (restaurantData && restaurantData.categories) {
-        renderMenuCards();
+      // Populate Addons Section in Step 1
+      const addonsSec = document.getElementById('cart-addons-section');
+      const addonsCont = document.getElementById('cart-addons-container');
+      if (addonsSec && addonsCont && restaurantData?.categories) {
+        const allItems = restaurantData.categories.flatMap(c => c.items || []);
+        const candidates = allItems.filter(m => m.isAvailable !== false && Number(m.price) <= 35 && !cart.some(c => c.id === m.id)).slice(0, 5);
+        if (candidates.length > 0 && cart.length > 0) {
+          addonsSec.classList.remove('hidden');
+          addonsCont.innerHTML = candidates.map(add => {
+            const safeImg = add.imageUrl || '/dajja_logo.jpg';
+            const safeName = add.name.replace(/'/g, "\\'");
+            return `
+              <div class="shrink-0 bg-white/5 border border-white/10 rounded-xl p-2 flex items-center gap-2 hover:border-orange-500/30 transition-all">
+                <img src="${safeImg}" class="w-8 h-8 rounded-lg object-cover shrink-0">
+                <div class="min-w-0 pr-1">
+                  <div class="text-[10px] font-bold text-white truncate max-w-[85px]">${add.name}</div>
+                  <div class="text-[9px] text-orange-400 font-mono font-bold">${add.price} ج.م</div>
+                </div>
+                <button type="button" onclick="addToCart('${add.id}', '${safeName}', ${add.price}, '${safeImg}', ${add.pointsCost || 0})" class="px-2 py-1 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-black transition-all flex items-center gap-0.5 active:scale-95 shadow-sm">
+                  <span>+</span>
+                  <span>إضافة</span>
+                </button>
+              </div>
+            `;
+          }).join('');
+        } else {
+          addonsSec.classList.add('hidden');
+        }
       }
     }
 
@@ -897,6 +1146,10 @@
       const btnDelivery = document.getElementById('btn-delivery');
       const btnTakeaway = document.getElementById('btn-takeaway');
       const btnDinein = document.getElementById('btn-dinein');
+      const cartBtnDelivery = document.getElementById('cart-btn-delivery');
+      const cartBtnTakeaway = document.getElementById('cart-btn-takeaway');
+      const cartBtnDinein = document.getElementById('cart-btn-dinein');
+      const cartBadgePreview = document.getElementById('cart-type-badge-preview');
       const addrGroup = document.getElementById('delivery-address-group');
       const tableGroup = document.getElementById('table-number-group');
       const custAddr = document.getElementById('cust-address');
@@ -908,11 +1161,17 @@
       [btnDelivery, btnTakeaway, btnDinein].forEach(b => {
         if (b) b.className = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white";
       });
+      [cartBtnDelivery, cartBtnTakeaway, cartBtnDinein].forEach(b => {
+        if (b) b.className = "flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all text-slate-400 hover:text-white";
+      });
 
       const activeClass = "flex-1 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
+      const cartActiveClass = "flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md";
 
       if (type === 'DELIVERY') {
         if (btnDelivery) btnDelivery.className = activeClass;
+        if (cartBtnDelivery) cartBtnDelivery.className = cartActiveClass;
+        if (cartBadgePreview) cartBadgePreview.innerText = '🛵 دليفري وتوصيل';
         if (addrGroup) addrGroup.classList.remove('hidden');
         if (tableGroup) tableGroup.classList.add('hidden');
         if (custAddr) custAddr.required = true;
@@ -921,6 +1180,8 @@
         if (feeBadge) feeBadge.classList.remove('hidden');
       } else if (type === 'DINE_IN') {
         if (btnDinein) btnDinein.className = activeClass;
+        if (cartBtnDinein) cartBtnDinein.className = cartActiveClass;
+        if (cartBadgePreview) cartBadgePreview.innerText = '🍽️ صالة داخل المطعم';
         if (addrGroup) addrGroup.classList.add('hidden');
         if (tableGroup) tableGroup.classList.remove('hidden');
         if (custAddr) custAddr.required = false;
@@ -930,6 +1191,8 @@
       } else {
         // TAKEAWAY
         if (btnTakeaway) btnTakeaway.className = activeClass;
+        if (cartBtnTakeaway) cartBtnTakeaway.className = cartActiveClass;
+        if (cartBadgePreview) cartBadgePreview.innerText = '🥡 استلام سفري تيك واي';
         if (addrGroup) addrGroup.classList.add('hidden');
         if (tableGroup) tableGroup.classList.add('hidden');
         if (custAddr) custAddr.required = false;
@@ -1034,7 +1297,8 @@
           notes,
           items: cart.map(i => ({
             menuItemId: i.id,
-            quantity: i.quantity
+            quantity: i.quantity,
+            notes: i.notes ? i.notes.trim() : null
           }))
         };
 
@@ -1349,7 +1613,14 @@
     }
 
     // Modal controls
-    function openCartModal() { document.getElementById('cart-modal').classList.remove('hidden'); document.getElementById('cart-modal').classList.add('flex'); }
+    function openCartModal() { 
+      const modal = document.getElementById('cart-modal');
+      if (modal) {
+        modal.classList.remove('hidden'); 
+        modal.classList.add('flex');
+        goToCartStep(1);
+      }
+    }
     function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); document.getElementById('cart-modal').classList.remove('flex'); }
     function openTrackModal() { document.getElementById('track-modal').classList.remove('hidden'); document.getElementById('track-modal').classList.add('flex'); }
     function closeTrackModal() { document.getElementById('track-modal').classList.add('hidden'); document.getElementById('track-modal').classList.remove('flex'); }
