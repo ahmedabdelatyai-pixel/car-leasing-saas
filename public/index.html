@@ -9,81 +9,98 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #0b0f19;
-      color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --bg-canvas: #F5F3EE;
+      --bg-surface: #FFFFFF;
+      --bg-surface-subtle: #FAF8F5;
+      --border-stone: #E6E2D9;
+      --text-main: #252A28;
+      --text-muted: #59605C;
+      --primary-green: #183B32;
+      --primary-green-hover: #122D26;
+      --accent-gold: #C5A878;
+      --accent-gold-soft: #F4EFE6;
     }
-    .glow-orange {
-      box-shadow: 0 0 35px rgba(249, 115, 22, 0.4);
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
+      background-color: var(--bg-canvas) !important;
+      color: var(--text-main) !important;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: -0.01em;
+    }
+
+    .glow-gold {
+      box-shadow: 0 10px 30px rgba(197, 168, 120, 0.25);
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 bg-[#F5F3EE]">
 
-  <!-- Ambient Glow Backgrounds -->
-  <div class="fixed top-1/4 -right-20 w-80 h-80 rounded-full bg-orange-600/15 blur-3xl pointer-events-none"></div>
-  <div class="fixed bottom-1/4 -left-20 w-80 h-80 rounded-full bg-amber-600/15 blur-3xl pointer-events-none"></div>
+  <!-- Subtle Ambient Glows -->
+  <div class="fixed top-1/4 -right-20 w-80 h-80 rounded-full bg-[#183B32]/10 blur-3xl pointer-events-none"></div>
+  <div class="fixed bottom-1/4 -left-20 w-80 h-80 rounded-full bg-[#C5A878]/15 blur-3xl pointer-events-none"></div>
 
   <div class="w-full max-w-sm space-y-6 relative z-10 text-center">
     
     <!-- Restaurant Logo & Title -->
     <div class="space-y-3">
-      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-4xl shadow-2xl glow-orange animate-bounce">
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-[#183B32] border border-[#C5A878]/40 flex items-center justify-center text-4xl shadow-xl glow-gold">
         🔥
       </div>
       <div>
-        <h1 class="text-2xl font-black text-white tracking-tight">مطعم ضجة</h1>
-        <p class="text-xs text-orange-400 font-bold mt-1">طعم يعمل ضجة! 🔥 أقوى برجر وسندوتشات دليفري وتيك واي</p>
+        <h1 class="text-2xl font-black text-[#252A28] tracking-tight">مطعم ضجة</h1>
+        <p class="text-xs text-[#183B32] font-bold mt-1">طعم يعمل ضجة! 🔥 أقوى برجر وسندوتشات دليفري وتيك واي</p>
       </div>
     </div>
 
     <!-- CUSTOMER ORDER ONLINE HERO BUTTON -->
-    <a href="order.html" class="w-full h-14 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-500 hover:to-amber-500 text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-2xl glow-orange active:scale-[0.98] transition-all">
+    <a href="order.html" class="w-full h-14 bg-[#183B32] hover:bg-[#122D26] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98]">
       <span class="text-xl">🍔</span>
       <span>اطلب أونلاين الآن (دليفري / تيك واي) 🚀</span>
     </a>
 
-    <div class="flex items-center gap-2 text-slate-500 text-xs">
-      <div class="flex-1 h-px bg-white/10"></div>
+    <div class="flex items-center gap-2 text-[#7A827E] text-xs">
+      <div class="flex-1 h-px bg-[#E6E2D9]"></div>
       <span>أو تسجيل دخول الإدارة والمطبخ</span>
-      <div class="flex-1 h-px bg-white/10"></div>
+      <div class="flex-1 h-px bg-[#E6E2D9]"></div>
     </div>
 
     <!-- STAFF & MANAGER LOGIN CARD -->
-    <div class="bg-[#111827]/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl text-right space-y-4">
-      <h2 class="text-xs font-black text-slate-200 border-b border-white/5 pb-3 text-center flex items-center justify-center gap-2">
+    <div class="bg-white border border-[#E6E2D9] rounded-3xl p-6 shadow-xl text-right space-y-4">
+      <h2 class="text-xs font-black text-[#252A28] border-b border-[#E6E2D9] pb-3 text-center flex items-center justify-center gap-2">
         <span>🔐</span> دخول المطبخ والكاشير والإدارة
       </h2>
 
       <form id="loginForm" onsubmit="handleStaffLogin(event)" class="space-y-3">
         <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">البريد الإلكتروني أو اسم المستخدم</label>
+          <label class="text-[10px] text-[#59605C] block font-semibold">البريد الإلكتروني أو اسم المستخدم</label>
           <input type="text" id="emailInput" required value="admin@dajja.com" placeholder="admin@dajja.com" 
-                 class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:border-orange-500 focus:outline-none font-mono">
+                 class="w-full h-10 px-3 rounded-xl text-xs bg-[#FAF8F5] border border-[#E6E2D9] text-[#252A28] focus:border-[#183B32] focus:outline-none font-mono">
         </div>
 
         <div class="space-y-1">
-          <label class="text-[10px] text-slate-400 block font-semibold">كلمة المرور</label>
+          <label class="text-[10px] text-[#59605C] block font-semibold">كلمة المرور</label>
           <input type="password" id="passwordInput" required value="123456" placeholder="••••••••" 
-                 class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:border-orange-500 focus:outline-none font-mono">
+                 class="w-full h-10 px-3 rounded-xl text-xs bg-[#FAF8F5] border border-[#E6E2D9] text-[#252A28] focus:border-[#183B32] focus:outline-none font-mono">
         </div>
 
         <div class="pt-2">
-          <button type="submit" id="submitBtn" class="w-full h-11 bg-white/10 hover:bg-orange-600 hover:text-white text-slate-200 font-black text-xs rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2">
+          <button type="submit" id="submitBtn" class="w-full h-11 bg-[#183B32] hover:bg-[#122D26] text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
             <span>دخول لوحة التحكم</span>
             <span>⚡</span>
           </button>
         </div>
       </form>
 
-      <p class="text-[10px] text-slate-500 text-center pt-2">
-        حساب تجريبي افتراضي: <span class="text-orange-400 font-mono">admin@dajja.com</span> | الرمز: <span class="text-orange-400 font-mono">123456</span>
+      <p class="text-[10px] text-[#7A827E] text-center pt-2">
+        حساب تجريبي افتراضي: <span class="text-[#183B32] font-mono font-bold">admin@dajja.com</span> | الرمز: <span class="text-[#183B32] font-mono font-bold">123456</span>
       </p>
     </div>
 

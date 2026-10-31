@@ -15,28 +15,249 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #0b0f19;
-      color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --bg-canvas: #F5F3EE;
+      --bg-surface: #FFFFFF;
+      --bg-surface-subtle: #FAF8F5;
+      --border-stone: #E6E2D9;
+      --border-stone-strong: #D6D0C2;
+      --text-main: #252A28;
+      --text-muted: #59605C;
+      --text-soft: #7A827E;
+      --primary-green: #183B32;
+      --primary-green-hover: #122D26;
+      --accent-gold: #C5A878;
+      --accent-gold-soft: #F4EFE6;
+      --status-success: #1E6B52;
+      --status-danger: #B93838;
+      --status-warning: #B45309;
     }
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
+      background-color: var(--bg-canvas) !important;
+      color: var(--text-main) !important;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: -0.01em;
+    }
+
+    /* Tabular numbers for clean Swiss financial alignment */
+    .font-mono, [id*="total"], [id*="subtotal"], [id*="amount"], [id*="fee"], [id*="price"] {
+      font-family: 'Inter', 'IBM Plex Sans Arabic', monospace !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
+    /* Scrollbars */
     .custom-scrollbar::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F5F3EE;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      background: #D8D2C4;
+      border-radius: 999px;
     }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #C5A878;
+    }
+
+    /* Header styling */
+    header {
+      background: #183B32 !important;
+      border-bottom: 1px solid rgba(197, 168, 120, 0.3) !important;
+      box-shadow: 0 4px 20px rgba(24, 59, 50, 0.12) !important;
+    }
+    header * {
+      color: #FFFFFF;
+    }
+    header .text-slate-400, header .text-gray-400 {
+      color: #E6E2D9 !important;
+    }
+    header .text-orange-400 {
+      color: #F4EFE6 !important;
+    }
+
+    /* Navigation Tabs Bar */
+    .nav-tabs-bar {
+      background-color: #FFFFFF !important;
+      border-bottom: 1px solid #E6E2D9 !important;
+      box-shadow: 0 1px 3px rgba(37, 42, 40, 0.03) !important;
+    }
+    .nav-tab {
+      font-family: 'IBM Plex Sans Arabic', sans-serif !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #59605C !important;
+      border-bottom: 2.5px solid transparent !important;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      padding: 12px 16px !important;
+    }
+    .nav-tab:hover {
+      color: #183B32 !important;
+      background-color: #FAF8F5 !important;
+    }
+    /* When active tab is selected */
+    .nav-tab.border-orange-500,
+    .nav-tab.text-orange-400 {
+      border-bottom-color: #183B32 !important;
+      color: #183B32 !important;
+      font-weight: 700 !important;
+      background-color: rgba(24, 59, 50, 0.04) !important;
+    }
+
+    /* Universal Surface & Card Overrides for European Minimalist Feel */
+    .bg-\[\#111827\],
+    .bg-\[\#1e293b\],
+    .bg-slate-900,
+    .bg-slate-800 {
+      background-color: #FFFFFF !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+      box-shadow: 0 4px 24px -2px rgba(24, 59, 50, 0.04) !important;
+    }
+
+    /* Inner subtle cards / sub-boxes */
+    .bg-black\/40,
+    .bg-black\/30,
+    .bg-black\/20,
+    .bg-slate-950,
+    .bg-white\/5 {
+      background-color: #FAF8F5 !important;
+      border-color: #E6E2D9 !important;
+    }
+
+    /* Input & Select fields */
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      background-color: #FAF8F5 !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background-color: #FFFFFF !important;
+      border-color: #183B32 !important;
+      outline: none !important;
+      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.08) !important;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: #8C9490 !important;
+    }
+
+    /* Headings and Text adjustments */
+    main .text-white {
+      color: #252A28 !important;
+    }
+    main .text-slate-400,
+    main .text-slate-500,
+    main .text-gray-400,
+    main .text-gray-500 {
+      color: #59605C !important;
+    }
+    main .text-slate-300,
+    main .text-slate-200 {
+      color: #252A28 !important;
+    }
+
+    /* Primary Buttons: European Forest Green & Soft Glow */
+    .bg-gradient-to-r.from-orange-600,
+    .bg-orange-600,
     .glow-orange {
-      box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+      background: #183B32 !important;
+      background-image: none !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.18) !important;
+      border-color: #183B32 !important;
+    }
+    .bg-gradient-to-r.from-orange-600:hover,
+    .bg-orange-600:hover {
+      background: #122D26 !important;
+      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.25) !important;
+    }
+
+    /* Accent & Price text */
+    main .text-orange-400,
+    main .text-orange-500 {
+      color: #183B32 !important;
+      font-weight: 800 !important;
+    }
+
+    /* Modal Backdrop & Modal Cards */
+    .fixed.inset-0.bg-black\/80,
+    .fixed.inset-0.bg-black\/70,
+    .fixed.inset-0.bg-black\/60 {
+      background-color: rgba(37, 42, 40, 0.6) !important;
+      backdrop-filter: blur(6px) !important;
+    }
+
+    /* Tables */
+    table {
+      border-color: #E6E2D9 !important;
+    }
+    thead th {
+      background-color: #F4EFE6 !important;
+      color: #183B32 !important;
+      font-weight: 700 !important;
+      border-color: #E6E2D9 !important;
+    }
+    tbody tr {
+      background-color: #FFFFFF !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+      transition: background-color 0.15s ease !important;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #FAF8F5 !important;
+    }
+    tbody tr:hover {
+      background-color: rgba(244, 239, 230, 0.6) !important;
+    }
+
+    /* Badges & Tags */
+    .bg-emerald-500\/20,
+    .bg-emerald-600\/20,
+    .bg-emerald-950\/80 {
+      background-color: rgba(30, 107, 82, 0.1) !important;
+      color: #1E6B52 !important;
+      border-color: rgba(30, 107, 82, 0.25) !important;
+    }
+    .text-emerald-400,
+    .text-emerald-300 {
+      color: #1E6B52 !important;
+    }
+    .bg-amber-500\/10,
+    .bg-amber-500\/20 {
+      background-color: rgba(197, 168, 120, 0.15) !important;
+      color: #8C6B32 !important;
+      border-color: rgba(197, 168, 120, 0.3) !important;
+    }
+    .text-amber-400,
+    .text-amber-300 {
+      color: #8C6B32 !important;
+    }
+    .bg-rose-500\/10,
+    .bg-rose-500\/20,
+    .bg-rose-600\/20 {
+      background-color: rgba(185, 56, 56, 0.08) !important;
+      color: #B93838 !important;
+      border-color: rgba(185, 56, 56, 0.25) !important;
+    }
+    .text-rose-400,
+    .text-rose-300 {
+      color: #B93838 !important;
     }
     .glow-emerald {
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 20px rgba(30, 107, 82, 0.25);
     }
     /* =========================================================
        80MM THERMAL PRINTER (ESC/POS & U-POS AI-330) STYLES
@@ -146,62 +367,62 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#0b0f19]">
+<body class="min-h-screen flex flex-col bg-[#F5F3EE]">
 
   <!-- TOP APP BAR -->
-  <header class="bg-[#111827] border-b border-white/10 px-5 py-2.5 flex justify-between items-center sticky top-0 z-40">
+  <header class="bg-[#183B32] border-b border-[#C5A878]/30 px-5 py-2.5 flex justify-between items-center sticky top-0 z-40 shadow-md text-white">
     <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-2xl overflow-hidden border border-orange-500/40 shadow-lg glow-orange shrink-0 bg-black">
+      <div class="w-11 h-11 rounded-2xl overflow-hidden border border-[#C5A878]/40 shadow-md shrink-0 bg-white">
         <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-full h-full object-cover">
       </div>
       <div>
         <h1 class="text-sm font-black text-white flex items-center gap-2">
           <span>مطعم ضجة</span>
-          <span class="text-[9px] bg-orange-500/15 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-md font-mono">للمشويات والسندوتشات 🔥</span>
+          <span class="text-[9px] bg-[#C5A878]/20 text-[#F4EFE6] border border-[#C5A878]/40 px-2 py-0.5 rounded-md font-mono">للمشويات والسندوتشات 🔥</span>
         </h1>
-        <p class="text-[10px] text-slate-400">كاشير المبيعات، الطلبات الحية، إدارة المنيو والتقارير</p>
+        <p class="text-[10px] text-[#E6E2D9]">كاشير المبيعات، الطلبات الحية، إدارة المنيو والتقارير</p>
       </div>
     </div>
 
     <!-- Quick Actions & User Profile -->
     <div class="flex items-center gap-2 sm:gap-3">
-      <div onclick="switchTab('settings')" title="تعديل بيانات الحساب" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 cursor-pointer transition-all">
-        <div class="w-7 h-7 rounded-lg bg-orange-600/20 text-orange-400 flex items-center justify-center text-xs font-bold font-mono">👤</div>
+      <div onclick="switchTab('settings')" title="تعديل بيانات الحساب" class="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/10 hover:bg-white/15 rounded-xl border border-white/10 cursor-pointer transition-all">
+        <div class="w-7 h-7 rounded-lg bg-[#C5A878]/20 text-[#F4EFE6] flex items-center justify-center text-xs font-bold font-mono">👤</div>
         <div class="text-right">
           <div class="flex items-center gap-1.5">
             <span id="header-user-name" class="text-xs font-bold text-white block leading-tight">مدير مطعم ضجة</span>
-            <span id="header-user-role-badge" class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">👑 مدير</span>
+            <span id="header-user-role-badge" class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-white/20 text-white border border-white/20">👑 مدير</span>
           </div>
           <div class="flex items-center gap-1.5 mt-0.5">
-            <span id="header-user-email" class="text-[9px] text-slate-400 block font-mono">admin@dajja.com</span>
-            <span id="header-plan-badge" class="hidden text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">باقة PREMIUM</span>
+            <span id="header-user-email" class="text-[9px] text-[#E6E2D9] block font-mono">admin@dajja.com</span>
+            <span id="header-plan-badge" class="hidden text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-[#C5A878]/20 text-[#F4EFE6] border border-[#C5A878]/40">باقة PREMIUM</span>
           </div>
         </div>
       </div>
       <div class="flex items-center gap-1.5">
-        <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+        <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
           <span id="sound-toggle-icon">🔔</span>
           <span id="sound-toggle-label" class="hidden sm:inline">صوت التنبيه: مفعّل</span>
         </button>
-        <button type="button" onclick="testOrderSoundPrompt()" title="استمع لصوت تنبيه طلبات القوي الآن للتجربة" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-black transition-all flex items-center gap-1 shadow-sm active:scale-95">
+        <button type="button" onclick="testOrderSoundPrompt()" title="استمع لصوت تنبيه طلبات القوي الآن للتجربة" class="px-2.5 py-1.5 rounded-xl bg-[#C5A878]/25 hover:bg-[#C5A878]/35 border border-[#C5A878]/40 text-[#F4EFE6] text-xs font-black transition-all flex items-center gap-1 shadow-sm active:scale-95">
           <span>🔊</span>
           <span class="hidden md:inline">تجربة صوت طلبات</span>
         </button>
       </div>
-      <button id="btn-install-dash" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
+      <button id="btn-install-dash" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-[#C5A878] hover:bg-[#b59868] text-[#183B32] text-xs font-black transition-all flex items-center gap-1.5 shadow-sm">
         <span>📲</span>
         <span class="hidden md:inline">تثبيت كـ تطبيق</span>
       </button>
-      <a href="/super-admin" id="link-super-admin" class="hidden px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition-all items-center gap-1.5">
+      <a href="/super-admin" id="link-super-admin" class="hidden px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all items-center gap-1.5">
         <span>👑</span>
         <span class="hidden sm:inline">لوحة السوبر أدمن</span>
       </a>
-      <a href="order.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600/15 hover:bg-orange-600 border border-orange-500/20 text-orange-400 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5">
+      <a href="order.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-bold transition-all flex items-center gap-1.5">
         <span>🌐</span>
         <span class="hidden sm:inline">صفحة طلب الزبائن</span>
         <span class="sm:hidden">الزبائن</span>
       </a>
-      <button onclick="logoutSession()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 text-slate-400 hover:text-rose-400 text-xs font-bold transition-all">
+      <button onclick="logoutSession()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/20 border border-white/15 text-white/90 hover:text-rose-200 text-xs font-bold transition-all">
         خروج 🚪
       </button>
     </div>
@@ -214,7 +435,7 @@
   </div>
 
   <!-- NAVIGATION TABS -->
-  <div class="bg-[#111827]/80 border-b border-white/5 px-4 sm:px-6 flex gap-1 sm:gap-2 overflow-x-auto custom-scrollbar">
+  <div class="nav-tabs-bar bg-white border-b border-[#E6E2D9] px-4 sm:px-6 flex gap-1 sm:gap-2 overflow-x-auto custom-scrollbar shadow-xs">
     <button onclick="switchTab('pos')" id="tab-btn-pos" class="nav-tab px-4 py-3 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-2 transition-all">
       <span>🛒</span> كاشير ضجة (ضرب أوردر)
     </button>

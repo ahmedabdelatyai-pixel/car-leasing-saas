@@ -8,30 +8,138 @@
   <link rel="apple-touch-icon" href="/dajja_logo.jpg">
   <meta name="theme-color" content="#ea580c">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #0b0f19;
-      color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --bg-canvas: #F5F3EE;
+      --bg-surface: #FFFFFF;
+      --bg-surface-subtle: #FAF8F5;
+      --border-stone: #E6E2D9;
+      --text-main: #252A28;
+      --text-muted: #59605C;
+      --primary-green: #183B32;
+      --primary-green-hover: #122D26;
+      --accent-gold: #C5A878;
+      --accent-gold-soft: #F4EFE6;
     }
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, -apple-system, sans-serif !important;
+      background-color: var(--bg-canvas) !important;
+      color: var(--text-main) !important;
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: -0.01em;
+    }
+
+    .font-mono, [id*="total"], [id*="price"], [id*="cost"], [id*="profit"], [id*="margin"] {
+      font-family: 'Inter', 'IBM Plex Sans Arabic', monospace !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+
+    header {
+      background-color: #183B32 !important;
+      border-bottom: 1px solid rgba(197, 168, 120, 0.3) !important;
+      box-shadow: 0 4px 20px rgba(24, 59, 50, 0.12) !important;
+    }
+    header h1 {
+      color: #FFFFFF !important;
+    }
+    header p {
+      color: #E6E2D9 !important;
+    }
+
+    .bg-\[\#111827\],
+    .bg-\[\#0b0f19\],
+    .bg-slate-900,
+    .bg-slate-800 {
+      background-color: #FFFFFF !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+      box-shadow: 0 4px 20px -2px rgba(24, 59, 50, 0.04) !important;
+    }
+
+    .bg-black\/40,
+    .bg-black\/30,
+    .bg-black\/20,
+    .bg-slate-950,
+    .bg-white\/5 {
+      background-color: #FAF8F5 !important;
+      border-color: #E6E2D9 !important;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      background-color: #FAF8F5 !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background-color: #FFFFFF !important;
+      border-color: #183B32 !important;
+      outline: none !important;
+      box-shadow: 0 0 0 3px rgba(24, 59, 50, 0.08) !important;
+    }
+
+    main .text-white {
+      color: #252A28 !important;
+    }
+    main .text-slate-400,
+    main .text-slate-500 {
+      color: #59605C !important;
+    }
+    main .text-slate-300,
+    main .text-slate-200 {
+      color: #252A28 !important;
+    }
+
+    .bg-gradient-to-r.from-orange-600,
+    .bg-orange-600,
+    .glow-orange {
+      background: #183B32 !important;
+      background-image: none !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 4px 14px rgba(24, 59, 50, 0.2) !important;
+      border-color: #183B32 !important;
+    }
+    .bg-gradient-to-r.from-orange-600:hover,
+    .bg-orange-600:hover {
+      background: #122D26 !important;
+      box-shadow: 0 6px 18px rgba(24, 59, 50, 0.28) !important;
+    }
+
+    table {
+      border-color: #E6E2D9 !important;
+    }
+    thead th {
+      background-color: #F4EFE6 !important;
+      color: #183B32 !important;
+      font-weight: 700 !important;
+      border-color: #E6E2D9 !important;
+    }
+    tbody tr {
+      background-color: #FFFFFF !important;
+      border-color: #E6E2D9 !important;
+      color: #252A28 !important;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #FAF8F5 !important;
+    }
+    tbody tr:hover {
+      background-color: rgba(244, 239, 230, 0.6) !important;
+    }
+
     .custom-scrollbar::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+      width: 6px;
+      height: 6px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: #D8D2C4;
       border-radius: 10px;
-    }
-    .glow-orange {
-      box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
-    }
-    .glow-red {
-      box-shadow: 0 0 25px rgba(239, 68, 68, 0.45);
-    }
-    .glow-emerald {
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
     }
     @keyframes pulseSlow {
       0%, 100% { opacity: 1; transform: scale(1); }
@@ -42,19 +150,19 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-[#0b0f19] flex flex-col custom-scrollbar">
+<body class="min-h-screen bg-[#F5F3EE] flex flex-col custom-scrollbar">
 
   <!-- TOP HEADER -->
-  <header class="bg-slate-900/90 border-b border-white/10 sticky top-0 z-40 backdrop-blur-md">
+  <header class="bg-[#183B32] border-b border-[#C5A878]/30 sticky top-0 z-40 shadow-md text-white">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <a href="/dashboard" class="flex items-center gap-2 group">
-          <img src="/dajja_logo.jpg" alt="Logo" class="w-10 h-10 rounded-xl object-cover border border-orange-500/30 group-hover:scale-105 transition-all">
+          <img src="/dajja_logo.jpg" alt="Logo" class="w-10 h-10 rounded-xl object-cover border border-[#C5A878]/40 group-hover:scale-105 transition-all bg-white">
           <div>
             <h1 class="text-base font-black text-white flex items-center gap-2">
-              مطعم ضجة <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">الوصفات والتسعير</span>
+              مطعم ضجة <span class="text-xs px-2 py-0.5 rounded-full bg-[#C5A878]/20 text-[#F4EFE6] border border-[#C5A878]/30">الوصفات والتسعير</span>
             </h1>
-            <p class="text-[10px] text-slate-400 font-semibold">حساب تكلفة الساندوتشات والوجبات، هامش الربح، والمصاريف التشغيلية</p>
+            <p class="text-[10px] text-[#E6E2D9] font-semibold">حساب تكلفة الساندوتشات والوجبات، هامش الربح، والمصاريف التشغيلية</p>
           </div>
         </a>
       </div>
