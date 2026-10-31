@@ -458,6 +458,9 @@
         </div>
       </div>
 
+      <!-- Unclosed Shift Warning Banner -->
+      <div id="unclosed-shift-warning-banner" class="hidden"></div>
+
       <!-- Orders Grid -->
       <div id="orders-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <p class="text-xs text-slate-500 col-span-full text-center py-12">جاري سحب الطلبات الحية...</p>
@@ -3507,6 +3510,54 @@
         filtered = allOrders.filter(o => o.status === currentFilter);
       }
 
+      // Check for unclosed previous day orders in current shift view
+      const banner = document.getElementById('unclosed-shift-warning-banner');
+      if (banner) {
+        if (currentShiftView === 'current' && Array.isArray(allOrders) && allOrders.length > 0) {
+          const todayStr = (new Date()).toDateString();
+          const previousDayOrders = allOrders.filter(o => {
+            const od = new Date(o.createdAt);
+            return od.toDateString() !== todayStr;
+          });
+
+          if (previousDayOrders.length > 0) {
+            // Collect unique days
+            const uniqueDays = Array.from(new Set(previousDayOrders.map(o => {
+              const od = new Date(o.createdAt);
+              return od.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' });
+            }))).join(' ، ');
+
+            banner.className = "mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-red-600/25 via-amber-600/20 to-rose-600/25 border-2 border-red-500/50 text-white text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl";
+            banner.innerHTML = `
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center text-xl flex-shrink-0 animate-bounce">
+                  ⚠️
+                </div>
+                <div>
+                  <div class="font-black text-white text-sm flex items-center gap-2">
+                    <span>تنبيه: الوردية الحالية بها طلبات من أيام سابقة لم يتم إغلاقها!</span>
+                    <span class="px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-mono font-bold">${previousDayOrders.length} طلب قديم</span>
+                  </div>
+                  <p class="text-rose-200 text-xs mt-0.5 font-medium">
+                    يوجد طلبات مفتوحة مسجلة بتاريخ: <strong class="text-amber-300 font-bold underline">${uniqueDays}</strong> لأن اليومية السابقة لم تُقفل بعد من الكاشير.
+                  </p>
+                </div>
+              </div>
+              <button onclick="openCloseDayModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95">
+                <span>🔒</span>
+                <span>تقفيل اليومية السابقة الآن</span>
+              </button>
+            `;
+          } else {
+            banner.className = "hidden";
+            banner.innerHTML = "";
+          }
+        } else {
+          banner.className = "hidden";
+          banner.innerHTML = "";
+        }
+      }
+
       if (filtered.length === 0) {
         if (currentShiftView === 'current') {
           container.innerHTML = `
@@ -3538,12 +3589,37 @@
         const badge = statusMap[o.status] || { label: o.status, bg: 'bg-slate-500/10 text-slate-400' };
         const itemsSummary = o.items ? o.items.map(it => `${it.quantity}x ${it.name}`).join(' ، ') : '';
 
+        // Date and Day calculation
+        const orderDate = new Date(o.createdAt);
+        const todayStr = (new Date()).toDateString();
+        const isToday = orderDate.toDateString() === todayStr;
+
+        // Day name (السبت، الأحد، ...)
+        const dayName = orderDate.toLocaleDateString('ar-EG', { weekday: 'long' });
+        // Day number + Month (31 أكتوبر أو 31/10)
+        const dateStr = orderDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+        // Time (04:15 م)
+        const timeStr = orderDate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
         return `
-          <div class="bg-[#111827] border ${isPending ? 'border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.25)]' : 'border-white/5'} rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
+          <div class="bg-[#111827] border ${!isToday ? 'border-2 border-rose-500/60 bg-[#161214] shadow-[0_0_20px_rgba(244,63,94,0.2)]' : (isPending ? 'border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.25)]' : 'border-white/5')} rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
             <div class="flex justify-between items-start border-b border-white/5 pb-2">
               <div>
-                <span class="text-base font-black text-white font-mono">${o.orderNumber}</span>
-                <span class="text-[10px] text-slate-400 block">${new Date(o.createdAt).toLocaleTimeString('ar-EG')}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-base font-black text-white font-mono">${o.orderNumber}</span>
+                  ${!isToday ? `
+                    <span class="text-[9px] px-2 py-0.5 rounded-md font-black bg-rose-600/30 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1">
+                      <span>⚠️</span>
+                      <span>يومية سابقة لم تُقفل</span>
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                  <span class="text-[11px] font-bold ${!isToday ? 'text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20' : 'text-slate-300'}">
+                    📅 ${dayName} (${dateStr})
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-mono">🕒 ${timeStr}</span>
+                </div>
               </div>
               <div class="flex flex-col items-end gap-1">
                 <span class="text-[10px] px-2 py-0.5 rounded-md font-bold border ${badge.bg} ${isPending ? 'animate-bounce' : ''}">${badge.label}</span>
@@ -4183,7 +4259,20 @@
         if (typesEl) typesEl.innerText = `${shift.deliveryCount || 0} دليفري (${shift.deliverySales || 0}ج) | ${shift.takeawayCount || 0} تيك (${shift.takeawaySales || 0}ج)`;
 
         const openEl = document.getElementById('shift-summary-opened');
-        if (openEl) openEl.innerText = shift.openedAt ? new Date(shift.openedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '--';
+        if (openEl) {
+          if (shift.openedAt) {
+            const od = new Date(shift.openedAt);
+            const isToday = od.toDateString() === (new Date()).toDateString();
+            const dayName = od.toLocaleDateString('ar-EG', { weekday: 'long' });
+            const dateStr = od.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+            const timeStr = od.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            openEl.innerHTML = isToday
+              ? `${dayName} (${dateStr}) - ${timeStr}`
+              : `<span class="text-rose-400 font-black animate-pulse">⚠️ ${dayName} (${dateStr}) ${timeStr} (يومية سابقة لم تُقفل)</span>`;
+          } else {
+            openEl.innerText = '--';
+          }
+        }
 
         // Expenses Tab Stats
         const repExpOpening = document.getElementById('rep-exp-opening-drawer');
