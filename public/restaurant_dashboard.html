@@ -2314,6 +2314,10 @@
     let knownOrderIds = new Set();
     let isInitialOrdersLoad = true;
     let audioCtx = null;
+    let activeAlarmInterval = null;
+    let activePendingOrders = [];
+    let isAlarmSnoozed = false;
+    let snoozeTimer = null;
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -2334,6 +2338,9 @@
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
 
         // Two burst rings for high alertness in busy kitchens (Ding-Ding-Dong x 2)
         const bursts = [0.0, 0.42];
@@ -2354,7 +2361,7 @@
 
             // Fast attack, maximum clear volume, smooth acoustic decay
             gain.gain.setValueAtTime(0.0001, ctx.currentTime + t.start);
-            gain.gain.exponentialRampToValueAtTime(0.9, ctx.currentTime + t.start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.95, ctx.currentTime + t.start + 0.02);
             gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t.start + t.dur);
 
             osc.connect(gain);
@@ -2369,17 +2376,131 @@
       }
     }
 
+    // Continuous Alarm: Keeps ringing until cashier accepts/receives all pending orders
+    function startPersistentOrderAlarm(pendingOrders) {
+      activePendingOrders = pendingOrders || [];
+      renderAlarmBanner();
+
+      if (!audioNotificationsEnabled || isAlarmSnoozed) return;
+
+      if (!activeAlarmInterval) {
+        playNewOrderSound();
+        activeAlarmInterval = setInterval(() => {
+          if (!isAlarmSnoozed && audioNotificationsEnabled && activePendingOrders.length > 0) {
+            playNewOrderSound();
+          }
+        }, 3200);
+      }
+    }
+
+    function stopPersistentOrderAlarm() {
+      if (activeAlarmInterval) {
+        clearInterval(activeAlarmInterval);
+        activeAlarmInterval = null;
+      }
+      activePendingOrders = [];
+      const banner = document.getElementById('persistent-order-alarm-banner');
+      if (banner) banner.remove();
+    }
+
+    function snoozeOrderAlarm() {
+      isAlarmSnoozed = true;
+      clearTimeout(snoozeTimer);
+      snoozeTimer = setTimeout(() => {
+        isAlarmSnoozed = false;
+        if (activePendingOrders.length > 0) {
+          playNewOrderSound();
+        }
+      }, 60000);
+      renderAlarmBanner();
+      showNotificationToast('🔕 تم كتم صوت التنبيه مؤقتاً لمدة 60 ثانية');
+    }
+
+    function renderAlarmBanner() {
+      if (activePendingOrders.length === 0) {
+        const b = document.getElementById('persistent-order-alarm-banner');
+        if (b) b.remove();
+        return;
+      }
+
+      let banner = document.getElementById('persistent-order-alarm-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'persistent-order-alarm-banner';
+        document.body.appendChild(banner);
+      }
+
+      const count = activePendingOrders.length;
+      const first = activePendingOrders[0];
+      const summary = count === 1
+        ? `طلب #${first.orderNumber} - ${first.customerName || 'عميل'} [${first.totalAmount} ج.م] - ${first.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}`
+        : `يوجد ${count} طلبات جديدة بانتظار استلامك! أحدثها #${first.orderNumber} (${first.customerName || 'عميل'})`;
+
+      banner.className = "fixed top-3 left-1/2 -translate-x-1/2 z-[9999] w-[95%] max-w-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white rounded-2xl p-3 sm:p-4 shadow-[0_15px_50px_rgba(239,68,68,0.7)] border-2 border-white/40 flex flex-col sm:flex-row items-center justify-between gap-3 animate-pulse";
+      banner.innerHTML = `
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0 animate-bounce">
+            🔔
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-black text-white">طلب عميل جديد بانتظار الاستلام!</span>
+              <span class="px-2 py-0.5 rounded-full bg-black/40 text-amber-300 text-[11px] font-mono font-bold">${count} جديد</span>
+            </div>
+            <p class="text-xs text-rose-100 font-medium truncate">${summary}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="acceptOrder('${first.id}')" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs shadow-xl transition-all flex items-center justify-center gap-1.5">
+            <span>✅</span>
+            <span>استلام الطلب الآن</span>
+          </button>
+          <button onclick="snoozeOrderAlarm()" title="كتم الصوت مؤقتاً لمدة دقيقة" class="px-2.5 py-2 rounded-xl bg-black/30 hover:bg-black/50 text-white text-xs font-bold transition-all">
+            <span>${isAlarmSnoozed ? '🔕 مكتوم 60ث' : '🔕 كتم دقيقة'}</span>
+          </button>
+          <button onclick="switchTab('orders')" class="px-2.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all">
+            <span>عرض</span>
+          </button>
+        </div>
+      `;
+    }
+
+    async function acceptOrder(orderId) {
+      try {
+        // Optimistically remove from pending orders list to stop sound immediately
+        activePendingOrders = activePendingOrders.filter(o => o.id !== orderId);
+        if (activePendingOrders.length === 0) {
+          stopPersistentOrderAlarm();
+        } else {
+          renderAlarmBanner();
+        }
+
+        await updateOrderStatus(orderId, 'PREPARING');
+        showNotificationToast('✅ تم استلام الطلب وبدء التحضير');
+      } catch (err) {
+        alert('تعذر استلام الطلب: ' + err.message);
+        loadLiveOrders();
+      }
+    }
+
     function toggleAudioNotifications() {
       audioNotificationsEnabled = !audioNotificationsEnabled;
       localStorage.setItem('dajja_audio_notif', audioNotificationsEnabled ? 'true' : 'false');
       updateAudioToggleUI();
 
       if (audioNotificationsEnabled) {
-        // Unlock browser audio context immediately on click and play test confirmation sound
         getAudioContext();
-        playNewOrderSound();
+        if (activePendingOrders.length > 0) {
+          startPersistentOrderAlarm(activePendingOrders);
+        } else {
+          playNewOrderSound();
+        }
         showNotificationToast('🔔 تم تفعيل صوت تنبيه الأوردرات الجديدة بنجاح!');
       } else {
+        if (activeAlarmInterval) {
+          clearInterval(activeAlarmInterval);
+          activeAlarmInterval = null;
+        }
         showNotificationToast('🔕 تم كتم صوت التنبيهات');
       }
     }
@@ -3349,20 +3470,17 @@
           } catch (_) {}
         }
 
-        // Detect new incoming orders (e.g. from customer web link or online delivery)
+        // Continuous Alarm & Notification: Track all pending unreceived orders
         if (Array.isArray(orders)) {
-          const newOrders = orders.filter(o => !knownOrderIds.has(o.id));
-          if (!isInitialOrdersLoad && newOrders.length > 0) {
-            const incomingAlerts = newOrders.filter(o => o.status === 'PENDING' || o.status === 'PREPARING');
-            if (incomingAlerts.length > 0) {
-              playNewOrderSound();
-              const latest = incomingAlerts[0];
-              const cust = latest.customerName ? latest.customerName : 'عميل جديد';
-              const orderNum = latest.orderNumber ? `#${latest.orderNumber}` : '';
-              const total = latest.totalAmount ? `(${latest.totalAmount} ج.م)` : '';
-              showNotificationToast(`🔔 أوردر جديد وصل الآن! ${orderNum} ${cust} ${total}`, true);
-            }
+          const pendingOrders = orders.filter(o => o.status === 'PENDING');
+          if (pendingOrders.length > 0) {
+            // New orders waiting for cashier acceptance! Keep alarm ringing until received
+            startPersistentOrderAlarm(pendingOrders);
+          } else {
+            // All orders accepted or no pending orders! Stop alarm
+            stopPersistentOrderAlarm();
           }
+
           orders.forEach(o => knownOrderIds.add(o.id));
           isInitialOrdersLoad = false;
         }
@@ -3416,18 +3534,19 @@
       };
 
       container.innerHTML = filtered.map(o => {
+        const isPending = o.status === 'PENDING';
         const badge = statusMap[o.status] || { label: o.status, bg: 'bg-slate-500/10 text-slate-400' };
         const itemsSummary = o.items ? o.items.map(it => `${it.quantity}x ${it.name}`).join(' ، ') : '';
 
         return `
-          <div class="bg-[#111827] border border-white/5 rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
+          <div class="bg-[#111827] border ${isPending ? 'border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.25)]' : 'border-white/5'} rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
             <div class="flex justify-between items-start border-b border-white/5 pb-2">
               <div>
                 <span class="text-base font-black text-white font-mono">${o.orderNumber}</span>
                 <span class="text-[10px] text-slate-400 block">${new Date(o.createdAt).toLocaleTimeString('ar-EG')}</span>
               </div>
               <div class="flex flex-col items-end gap-1">
-                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold border ${badge.bg}">${badge.label}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold border ${badge.bg} ${isPending ? 'animate-bounce' : ''}">${badge.label}</span>
                 <span class="text-[9px] text-slate-400 font-bold">${o.orderType === 'DELIVERY' ? '🛵 دليفري' : '🥡 تيك واي'}</span>
               </div>
             </div>
@@ -3451,7 +3570,10 @@
             <!-- Action Buttons -->
             <div class="pt-2 border-t border-white/5 flex gap-1.5 flex-wrap">
               ${o.status === 'PENDING' ? `
-                <button onclick="updateOrderStatus('${o.id}', 'PREPARING')" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black transition-all">بدء التحضير 🍳</button>
+                <button onclick="acceptOrder('${o.id}')" class="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-950/40 animate-pulse transition-all flex items-center justify-center gap-1.5">
+                  <span>🔔</span>
+                  <span>استلام الأوردر وبدء التحضير</span>
+                </button>
               ` : ''}
 
               ${o.status === 'PREPARING' ? (o.orderType === 'DELIVERY' ? `
@@ -3490,6 +3612,12 @@
     async function cancelOrder(orderId) {
       if (!confirm('هل تريد إلغاء هذا الطلب؟')) return;
       try {
+        activePendingOrders = activePendingOrders.filter(o => o.id !== orderId);
+        if (activePendingOrders.length === 0) {
+          stopPersistentOrderAlarm();
+        } else {
+          renderAlarmBanner();
+        }
         await apiFetch(`/api/v1/orders/${orderId}/status`, {
           method: 'PUT',
           body: JSON.stringify({ status: 'CANCELLED' })
