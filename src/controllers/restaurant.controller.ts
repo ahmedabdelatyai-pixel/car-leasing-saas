@@ -358,7 +358,7 @@ export class RestaurantController {
   static async createMenuItem(req: Request, res: Response) {
     try {
       const restaurant = await RestaurantController.getOrCreateRestaurant();
-      const { categoryId, name, description, price, imageUrl, badge, isAvailable, pointsCost, sortOrder } = req.body;
+      const { categoryId, name, description, price, imageUrl, badge, isAvailable, isAddon, pointsCost, sortOrder } = req.body;
 
       if (!categoryId || !name || price === undefined) {
         return res.status(400).json({ error: 'Missing required item details: categoryId, name, price' });
@@ -375,6 +375,7 @@ export class RestaurantController {
           badge: badge || null,
           sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
           isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
+          isAddon: isAddon !== undefined ? Boolean(isAddon) : false,
           pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : 0
         }
       });
@@ -391,7 +392,7 @@ export class RestaurantController {
   static async updateMenuItem(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { name, description, price, imageUrl, badge, isAvailable, categoryId, pointsCost, sortOrder } = req.body;
+      const { name, description, price, imageUrl, badge, isAvailable, isAddon, categoryId, pointsCost, sortOrder } = req.body;
 
       const updated = await prisma.menuItem.update({
         where: { id },
@@ -403,6 +404,7 @@ export class RestaurantController {
           badge: badge !== undefined ? badge : undefined,
           sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
           isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined,
+          isAddon: isAddon !== undefined ? Boolean(isAddon) : undefined,
           categoryId: categoryId || undefined,
           pointsCost: pointsCost !== undefined && pointsCost !== null ? Number(pointsCost) : undefined
         }

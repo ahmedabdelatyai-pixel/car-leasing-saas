@@ -1505,7 +1505,7 @@
           <textarea id="item-desc" rows="2" placeholder="المكونات والتفاصيل..." class="w-full p-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none"></textarea>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
           <div class="space-y-1">
             <label class="text-[10px] text-slate-400 block font-semibold">بادج مميز (اختياري)</label>
             <input type="text" id="item-badge" placeholder="الأكثر مبيعاً 🔥" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-white/10 text-white focus:outline-none">
@@ -1515,10 +1515,16 @@
             <label class="text-[10px] text-amber-400 block font-semibold">🎁 استبدال بالنقاط (مكافأة)</label>
             <input type="number" id="item-points-cost" min="0" placeholder="0 = غير متاح كهدية" class="w-full h-9 px-2.5 rounded-xl text-xs bg-white/5 border border-amber-500/30 text-amber-400 font-mono font-bold focus:outline-none">
           </div>
+        </div>
 
-          <div class="pt-4 flex items-center gap-2">
-            <input type="checkbox" id="item-available" checked class="w-4 h-4 rounded text-orange-600 bg-white/5 border-white/20">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="item-available" checked class="w-4 h-4 rounded text-orange-600 bg-black/40 border-white/20">
             <label for="item-available" class="text-xs text-slate-200 font-bold cursor-pointer">متاح للطلب الآن 🟢</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="item-is-addon" class="w-4 h-4 rounded text-amber-500 bg-black/40 border-amber-500/30">
+            <label for="item-is-addon" class="text-xs text-amber-300 font-bold cursor-pointer">✨ إظهار كإضافة / صوص في السلة (Add-on)</label>
           </div>
         </div>
 
@@ -3812,10 +3818,15 @@
                     </div>
 
                     <!-- Availability Badge & Actions -->
-                    <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 mt-2">
-                      <button onclick="toggleItemAvailability('${item.id}', ${!isAvail})" class="px-2 py-0.5 rounded-md font-bold transition-all ${isAvail ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}">
-                        ${isAvail ? 'متاح 🟢' : 'غير متاح 🔴'}
-                      </button>
+                    <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 mt-2 flex-wrap gap-1.5">
+                      <div class="flex items-center gap-1.5">
+                        <button onclick="toggleItemAvailability('${item.id}', ${!isAvail})" class="px-2 py-0.5 rounded-md font-bold transition-all ${isAvail ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}">
+                          ${isAvail ? 'متاح 🟢' : 'غير متاح 🔴'}
+                        </button>
+                        <button onclick="toggleItemAddon('${item.id}', ${!item.isAddon})" title="إظهار في شريط مقبلات وصوصات السلة للعميل" class="px-2 py-0.5 rounded-md font-bold transition-all ${item.isAddon ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm' : 'bg-white/5 text-slate-400 hover:text-white'}">
+                          ${item.isAddon ? '✨ مقبلات بالسلة' : '+ مقبلات بالسلة'}
+                        </button>
+                      </div>
 
                       <div class="flex items-center gap-2">
                         ${(currentUser && currentUser.role === 'CASHIER') ? '' : `
@@ -3876,6 +3887,7 @@
       document.getElementById('item-img').value = '';
       document.getElementById('item-img-preview').src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
       document.getElementById('item-available').checked = true;
+      document.getElementById('item-is-addon').checked = false;
 
       const catSelect = document.getElementById('item-cat-id');
       catSelect.innerHTML = (currentRestaurant?.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
@@ -3903,6 +3915,7 @@
       document.getElementById('item-img').value = foundItem.imageUrl || '';
       document.getElementById('item-img-preview').src = foundItem.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
       document.getElementById('item-available').checked = foundItem.isAvailable !== false;
+      document.getElementById('item-is-addon').checked = foundItem.isAddon === true;
 
       const catSelect = document.getElementById('item-cat-id');
       catSelect.innerHTML = (currentRestaurant?.categories || []).map(c => `<option value="${c.id}" ${c.id === foundCat.id ? 'selected' : ''}>${c.name}</option>`).join('');
@@ -3928,6 +3941,18 @@
       }
     }
 
+    async function toggleItemAddon(id, isAddon) {
+      try {
+        await apiFetch(`/api/v1/restaurant/menu-items/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ isAddon })
+        });
+        loadMenuData();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
     async function submitMenuItem(e) {
       e.preventDefault();
       const id = document.getElementById('item-id').value;
@@ -3939,6 +3964,7 @@
       const pointsCost = Number(document.getElementById('item-points-cost').value) || 0;
       const imageUrl = document.getElementById('item-img').value.trim();
       const isAvailable = document.getElementById('item-available').checked;
+      const isAddon = document.getElementById('item-is-addon').checked;
 
       const btn = document.getElementById('btn-save-menu-item');
       btn.disabled = true;
@@ -3948,12 +3974,12 @@
         if (id) {
           await apiFetch(`/api/v1/restaurant/menu-items/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable })
+            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable, isAddon })
           });
         } else {
           await apiFetch('/api/v1/restaurant/menu-items', {
             method: 'POST',
-            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable })
+            body: JSON.stringify({ categoryId, name, price, description, badge, pointsCost, imageUrl, isAvailable, isAddon })
           });
         }
         closeMenuItemModal();

@@ -133,6 +133,7 @@ model MenuItem {
   price        Decimal     @db.Decimal(10, 2)
   imageUrl     String?     @map("image_url") @db.Text
   isAvailable  Boolean     @default(true) @map("is_available")
+  isAddon      Boolean     @default(false) @map("is_addon")
   badge        String?     @db.VarChar(50)
   sortOrder    Int         @default(0) @map("sort_order")
   pointsCost   Int?        @default(0) @map("points_cost")
