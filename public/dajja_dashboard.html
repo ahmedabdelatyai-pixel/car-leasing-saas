@@ -178,10 +178,16 @@
           </div>
         </div>
       </div>
-      <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
-        <span id="sound-toggle-icon">🔔</span>
-        <span id="sound-toggle-label" class="hidden sm:inline">صوت التنبيه: مفعّل</span>
-      </button>
+      <div class="flex items-center gap-1.5">
+        <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+          <span id="sound-toggle-icon">🔔</span>
+          <span id="sound-toggle-label" class="hidden sm:inline">صوت التنبيه: مفعّل</span>
+        </button>
+        <button type="button" onclick="testOrderSoundPrompt()" title="استمع لصوت تنبيه طلبات القوي الآن للتجربة" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-black transition-all flex items-center gap-1 shadow-sm active:scale-95">
+          <span>🔊</span>
+          <span class="hidden md:inline">تجربة صوت طلبات</span>
+        </button>
+      </div>
       <button id="btn-install-dash" onclick="promptInstallPwa()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
         <span>📲</span>
         <span class="hidden md:inline">تثبيت كـ تطبيق</span>
@@ -2411,9 +2417,30 @@
       return audioCtx;
     }
 
-    // Play a distinct, loud, multi-frequency kitchen chime/bell
-    function playNewOrderSound() {
-      if (!audioNotificationsEnabled) return;
+    let talabatAudioElement = null;
+
+    // 1. Play high-decibel Talabat order notification sound file
+    function playTalabatAudioFile() {
+      try {
+        if (!talabatAudioElement) {
+          talabatAudioElement = new Audio('/sounds/talabat_order_alert.wav');
+          talabatAudioElement.preload = 'auto';
+        }
+        talabatAudioElement.volume = 1.0;
+        talabatAudioElement.currentTime = 0;
+        const playPromise = talabatAudioElement.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn('Audio element play interrupted or blocked:', err);
+          });
+        }
+      } catch (err) {
+        console.warn('Audio file error:', err);
+      }
+    }
+
+    // 2. High-energy Talabat Ascending Brass Fanfare Web Audio Synthesizer (Cutting through noisy kitchens)
+    function synthesizeTalabatOrderSound() {
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
@@ -2421,38 +2448,61 @@
           ctx.resume();
         }
 
-        // Two burst rings for high alertness in busy kitchens (Ding-Ding-Dong x 2)
-        const bursts = [0.0, 0.42];
-        bursts.forEach(offset => {
-          const tones = [
-            { freq: 1046.50, start: offset + 0.00, dur: 0.18, type: 'triangle' }, // C6
-            { freq: 1318.51, start: offset + 0.08, dur: 0.18, type: 'triangle' }, // E6
-            { freq: 1760.00, start: offset + 0.16, dur: 0.35, type: 'sine'     }, // A6 bell
-            { freq: 2093.00, start: offset + 0.16, dur: 0.42, type: 'triangle' }  // C7 harmonic
-          ];
+        const now = ctx.currentTime;
 
-          tones.forEach(t => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+        // Talabat Signature 2-Stage Fanfare:
+        // Stage 1 (Fast Ascending Alert): D5 (587Hz) -> F#5 (740Hz) -> A5 (880Hz) -> D6 (1174Hz)
+        // Stage 2 (Punchy Climax): G5 (784Hz) -> B5 (988Hz) -> D6 (1174Hz) -> G6 (1568Hz) + High Shimmer Bell (2349Hz)
+        const notes = [
+          // Motif 1
+          { freq: 587.33,  start: 0.00, dur: 0.12, type: 'triangle', gain: 0.85 },
+          { freq: 739.99,  start: 0.09, dur: 0.12, type: 'triangle', gain: 0.90 },
+          { freq: 880.00,  start: 0.18, dur: 0.14, type: 'triangle', gain: 0.95 },
+          { freq: 1174.66, start: 0.27, dur: 0.35, type: 'sawtooth', gain: 0.90 },
 
-            osc.type = t.type;
-            osc.frequency.setValueAtTime(t.freq, ctx.currentTime + t.start);
+          // Motif 2 (Higher, louder, triumphant climax)
+          { freq: 783.99,  start: 0.54, dur: 0.12, type: 'triangle', gain: 0.90 },
+          { freq: 987.77,  start: 0.63, dur: 0.14, type: 'triangle', gain: 0.95 },
+          { freq: 1174.66, start: 0.72, dur: 0.16, type: 'sawtooth', gain: 0.95 },
+          { freq: 1567.98, start: 0.82, dur: 0.65, type: 'triangle', gain: 1.00 },
+          { freq: 2349.32, start: 0.82, dur: 0.50, type: 'sine',     gain: 0.40 } // High shimmer bell
+        ];
 
-            // Fast attack, maximum clear volume, smooth acoustic decay
-            gain.gain.setValueAtTime(0.0001, ctx.currentTime + t.start);
-            gain.gain.exponentialRampToValueAtTime(0.95, ctx.currentTime + t.start + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t.start + t.dur);
+        notes.forEach(n => {
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
 
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+          osc.type = n.type;
+          osc.frequency.setValueAtTime(n.freq, now + n.start);
 
-            osc.start(ctx.currentTime + t.start);
-            osc.stop(ctx.currentTime + t.start + t.dur);
-          });
+          // Punchy attack & smooth exponential decay
+          gainNode.gain.setValueAtTime(0.0001, now + n.start);
+          gainNode.gain.exponentialRampToValueAtTime(n.gain, now + n.start + 0.015);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, now + n.start + n.dur);
+
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          osc.start(now + n.start);
+          osc.stop(now + n.start + n.dur);
         });
       } catch (err) {
-        console.warn('Audio playback error:', err);
+        console.warn('Web Audio synthesis error:', err);
       }
+    }
+
+    // Play both audio file & synthesizer simultaneously for maximum volume and alertness
+    function playNewOrderSound() {
+      if (!audioNotificationsEnabled) return;
+      playTalabatAudioFile();
+      synthesizeTalabatOrderSound();
+    }
+
+    // Cashier Test Sound Button
+    function testOrderSoundPrompt() {
+      getAudioContext();
+      playNewOrderSound();
+      showNotificationToast('🔊 جاري تجربة واستماع صوت تنبيه طلبات القوي!');
     }
 
     // Continuous Alarm: Keeps ringing until cashier accepts/receives all pending orders

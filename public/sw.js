@@ -1,5 +1,5 @@
 // Service Worker for Dajja Restaurant PWA
-const CACHE_NAME = 'dajja-cache-v3';
+const CACHE_NAME = 'dajja-cache-v4';
 const STATIC_ASSETS = [
   '/',
   '/order.html',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   '/restaurant_dashboard.html',
   '/dashboard',
   '/dajja_logo.jpg',
+  '/sounds/talabat_order_alert.wav',
   '/manifest.json',
   '/manifest-dashboard.json'
 ];
