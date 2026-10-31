@@ -479,6 +479,10 @@
           <p class="text-[11px] text-slate-400">إضافة وجبة، تعديل الأسعار، تغيير الصور، والتحكم في إيقاف أو تفعيل أي صنف</p>
         </div>
         <div class="flex flex-wrap gap-2">
+          <button onclick="openAddonsManagerModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 active:scale-95 border border-amber-300">
+            <span>✨</span>
+            <span>تخصيص مقبلات وصوصات السلة (Add-ons)</span>
+          </button>
           <a href="/print_menu.html" target="_blank" class="px-3.5 py-2 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95">
             <span>🖨️</span>
             <span>تصميم وطباعة المنيو المحدث</span>
@@ -490,6 +494,25 @@
             <span>+</span>
             <span>إضافة وجبة للمنيو</span>
           </button>
+        </div>
+      </div>
+
+      <!-- LIVE ACTIVE ADDONS BANNER -->
+      <div id="active-addons-banner" class="bg-gradient-to-r from-amber-950/40 via-orange-950/20 to-black p-4 rounded-3xl border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+            🍟
+          </div>
+          <div>
+            <h4 class="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+              <span>مقبلات وصوصات سلة العميل المقترحة حالياً:</span>
+              <span id="active-addons-count" class="bg-amber-400 text-black font-mono font-black text-xs px-2.5 py-0.5 rounded-full shadow-sm">0 أصناف</span>
+            </h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">هذه هي الأصناف التي تظهر للزبائن في سلة الطلب لاقتراحها عليهم تلقائياً بنقرة زر</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2" id="active-addons-pills">
+          <!-- Populated dynamically with item tags and remove (x) -->
         </div>
       </div>
 
@@ -1456,6 +1479,53 @@
   <!-- ==============================================
        MODALS: MENU ITEMS, RECEIPT, CAPTAINS
        ============================================== -->
+
+  <!-- DEDICATED ADDONS & UPSELL MANAGER MODAL -->
+  <div id="addons-manager-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-[#111827] border border-amber-500/30 max-w-2xl w-full rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+            🍟
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+              <span>تخصيص مقبلات وصوصات سلة العميل</span>
+              <span class="text-[10px] bg-amber-400 text-black px-2.5 py-0.5 rounded-full font-mono font-black" id="modal-addons-count-badge">0 محدد</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">حدد الأصناف التي تود ظهورها للعميل بأسفل السلة لاقتراحها عليه بضغطة زر</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAddonsManagerModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-all text-sm font-bold">✕</button>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-1">
+          <input type="text" id="addons-search-input" oninput="renderAddonsManagerList()" placeholder="🔍 ابحث عن صنف (صوص، ثومية، بطاطس، كول سلو، بيبسي)..." class="w-full h-10 px-3.5 rounded-xl text-xs bg-white/5 border border-white/10 focus:border-amber-500 focus:outline-none text-white transition-all">
+        </div>
+        <div class="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
+          <button type="button" onclick="setAddonsFilter('ALL')" id="filter-addon-all" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-black font-black">الكل</button>
+          <button type="button" onclick="setAddonsFilter('SELECTED')" id="filter-addon-selected" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">المحددة فقط ✨</button>
+          <button type="button" onclick="setAddonsFilter('SAUCES')" id="filter-addon-sauces" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">مقبلات وصوصات 🥫</button>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <div class="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1" id="addons-manager-items-list">
+        <!-- populated dynamically -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-white/10 flex justify-between items-center text-xs">
+        <span class="text-slate-400">التغييرات تُحفظ فورياً في السيستم ⚡</span>
+        <button type="button" onclick="closeAddonsManagerModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black transition-all active:scale-95 shadow-lg">
+          تم وتأكيد الاختيارات ✔️
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ADD / EDIT MENU ITEM MODAL (WITH IMAGE UPLOAD) -->
   <div id="menu-item-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
@@ -2969,6 +3039,7 @@
           <div onclick="${isAvail ? `addPosCartItem('${it.id}', '${it.name.replace(/'/g, "\\'")}', ${it.price}, ${isOutOfStock})` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
             <div class="relative w-full h-24 rounded-xl overflow-hidden mb-2 bg-black/40">
               <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300">
+              ${it.isAddon ? `<span class="absolute top-1 left-1 bg-amber-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">✨ مقبلات بالسلة</span>` : ''}
               ${it.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">${it.badge}</span>` : ''}
               ${stockBadge}
               ${!isAvail ? `<span class="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] font-black text-rose-400 z-20">غير متاح</span>` : ''}
@@ -3765,6 +3836,27 @@
       const container = document.getElementById('dashboard-menu-container');
       if (!currentRestaurant || !currentRestaurant.categories) return;
 
+      // Update Live Active Addons Banner
+      const allItemsList = currentRestaurant.categories.flatMap(c => (c.items || []).map(i => ({ ...i, categoryName: c.name })));
+      const activeAddons = allItemsList.filter(i => i.isAddon === true);
+      const countEl = document.getElementById('active-addons-count');
+      const pillsEl = document.getElementById('active-addons-pills');
+      if (countEl) countEl.innerText = `${activeAddons.length} أصناف`;
+      if (pillsEl) {
+        if (activeAddons.length === 0) {
+          pillsEl.innerHTML = `<span class="text-xs text-amber-300/80 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 font-bold">⚠️ لا توجد مقبلات محددة حالياً - انقر الزر الذهبي بالأعلى لتخصيص الصوصات</span>`;
+        } else {
+          pillsEl.innerHTML = activeAddons.map(ad => `
+            <div class="flex items-center gap-1.5 bg-black/60 border border-amber-500/40 px-3 py-1 rounded-xl text-xs font-bold text-amber-300 shadow-sm">
+              <span>🍟</span>
+              <span>${ad.name}</span>
+              <span class="text-[10px] text-orange-400 font-mono">(${ad.price} ج.م)</span>
+              <button onclick="toggleItemAddon('${ad.id}', false)" title="إلغاء من مقبلات السلة" class="w-4 h-4 rounded-full bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 flex items-center justify-center text-[10px] font-black mr-1">✕</button>
+            </div>
+          `).join('');
+        }
+      }
+
       container.innerHTML = currentRestaurant.categories.map(cat => `
         <div class="bg-[#111827] border border-white/5 rounded-3xl p-5 space-y-4">
           <div class="flex justify-between items-center border-b border-white/5 pb-3">
@@ -3795,9 +3887,10 @@
                 : `<span class="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">ربح ${margin}% ✅</span>`;
 
               return `
-                <div class="bg-black/30 border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-3 flex gap-3 justify-between relative hover:border-white/10 transition-all">
+                <div class="bg-black/30 border ${isOutOfStock ? 'border-rose-500/30' : (item.isAddon ? 'border-amber-500/40 bg-amber-950/10' : 'border-white/5')} rounded-2xl p-3 flex gap-3 justify-between relative hover:border-white/10 transition-all">
                   <div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-black/40">
                     <img src="${img}" class="w-full h-full object-cover">
+                    ${item.isAddon ? `<span class="absolute top-1 left-1 bg-amber-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">✨ بالسلة</span>` : ''}
                     ${item.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">${item.badge}</span>` : ''}
                     ${isOutOfStock ? `<span class="absolute inset-0 bg-black/80 flex items-center justify-center text-[9px] font-black text-rose-400 text-center p-1">نفد المخزون ⚠️</span>` : ''}
                   </div>
@@ -3823,8 +3916,9 @@
                         <button onclick="toggleItemAvailability('${item.id}', ${!isAvail})" class="px-2 py-0.5 rounded-md font-bold transition-all ${isAvail ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}">
                           ${isAvail ? 'متاح 🟢' : 'غير متاح 🔴'}
                         </button>
-                        <button onclick="toggleItemAddon('${item.id}', ${!item.isAddon})" title="إظهار في شريط مقبلات وصوصات السلة للعميل" class="px-2 py-0.5 rounded-md font-bold transition-all ${item.isAddon ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm' : 'bg-white/5 text-slate-400 hover:text-white'}">
-                          ${item.isAddon ? '✨ مقبلات بالسلة' : '+ مقبلات بالسلة'}
+                        <button onclick="toggleItemAddon('${item.id}', ${!item.isAddon})" title="إظهار في شريط مقبلات وصوصات السلة للعميل" class="px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${item.isAddon ? 'bg-amber-400 hover:bg-amber-300 text-black shadow-md border border-amber-300' : 'bg-white/5 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-white/10'}">
+                          <span>${item.isAddon ? '✨' : '+'}</span>
+                          <span>${item.isAddon ? 'مقبلات بالسلة' : 'إظهار بالسلة'}</span>
                         </button>
                       </div>
 
@@ -3941,13 +4035,110 @@
       }
     }
 
-    async function toggleItemAddon(id, isAddon) {
+    let currentAddonsFilter = 'ALL';
+
+    function openAddonsManagerModal() {
+      document.getElementById('addons-manager-modal').classList.remove('hidden');
+      document.getElementById('addons-manager-modal').classList.add('flex');
+      renderAddonsManagerList();
+    }
+
+    function closeAddonsManagerModal() {
+      document.getElementById('addons-manager-modal').classList.add('hidden');
+      document.getElementById('addons-manager-modal').classList.remove('flex');
+    }
+
+    function setAddonsFilter(filter) {
+      currentAddonsFilter = filter;
+      ['all', 'selected', 'sauces'].forEach(f => {
+        const btn = document.getElementById(`filter-addon-${f}`);
+        if (!btn) return;
+        if (f.toUpperCase() === filter) {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-400 text-black";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+        }
+      });
+      renderAddonsManagerList();
+    }
+
+    function renderAddonsManagerList() {
+      const container = document.getElementById('addons-manager-items-list');
+      const search = (document.getElementById('addons-search-input')?.value || '').trim().toLowerCase();
+      if (!container || !currentRestaurant?.categories) return;
+
+      const allItemsList = currentRestaurant.categories.flatMap(c => (c.items || []).map(i => ({ ...i, categoryName: c.name })));
+      
+      const badgeCount = document.getElementById('modal-addons-count-badge');
+      if (badgeCount) {
+        badgeCount.innerText = `${allItemsList.filter(i => i.isAddon === true).length} محدد بالسلة`;
+      }
+
+      let filtered = allItemsList;
+
+      if (currentAddonsFilter === 'SELECTED') {
+        filtered = filtered.filter(i => i.isAddon === true);
+      } else if (currentAddonsFilter === 'SAUCES') {
+        filtered = filtered.filter(i => 
+          i.categoryName.includes('صوص') || 
+          i.categoryName.includes('مقبل') || 
+          i.categoryName.includes('إضاف') ||
+          i.name.includes('صوص') || 
+          i.name.includes('تومية') || 
+          i.name.includes('بطاطس') || 
+          i.name.includes('كول سلو') ||
+          Number(i.price) <= 35
+        );
+      }
+
+      if (search) {
+        filtered = filtered.filter(i => i.name.toLowerCase().includes(search) || i.categoryName.toLowerCase().includes(search));
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="py-12 text-center text-xs text-slate-400 bg-black/20 rounded-2xl border border-white/5">لا توجد أصناف مطابقة للبحث أو الفلتر المحدد.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isSelected = item.isAddon === true;
+        const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+        return `
+          <div class="flex items-center justify-between p-3 rounded-2xl border ${isSelected ? 'bg-amber-950/20 border-amber-500/40' : 'bg-black/30 border-white/5 hover:border-white/10'} transition-all gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${img}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h5 class="text-xs sm:text-sm font-black text-white truncate">${item.name}</h5>
+                  ${isSelected ? '<span class="bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.2 rounded-md">مضاف بالسلة ✨</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                  <span class="text-orange-400 font-mono font-bold text-xs">${item.price} ج.م</span>
+                  <span>•</span>
+                  <span>قسم: ${item.categoryName}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 1-Click Big Toggle Button -->
+            <button type="button" onclick="toggleItemAddon('${item.id}', ${!isSelected}, true)" class="px-4 py-2 rounded-xl text-xs font-black transition-all shrink-0 active:scale-95 flex items-center gap-1.5 ${isSelected ? 'bg-amber-400 hover:bg-amber-300 text-black shadow-lg shadow-amber-500/20 border border-amber-300' : 'bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10'}">
+              <span>${isSelected ? '✔ مضاف بالسلة (إلغاء)' : '+ إضافة لمقبلات السلة'}</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleItemAddon(id, isAddon, refreshAddonsModal = false) {
       try {
         await apiFetch(`/api/v1/restaurant/menu-items/${id}`, {
           method: 'PUT',
           body: JSON.stringify({ isAddon })
         });
-        loadMenuData();
+        await loadMenuData();
+        if (refreshAddonsModal) {
+          renderAddonsManagerList();
+        }
       } catch (err) {
         alert(err.message);
       }
