@@ -598,25 +598,27 @@
               </div>
             </div>
 
-            <!-- Middle Feature: Extra Combos Showcase (Fills middle void) -->
-            <div class="my-1.5 bg-orange-50/90 border border-orange-200 rounded-2xl p-2 space-y-1.5 shadow-xs">
+            <!-- Middle Feature: Extra Combos Showcase (Dynamically populated or fallback) -->
+            <div id="trifold-combos-container" class="my-1.5 bg-orange-50/90 border border-orange-200 rounded-2xl p-2 space-y-1.5 shadow-xs">
               <div class="font-black text-orange-950 text-[10.5px] flex items-center justify-center gap-1.5">
                 <span>🎁</span>
                 <span>بوكسات وكومبو التوفير العائلي</span>
               </div>
-              <div class="bg-white border border-orange-100 rounded-xl p-1.5 text-right space-y-0.5">
-                <div class="flex justify-between items-center">
-                  <span class="font-black text-gray-900 text-[10px]">👨‍👩‍👧‍👦 بوكس اللمة العائلي</span>
-                  <span class="font-black text-orange-600 font-mono text-[10px] bg-orange-100 px-2 py-0.5 rounded-md">عرض خاص</span>
+              <div id="trifold-combos-list" class="space-y-1">
+                <div class="bg-white border border-orange-100 rounded-xl p-1.5 text-right space-y-0.5">
+                  <div class="flex justify-between items-center">
+                    <span class="font-black text-gray-900 text-[10px]">👨‍👩‍👧‍👦 بوكس اللمة العائلي</span>
+                    <span class="font-black text-orange-600 font-mono text-[10px] bg-orange-100 px-2 py-0.5 rounded-md">عرض خاص</span>
+                  </div>
+                  <p class="text-gray-600 text-[8.5px] leading-tight">بيتزا وسط + 2 حواوشي عالفحم + بطاطس مقلية + لتر بيبسي</p>
                 </div>
-                <p class="text-gray-600 text-[8.5px] leading-tight">بيتزا وسط + 2 حواوشي عالفحم + بطاطس مقلية + لتر بيبسي</p>
-              </div>
-              <div class="bg-white border border-orange-100 rounded-xl p-1.5 text-right space-y-0.5">
-                <div class="flex justify-between items-center">
-                  <span class="font-black text-gray-900 text-[10px]">🍔 كومبو ضجة برجر السوبر</span>
-                  <span class="font-black text-orange-600 font-mono text-[10px] bg-orange-100 px-2 py-0.5 rounded-md">توفير 20ج</span>
+                <div class="bg-white border border-orange-100 rounded-xl p-1.5 text-right space-y-0.5">
+                  <div class="flex justify-between items-center">
+                    <span class="font-black text-gray-900 text-[10px]">🍔 كومبو ضجة برجر السوبر</span>
+                    <span class="font-black text-orange-600 font-mono text-[10px] bg-orange-100 px-2 py-0.5 rounded-md">توفير 20ج</span>
+                  </div>
+                  <p class="text-gray-600 text-[8.5px] leading-tight">برجر دبل بالجبنة + بطاطس مقلية فريش + صوص سري + كانز</p>
                 </div>
-                <p class="text-gray-600 text-[8.5px] leading-tight">برجر دبل بالجبنة + بطاطس مقلية فريش + صوص سري + كانز</p>
               </div>
             </div>
 
@@ -972,12 +974,28 @@
     // 1. Group Pizza (صغير / وسط / كبير)
     function renderPizzaTable(items) {
       const grouped = {};
+      const singleItems = [];
+
       items.forEach(it => {
-        let base = it.name.replace(/بيتزا\s*/g, '').replace(/\((صغير|وسط|كبير)\)/g, '').trim();
-        if (!grouped[base]) grouped[base] = { small: '-', med: '-', large: '-' };
-        if (it.name.includes('صغير')) grouped[base].small = it.price;
-        if (it.name.includes('وسط')) grouped[base].med = it.price;
-        if (it.name.includes('كبير')) grouped[base].large = it.price;
+        let name = it.name.trim();
+        let isSmall = name.includes('صغير');
+        let isMed = name.includes('وسط');
+        let isLarge = name.includes('كبير');
+
+        if (isSmall || isMed || isLarge) {
+          let base = name
+            .replace(/بيتزا\s*/g, '')
+            .replace(/\((صغير|وسط|كبير)\)/g, '')
+            .replace(/صغير|وسط|كبير/g, '')
+            .trim();
+          
+          if (!grouped[base]) grouped[base] = { small: '-', med: '-', large: '-' };
+          if (isSmall) grouped[base].small = it.price;
+          if (isMed) grouped[base].med = it.price;
+          if (isLarge) grouped[base].large = it.price;
+        } else {
+          singleItems.push(it);
+        }
       });
 
       let rowsHtml = '';
@@ -991,6 +1009,17 @@
           </tr>
         `;
       }
+
+      // Append any pizzas without small/med/large as dedicated rows
+      singleItems.forEach(it => {
+        let base = it.name.replace(/بيتزا\s*/g, '').trim();
+        rowsHtml += `
+          <tr>
+            <td class="font-bold text-gray-900 text-right pr-1.5" title="${base}">${base}</td>
+            <td colspan="3" class="font-black text-orange-600 bg-orange-50/50 text-center text-[10.5px]">${it.price} ج</td>
+          </tr>
+        `;
+      });
 
       return `
         <table class="menu-table">
@@ -1018,12 +1047,28 @@
     // 2. Group Sandwiches (فينو / ردة / سوري)
     function renderSandwichesTable(items) {
       const grouped = {};
+      const singleItems = [];
+
       items.forEach(it => {
-        let base = it.name.replace(/سندوتش\s*/g, '').replace(/\((فينو|ردة|سوري)\)/g, '').trim();
-        if (!grouped[base]) grouped[base] = { fino: '-', radda: '-', souri: '-' };
-        if (it.name.includes('فينو')) grouped[base].fino = it.price;
-        if (it.name.includes('ردة')) grouped[base].radda = it.price;
-        if (it.name.includes('سوري')) grouped[base].souri = it.price;
+        let name = it.name.trim();
+        let isFino = name.includes('فينو');
+        let isRadda = name.includes('ردة') || name.includes('رده');
+        let isSouri = name.includes('سوري') || name.includes('سورى');
+
+        if (isFino || isRadda || isSouri) {
+          let base = name
+            .replace(/سندوتش|ساندوتش\s*/g, '')
+            .replace(/\((فينو|ردة|رده|سوري|سورى)\)/g, '')
+            .replace(/فينو|ردة|رده|سوري|سورى/g, '')
+            .trim();
+
+          if (!grouped[base]) grouped[base] = { fino: '-', radda: '-', souri: '-' };
+          if (isFino) grouped[base].fino = it.price;
+          if (isRadda) grouped[base].radda = it.price;
+          if (isSouri) grouped[base].souri = it.price;
+        } else {
+          singleItems.push(it);
+        }
       });
 
       let rowsHtml = '';
@@ -1037,6 +1082,16 @@
           </tr>
         `;
       }
+
+      singleItems.forEach(it => {
+        let base = it.name.replace(/سندوتش|ساندوتش\s*/g, '').trim();
+        rowsHtml += `
+          <tr>
+            <td class="font-bold text-gray-900 text-right pr-1.5" title="${base}">${base}</td>
+            <td colspan="3" class="font-black text-orange-600 bg-orange-50/50 text-center text-[10.5px]">${it.price} ج</td>
+          </tr>
+        `;
+      });
 
       return `
         <table class="menu-table">
@@ -1061,23 +1116,35 @@
       `;
     }
 
-    // 3. Group Hawawshi (نص / صغير / وسط / كبير)
+    // 3. Group Hawawshi (نص / صغير / وسط / كبير / حبة كاملة)
     function renderHawawshiTable(items) {
       const grouped = {};
+      const singleItems = [];
+
       items.forEach(it => {
-        let base = it.name
-          .replace(/حواوشي\s*/g, '')
-          .replace(/سدق/g, 'سجق')
-          .replace(/\((نص|صغير|وسط|كبير)\)/g, '')
-          .replace(/حبه كامله/g, '')
-          .trim();
-        
-        if (!grouped[base]) grouped[base] = { half: '-', small: '-', med: '-', large: '-' };
-        if (it.name.includes('نص')) grouped[base].half = it.price;
-        else if (it.name.includes('صغير')) grouped[base].small = it.price;
-        else if (it.name.includes('وسط')) grouped[base].med = it.price;
-        else if (it.name.includes('كبير')) grouped[base].large = it.price;
-        else if (it.name.includes('حبه كامله')) grouped[base].small = it.price;
+        let name = it.name.trim();
+        let isHalf = name.includes('نص');
+        let isSmall = name.includes('صغير') || name.includes('حبه كامله') || name.includes('حبة كاملة');
+        let isMed = name.includes('وسط');
+        let isLarge = name.includes('كبير');
+
+        if (isHalf || isSmall || isMed || isLarge) {
+          let base = name
+            .replace(/حواوشي\s*/g, '')
+            .replace(/سدق/g, 'سجق')
+            .replace(/\((نص|صغير|وسط|كبير)\)/g, '')
+            .replace(/نص|صغير|وسط|كبير/g, '')
+            .replace(/حبه كامله|حبة كاملة/g, '')
+            .trim();
+          
+          if (!grouped[base]) grouped[base] = { half: '-', small: '-', med: '-', large: '-' };
+          if (isHalf) grouped[base].half = it.price;
+          if (isSmall) grouped[base].small = it.price;
+          if (isMed) grouped[base].med = it.price;
+          if (isLarge) grouped[base].large = it.price;
+        } else {
+          singleItems.push(it);
+        }
       });
 
       let rowsHtml = '';
@@ -1092,6 +1159,16 @@
           </tr>
         `;
       }
+
+      singleItems.forEach(it => {
+        let base = it.name.replace(/حواوشي\s*/g, '').trim();
+        rowsHtml += `
+          <tr>
+            <td class="font-bold text-gray-900 text-right pr-1.5" title="${base}">${base}</td>
+            <td colspan="4" class="font-black text-orange-600 bg-orange-50/50 text-center text-[10px]">${it.price} ج</td>
+          </tr>
+        `;
+      });
 
       return `
         <table class="menu-table">
@@ -1214,8 +1291,23 @@
       document.getElementById('total-items-badge').innerText = `${totalItems} وجبة مسجلة`;
 
       // 1. Populate Tri-Fold Flap 3 (Offers & Burgers)
-      document.getElementById('trifold-col-offers').innerHTML = (offersCat.items || []).map(i => renderLeaderRow(i.name, i.price)).join('') || '<p class="text-gray-400 text-center">لا توجد عروض حالياً</p>';
+      const offersHtml = (offersCat.items || []).map(i => renderLeaderRow(i.name, i.price)).join('');
+      document.getElementById('trifold-col-offers').innerHTML = offersHtml || '<p class="text-gray-400 text-center text-[10px] py-1">لا توجد عروض حالياً</p>';
       document.getElementById('trifold-col-burgers').innerHTML = (burgersCat.items || []).map(i => renderLeaderRow(i.name, i.price)).join('');
+
+      // Populate Extra Combos Box dynamically if items exist in offersCat
+      const combosListEl = document.getElementById('trifold-combos-list');
+      if (combosListEl && (offersCat.items || []).length > 0) {
+        combosListEl.innerHTML = (offersCat.items || []).slice(0, 2).map((off, idx) => `
+          <div class="bg-white border border-orange-100 rounded-xl p-1.5 text-right space-y-0.5">
+            <div class="flex justify-between items-center">
+              <span class="font-black text-gray-900 text-[10px]">${idx === 0 ? '👨‍👩‍👧‍👦' : '🍔'} ${off.name}</span>
+              <span class="font-black text-orange-600 font-mono text-[10.5px] bg-orange-100 px-2 py-0.5 rounded-md">${off.price} ج</span>
+            </div>
+            <p class="text-gray-600 text-[8.5px] leading-tight">${off.description || 'عرض خاص وتوفير مميز من مطعم ضجة'}</p>
+          </div>
+        `).join('');
+      }
 
       // 2. Populate Tri-Fold Side B (The Inner Menu)
       document.getElementById('trifold-sandwiches-table-container').innerHTML = renderSandwichesTable(sandwichesCat.items || []);
