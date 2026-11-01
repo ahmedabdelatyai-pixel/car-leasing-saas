@@ -197,6 +197,20 @@
       color: var(--accent-gold) !important;
     }
 
+    .glow-emerald {
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.45) !important;
+    }
+    .nav-tab-pos-hero {
+      color: #ffffff !important;
+      border-bottom: none !important;
+      background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0d9488 100%) !important;
+    }
+    .nav-tab-pos-hero:hover {
+      background: linear-gradient(135deg, #047857 0%, #059669 50%, #0f766e 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.6) !important;
+    }
+
     /* Universal Surface & Card Overrides for European Minimalist Feel */
     .bg-\[\#111827\],
     .bg-\[\#1e293b\],
@@ -506,82 +520,92 @@
 <body class="min-h-screen flex flex-col bg-[#F5F3EE]">
 
   <!-- TOP APP BAR -->
-  <header class="bg-[#183B32] border-b border-[#C5A878]/30 px-3 sm:px-5 py-2 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-40 shadow-md text-white">
-    <!-- Brand Info -->
-    <div class="flex items-center gap-2.5 shrink-0">
-      <div class="w-10 h-10 rounded-xl overflow-hidden border border-[#C5A878]/50 shadow-md shrink-0 bg-white p-0.5">
-        <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-full h-full object-cover rounded-lg">
-      </div>
-      <div>
-        <div class="flex items-center gap-1.5">
-          <span class="text-sm font-black text-white tracking-wide">مطعم ضجة</span>
-          <span class="hidden md:inline-flex text-[9px] bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/40 px-1.5 py-0.5 rounded-md font-mono font-bold">للمشويات السريعة</span>
+  <header class="bg-[#183B32] border-b border-[#C5A878]/30 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 sticky top-0 z-40 shadow-lg text-white">
+    <!-- Brand Info & 64x64 Luxury 3D Logo -->
+    <div class="flex items-center gap-3.5 shrink-0">
+      <div class="relative group cursor-pointer shrink-0" title="مطعم ضجة - النظام والفرع متصل بالسحابة 🟢">
+        <!-- 3D Luxury Multi-layer Frame (64x64px) with interactive hover -->
+        <div class="w-16 h-16 rounded-2xl p-[3px] bg-gradient-to-br from-[#E6CA92] via-[#C5A878] to-[#6d552e] shadow-xl shadow-black/40 ring-1 ring-white/25 transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 group-hover:shadow-2xl">
+          <div class="w-full h-full rounded-[13px] overflow-hidden bg-white shadow-inner flex items-center justify-center p-0.5">
+            <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-full h-full object-cover rounded-[11px]">
+          </div>
         </div>
-        <p class="text-[10px] text-[#E6E2D9]/80 hidden sm:block">نظام نقاط البيع وإدارة المطعم السحابي</p>
+        <!-- Smart Green Online Dot on Logo -->
+        <div class="absolute -bottom-1 -left-1 flex items-center justify-center" title="الفرع والسيستم أونلاين 🟢">
+          <span class="absolute w-4 h-4 rounded-full bg-emerald-400 animate-ping opacity-75"></span>
+          <span class="relative w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#183B32] shadow-sm flex items-center justify-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-base font-black text-white tracking-wide">مطعم ضجة</span>
+          <span class="hidden md:inline-flex text-[10px] bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/40 px-2 py-0.5 rounded-lg font-mono font-bold shadow-xs">للمشويات السريعة 🔥</span>
+        </div>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <p class="text-[11px] text-[#E6E2D9]/90 font-medium">الفرع مفعّل والسيستم متصل بالسحابة</p>
+        </div>
       </div>
     </div>
 
-    <!-- Unified Executive Toolbar -->
-    <div class="flex items-center gap-1.5 sm:gap-2">
-      <!-- Network & Offline Sync Status Pill -->
-      <div id="network-status-pill" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[11px] font-bold bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-xs whitespace-nowrap">
+    <!-- Unified Executive Toolbar: 36px Height Control Pills -->
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <!-- Network & Offline Sync Status Pill (36px) -->
+      <div id="network-status-pill" class="h-[36px] px-3.5 flex items-center gap-2 rounded-full border transition-all text-xs font-bold backdrop-blur-md bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm whitespace-nowrap">
         <span id="network-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="network-status-text" class="hidden sm:inline">متصل بالسحابة 🟢</span>
         <span class="sm:hidden text-emerald-300">أونلاين</span>
-        <button id="btn-sync-offline-now" onclick="triggerManualSync()" title="مزامنة الطلبات المحفوظة محلياً مع السيرفر" class="hidden px-2 py-0.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-[10px] font-black transition-all items-center gap-1 shadow-xs">
+        <button id="btn-sync-offline-now" onclick="triggerManualSync()" title="مزامنة الطلبات المحفوظة محلياً مع السيرفر" class="hidden h-6 px-2.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-[10px] font-black transition-all items-center gap-1 shadow-xs">
           <span>🔄 مزامنة</span>
           <span id="offline-queue-badge" class="px-1 rounded-full bg-black/30 text-white font-mono">0</span>
         </button>
       </div>
 
-      <!-- Quick Actions Capsule -->
-      <div class="flex items-center bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-full border border-white/15 p-0.5 sm:p-1 shadow-xs text-white">
-        <!-- Sound Toggle -->
-        <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-emerald-300 hover:bg-white/15 transition-all">
-          <span id="sound-toggle-icon">🔔</span>
-          <span id="sound-toggle-label" class="hidden xl:inline text-[11px]">التنبيه: مفعّل</span>
-        </button>
+      <!-- Sound Toggle Pill (36px) -->
+      <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="h-[36px] px-3.5 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-emerald-300 hover:text-emerald-200 transition-all shadow-sm active:scale-95 whitespace-nowrap">
+        <span id="sound-toggle-icon">🔔</span>
+        <span id="sound-toggle-label" class="hidden lg:inline text-[11px]">التنبيه: مفعّل</span>
+      </button>
 
-        <!-- Sound Test Button -->
-        <button type="button" onclick="testOrderSoundPrompt()" title="تجربة صوت تنبيه طلبات القوي" class="w-7 h-7 flex items-center justify-center rounded-full text-xs text-[#F4EFE6] hover:bg-white/20 transition-all active:scale-95" aria-label="تجربة الصوت">
-          <span>🔊</span>
-        </button>
+      <!-- Instant Sound Test Pill (36px) -->
+      <button type="button" onclick="testOrderSoundPrompt()" title="تجربة واستماع نغمة تنبيه طلبات القوي الآن" class="h-[36px] px-3 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-amber-200 hover:text-amber-100 transition-all shadow-sm active:scale-95 whitespace-nowrap" aria-label="تجربة الصوت">
+        <span>🔊</span>
+        <span class="hidden md:inline text-[11px]">تجربة الصوت</span>
+      </button>
 
-        <div class="w-px h-3.5 bg-white/20 mx-0.5"></div>
+      <!-- Theme Toggle Pill (36px) -->
+      <button id="btn-theme-toggle" onclick="toggleDashboardTheme()" title="تبديل الإضاءة (داكن / فاتح)" class="h-[36px] px-3 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-white hover:text-white/90 transition-all shadow-sm active:scale-95 whitespace-nowrap">
+        <span id="theme-toggle-icon">🌙</span>
+        <span id="theme-toggle-label" class="hidden xl:inline text-[11px]">الوضع</span>
+      </button>
 
-        <!-- Theme Toggle -->
-        <button id="btn-theme-toggle" onclick="toggleDashboardTheme()" title="تبديل الإضاءة (داكن / فاتح)" class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white hover:bg-white/20 transition-all active:scale-95">
-          <span id="theme-toggle-icon">🌙</span>
-          <span id="theme-toggle-label" class="hidden xl:inline text-[11px]">الوضع</span>
-        </button>
+      <!-- Customer Menu Pill (36px) -->
+      <a href="order.html" target="_blank" title="فتح صفحة منيو وطلب الزبائن" class="h-[36px] px-3.5 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-[#F4EFE6] hover:text-white transition-all shadow-sm whitespace-nowrap active:scale-95">
+        <span>🌐</span>
+        <span class="hidden md:inline text-[11px]">منيو الزبائن</span>
+      </a>
 
-        <div class="w-px h-3.5 bg-white/20 mx-0.5"></div>
+      <!-- Install App Pill (36px) -->
+      <button id="btn-install-dash" onclick="promptInstallPwa()" title="تثبيت النظام كتطبيق سطح مكتب أو جوال" class="h-[36px] px-3.5 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 hover:text-amber-200 transition-all shadow-sm whitespace-nowrap active:scale-95">
+        <span>📲</span>
+        <span class="hidden xl:inline text-[11px]">تثبيت التطبيق</span>
+      </button>
 
-        <!-- Customer Menu Link -->
-        <a href="order.html" target="_blank" title="فتح صفحة منيو وطلب الزبائن" class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-[#F4EFE6] hover:bg-white/20 transition-all whitespace-nowrap">
-          <span>🌐</span>
-          <span class="hidden md:inline text-[11px]">المنيو</span>
-        </a>
+      <!-- Super Admin Pill (Hidden by default) -->
+      <a href="/super-admin" id="link-super-admin" class="hidden h-[36px] px-3.5 items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-purple-300 hover:text-white transition-all shadow-sm whitespace-nowrap active:scale-95">
+        <span>👑</span>
+        <span class="hidden md:inline text-[11px]">السوبر أدمن</span>
+      </a>
 
-        <!-- PWA Install -->
-        <button id="btn-install-dash" onclick="promptInstallPwa()" title="تثبيت النظام كتطبيق سطح مكتب أو جوال" class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-[#C5A878] hover:bg-[#b59868] text-[#183B32] transition-all whitespace-nowrap shadow-xs ml-0.5">
-          <span>📲</span>
-          <span class="hidden lg:inline">تطبيق</span>
-        </button>
-
-        <!-- Super Admin Link (Hidden by default) -->
-        <a href="/super-admin" id="link-super-admin" class="hidden px-2 py-1 rounded-full text-xs font-bold text-amber-300 hover:bg-white/20 transition-all items-center gap-1">
-          <span>👑</span>
-          <span class="hidden lg:inline text-[11px]">الأدمن</span>
-        </a>
-      </div>
-
-      <!-- User Profile Capsule -->
-      <div onclick="switchTab('settings')" title="تعديل بيانات الحساب والإعدادات" class="flex items-center gap-1.5 pl-1.5 pr-2 py-1 bg-white/10 hover:bg-white/20 rounded-full border border-white/15 cursor-pointer transition-all whitespace-nowrap">
-        <div class="w-7 h-7 rounded-full bg-[#C5A878]/30 text-[#F4EFE6] border border-[#C5A878]/50 flex items-center justify-center text-xs font-bold shrink-0">👤</div>
-        <div class="hidden sm:block text-right">
+      <!-- User Profile Pill (36px) -->
+      <div onclick="switchTab('settings')" title="تعديل بيانات الحساب والإعدادات" class="h-[36px] pl-2 pr-3.5 flex items-center gap-2 rounded-full backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 cursor-pointer text-white transition-all whitespace-nowrap shadow-sm">
+        <div class="w-6 h-6 rounded-full bg-[#C5A878]/30 text-[#F4EFE6] border border-[#C5A878]/50 flex items-center justify-center text-[11px] font-bold shrink-0">👤</div>
+        <div class="hidden sm:block text-right leading-none">
           <div class="flex items-center gap-1">
-            <span id="header-user-name" class="text-xs font-bold text-white block leading-tight">مدير ضجة</span>
+            <span id="header-user-name" class="text-xs font-bold text-white leading-none">مدير ضجة</span>
             <span id="header-user-role-badge" class="text-[9px] px-1 py-0.2 rounded-full font-bold bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/30">👑</span>
           </div>
           <span id="header-user-email" class="hidden font-mono text-[9px] text-[#E6E2D9]">admin@dajja.com</span>
@@ -589,8 +613,8 @@
         </div>
       </div>
 
-      <!-- Logout Button -->
-      <button onclick="logoutSession()" title="تسجيل الخروج" class="p-1.5 sm:px-2.5 sm:py-1 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-xs font-bold transition-all flex items-center gap-1 active:scale-95 whitespace-nowrap">
+      <!-- Logout Pill (36px) -->
+      <button onclick="logoutSession()" title="تسجيل الخروج" class="h-[36px] px-3.5 flex items-center gap-1.5 rounded-full backdrop-blur-md bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap">
         <span>🚪</span>
         <span class="hidden sm:inline text-[11px]">خروج</span>
       </button>
@@ -603,11 +627,15 @@
     <span id="subscription-status-banner-text">تنبيه: حساب هذا المطعم معلق حالياً من قبل إدارة المنصة. يرجى سداد الاشتراك أو التواصل مع الإدارة لإعادة التفعيل.</span>
   </div>
 
-  <!-- NAVIGATION TABS -->
-  <div class="nav-tabs-bar bg-white border-b border-[#E6E2D9] px-3 sm:px-5 flex items-center gap-1 sm:gap-1.5 overflow-x-auto custom-scrollbar shadow-xs whitespace-nowrap">
-    <button onclick="switchTab('pos')" id="tab-btn-pos" class="nav-tab px-3.5 py-2.5 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0">
-      <span>🛒</span> <span>الكاشير (POS)</span>
+  <!-- NAVIGATION TABS (SaaS Navigation with Standout Emerald Cashier Hero Button) -->
+  <div class="nav-tabs-bar bg-white border-b border-[#E6E2D9] px-3 sm:px-6 py-1.5 flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scrollbar shadow-xs whitespace-nowrap">
+    <!-- Standout Emerald Cashier (POS) Hero Button -->
+    <button onclick="switchTab('pos')" id="tab-btn-pos" class="nav-tab nav-tab-pos-hero px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-950/40 border border-emerald-400/40 ring-2 ring-emerald-400/30 glow-emerald flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0">
+      <span class="text-sm">🛒</span>
+      <span class="tracking-wide">كاشير المبيعات (ضرب أوردر)</span>
+      <span class="px-1.5 py-0.5 rounded-md bg-black/20 text-emerald-100 text-[10px] font-mono font-bold">POS⚡</span>
     </button>
+
     <button onclick="switchTab('orders')" id="tab-btn-orders" class="nav-tab px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0">
       <span>📋</span> <span>الطلبات الحية</span> <span id="count-active-orders" class="nav-tab-badge">0</span>
     </button>
@@ -2874,7 +2902,7 @@
 
       if (!isDeviceOnline) {
         if (pill) {
-          pill.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[11px] font-bold bg-amber-500/20 border-amber-400/40 text-amber-200 shadow-xs whitespace-nowrap";
+          pill.className = "h-[36px] px-3.5 flex items-center gap-2 rounded-full border transition-all text-xs font-bold backdrop-blur-md bg-amber-500/20 border-amber-400/40 text-amber-200 shadow-sm whitespace-nowrap";
         }
         if (dot) {
           dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
@@ -2899,7 +2927,7 @@
         // Online state
         if (count > 0) {
           if (pill) {
-            pill.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[11px] font-bold bg-sky-500/20 border-sky-400/40 text-sky-200 shadow-xs whitespace-nowrap";
+            pill.className = "h-[36px] px-3.5 flex items-center gap-2 rounded-full border transition-all text-xs font-bold backdrop-blur-md bg-sky-500/20 border-sky-400/40 text-sky-200 shadow-sm whitespace-nowrap";
           }
           if (dot) {
             dot.className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
@@ -2917,7 +2945,7 @@
           }
         } else {
           if (pill) {
-            pill.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all text-[11px] font-bold bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-xs whitespace-nowrap";
+            pill.className = "h-[36px] px-3.5 flex items-center gap-2 rounded-full border transition-all text-xs font-bold backdrop-blur-md bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm whitespace-nowrap";
           }
           if (dot) {
             dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
@@ -3297,11 +3325,11 @@
       if (!btn) return;
 
       if (audioNotificationsEnabled) {
-        btn.className = "whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-emerald-300 hover:bg-white/15 transition-all";
+        btn.className = "h-[36px] px-3.5 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-emerald-300 hover:text-emerald-200 transition-all shadow-sm active:scale-95 whitespace-nowrap";
         if (icon) icon.innerText = '🔔';
         if (label) label.innerText = 'التنبيه: مفعّل';
       } else {
-        btn.className = "whitespace-nowrap flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-rose-300 hover:bg-white/15 transition-all";
+        btn.className = "h-[36px] px-3.5 flex items-center gap-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/15 text-rose-300 hover:text-rose-200 transition-all shadow-sm active:scale-95 whitespace-nowrap";
         if (icon) icon.innerText = '🔕';
         if (label) label.innerText = 'التنبيه: مكتوم';
       }
@@ -3628,7 +3656,11 @@
       }
 
       document.querySelectorAll('.nav-tab').forEach(b => {
-        b.className = "nav-tab px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0";
+        if (b.id === 'tab-btn-pos') {
+          b.className = "nav-tab nav-tab-pos-hero px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/40 border border-emerald-400/40 ring-2 ring-emerald-400/30 glow-emerald flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0";
+        } else {
+          b.className = "nav-tab px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0";
+        }
       });
 
       ['pos', 'orders', 'menu', 'reports', 'captains', 'customers', 'qr', 'stories', 'settings'].forEach(p => {
@@ -3638,7 +3670,11 @@
 
       const activeBtn = document.getElementById(`tab-btn-${tab}`);
       if (activeBtn) {
-        activeBtn.className = "nav-tab px-3.5 py-2.5 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0";
+        if (tab === 'pos') {
+          activeBtn.className = "nav-tab nav-tab-pos-hero px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-950/60 border border-emerald-300 ring-2 ring-emerald-300 glow-emerald flex items-center gap-2 transition-all active:scale-95 whitespace-nowrap shrink-0";
+        } else {
+          activeBtn.className = "nav-tab px-3.5 py-2.5 text-xs font-black border-b-2 border-orange-500 text-orange-400 flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0";
+        }
       }
       const activePane = document.getElementById(`pane-${tab}`);
       if (activePane) activePane.classList.remove('hidden');
