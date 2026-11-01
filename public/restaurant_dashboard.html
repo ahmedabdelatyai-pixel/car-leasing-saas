@@ -719,9 +719,13 @@
             <span>🔒</span>
             <span>غلق اليوم المالي (تقفيل الوردية)</span>
           </button>
-          <button onclick="window.print()" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
+          <button onclick="executePeriodReportPrint('FULL')" class="px-3 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95" title="طباعة تقرير شامل A4 مع جدول مبيعات الأصناف">
             <span>🖨️</span>
-            <span>طباعة التقرير</span>
+            <span>طباعة التقرير (A4)</span>
+          </button>
+          <button onclick="executePeriodReportPrint('THERMAL')" class="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 active:scale-95" title="طباعة بون حراري 80mm للتقرير على طابعة الكاشير">
+            <span>🧾</span>
+            <span>بون حراري 80mm</span>
           </button>
         </div>
       </div>
@@ -6367,13 +6371,104 @@
       const closeTime = new Date(c.closedAt).toLocaleTimeString('ar-EG');
       const openTime = c.openedAt ? new Date(c.openedAt).toLocaleTimeString('ar-EG') : '--';
 
-      const itemsRows = (c.itemsBreakdown || []).map(it => `
-        <tr>
-          <td style="text-align: right; font-weight: 700; padding: 2px 0;">${it.name}</td>
-          <td style="text-align: center; font-family: monospace; padding: 2px 0;">${it.quantity}</td>
-          <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2px 0;">${it.totalSales} ج.م</td>
-        </tr>
-      `).join('');
+      let breakdown = [];
+      if (typeof c.itemsBreakdown === 'string') {
+        try { breakdown = JSON.parse(c.itemsBreakdown); } catch (e) { breakdown = []; }
+      } else if (Array.isArray(c.itemsBreakdown)) {
+        breakdown = c.itemsBreakdown;
+      }
+
+      const itemsRows = breakdown.map(it => {
+        const itName = it.name || 'صنف';
+        const itQty = Number(it.quantity ?? it.qty ?? 0);
+        const itRev = Number(it.revenue ?? it.totalSales ?? it.total ?? 0);
+        return `
+          <tr>
+            <td style="text-align: right; font-weight: 700; padding: 2.5px 0;">${itName}</td>
+            <td style="text-align: center; font-family: monospace; font-weight: 700; padding: 2.5px 0;">${itQty}</td>
+            <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2.5px 0; white-space: nowrap;">${itRev.toFixed(2)} ج.م</td>
+          </tr>
+        `;
+      }).join('');
+
+      let expList = [];
+      if (Array.isArray(c.expenses) && c.expenses.length > 0) {
+        expList = c.expenses;
+      } else if (Array.isArray(c.expensesBreakdown)) {
+        expList = c.expensesBreakdown;
+      } else if (typeof c.expensesBreakdown === 'string') {
+        try { expList = JSON.parse(c.expensesBreakdown); } catch (e) { expList = []; }
+      }
+
+      const openFloat = Number(c.openingDrawer || 0);
+      const totSales = Number(c.totalSales || 0);
+      const totExpenses = Number(c.totalExpenses || 0);
+      const netCash = Number(c.netDrawerCash ?? (openFloat + totSales - totExpenses));
+      const actualCash = c.actualDrawerCash !== undefined && c.actualDrawerCash !== null ? Number(c.actualDrawerCash) : null;
+      const diffCash = c.drawerDifference !== undefined && c.drawerDifference !== null ? Number(c.drawerDifference) : null;
+
+      const drawerMovementHtml = `
+        <div class="dashed"></div>
+        <div style="font-size: 11px; font-weight: 900; margin-bottom: 3px; background: #eee; padding: 2px 4px; text-align: center;">
+          💵 حركة نقدية الدرج والخزينة
+        </div>
+        <div style="font-size: 11px; line-height: 1.5;">
+          <div class="flex-between">
+            <span>(+) عهدة بداية الدرج (الفكة):</span>
+            <span style="font-family: monospace; font-weight: 700;">${openFloat.toFixed(2)} ج.م</span>
+          </div>
+          <div class="flex-between">
+            <span>(+) إجمالي المبيعات:</span>
+            <span style="font-family: monospace; font-weight: 700;">${totSales.toFixed(2)} ج.م</span>
+          </div>
+          <div class="flex-between" style="color: #b91c1c;">
+            <span>(-) إجمالي المصروفات:</span>
+            <span style="font-family: monospace; font-weight: 700;">-${totExpenses.toFixed(2)} ج.م</span>
+          </div>
+          <div class="flex-between" style="font-weight: 900; border-top: 1px dashed #000; padding-top: 2px;">
+            <span>(=) صافي النقدية المتوقع:</span>
+            <span style="font-family: monospace; font-size: 13px;">${netCash.toFixed(2)} ج.م</span>
+          </div>
+          ${actualCash !== null ? `
+          <div class="flex-between" style="font-weight: 700;">
+            <span>الجرد الفعلي للنقدية:</span>
+            <span style="font-family: monospace;">${actualCash.toFixed(2)} ج.م</span>
+          </div>
+          ` : ''}
+          ${diffCash !== null ? `
+          <div class="flex-between" style="font-weight: 900; color: ${diffCash < 0 ? '#b91c1c' : (diffCash > 0 ? '#2563eb' : '#059669')};">
+            <span>الفارق (${diffCash < 0 ? 'عجز' : (diffCash > 0 ? 'زيادة' : 'مطابق')}):</span>
+            <span style="font-family: monospace;">${diffCash > 0 ? '+' : ''}${diffCash.toFixed(2)} ج.م</span>
+          </div>
+          ` : ''}
+        </div>
+      `;
+
+      const expensesHtml = expList.length > 0 ? `
+        <div class="dashed"></div>
+        <div style="font-size: 11px; font-weight: 900; margin-bottom: 2px;">تفاصيل المصروفات المنصرفة:</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align: right; width: 65%;">البند والبيان</th>
+              <th style="text-align: left; width: 35%;">المبلغ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${expList.map(exp => `
+              <tr>
+                <td style="text-align: right; padding: 2px 0;">
+                  <div style="font-weight: 700;">${exp.category || 'مصروف'}: ${exp.description || ''}</div>
+                  ${exp.paidTo ? `<div style="font-size: 9px; color: #555;">المستلم: ${exp.paidTo}</div>` : ''}
+                </td>
+                <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2px 0; color: #b91c1c; white-space: nowrap;">
+                  -${Number(exp.amount || 0).toFixed(2)} ج.م
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '';
 
       const notesHtml = c.notes ? `
         <div style="border: 1px dashed #000; padding: 4px; margin: 4px 0; font-size: 10px;">
@@ -6420,19 +6515,19 @@
           <div style="font-size: 12px; font-weight: bold; line-height: 1.5;">
             <div class="flex-between" style="font-size: 15px; font-weight: 900; border-bottom: 1.5px solid #000; padding-bottom: 2px;">
               <span>إجمالي المبيعات:</span>
-              <span style="font-family: monospace;">${c.totalSales} ج.م</span>
+              <span style="font-family: monospace;">${totSales.toFixed(2)} ج.م</span>
             </div>
             <div class="flex-between">
               <span>إجمالي عدد الفواتير:</span>
-              <span style="font-family: monospace;">${c.orderCount} طلب</span>
+              <span style="font-family: monospace;">${c.orderCount || 0} طلب</span>
             </div>
             <div class="flex-between">
               <span>مبيعات الدليفري:</span>
-              <span style="font-family: monospace;">${c.deliverySales} ج.م (${c.deliveryCount} طلب)</span>
+              <span style="font-family: monospace;">${Number(c.deliverySales || 0).toFixed(2)} ج.م (${c.deliveryCount || 0} طلب)</span>
             </div>
             <div class="flex-between">
               <span>مبيعات التيك واي:</span>
-              <span style="font-family: monospace;">${c.takeawaySales} ج.م (${c.takeawayCount} طلب)</span>
+              <span style="font-family: monospace;">${Number(c.takeawaySales || 0).toFixed(2)} ج.م (${c.takeawayCount || 0} طلب)</span>
             </div>
             <div class="flex-between" style="font-size: 10px;">
               <span>المسؤول:</span>
@@ -6440,11 +6535,15 @@
             </div>
           </div>
 
+          ${drawerMovementHtml}
+
+          ${expensesHtml}
+
           ${notesHtml}
 
           <div class="dashed"></div>
 
-          <div style="font-size: 11px; font-weight: 900; margin-bottom: 2px;">تفاصيل الأصناف المباعة:</div>
+          <div style="font-size: 11px; font-weight: 900; margin-bottom: 2px;">تفاصيل الأصناف المباعة (Sold Menu Items):</div>
           <table>
             <thead>
               <tr>
@@ -6454,7 +6553,7 @@
               </tr>
             </thead>
             <tbody>
-              ${itemsRows}
+              ${itemsRows || '<tr><td colspan="3" style="text-align: center; padding: 6px;">لا توجد أصناف مباعة.</td></tr>'}
             </tbody>
           </table>
 
@@ -6467,6 +6566,344 @@
       `;
 
       printThroughIsolatedIframe(zDoc);
+    }
+
+    // ==============================================
+    // PERIOD & MENU ITEMS REPORT PRINTING (A4 & 80MM)
+    // ==============================================
+    function executePeriodReportPrint(mode = 'FULL') {
+      if (!currentReportsData) {
+        alert('برجاء الانتظار حتى اكتمال تحميل بيانات التقرير أولاً، أو اختيار الفترة والضغط على تطبيق الفلتر.');
+        return;
+      }
+
+      const rep = currentReportsData;
+      const periodLabel = document.getElementById('rep-period-text')?.innerText || 'تقرير مبيعات الفترة';
+      const printDate = new Date().toLocaleString('ar-EG');
+      const items = Array.isArray(rep.itemsReport) ? rep.itemsReport : [];
+
+      const totalRev = Number(rep.totalRevenue || 0);
+      const totalFoodCost = Number(rep.totalFoodCost || 0);
+      const grossProfit = Number(rep.grossProfit || 0);
+      const grossMargin = Number(rep.grossMarginPercent || 0);
+      const totalOrders = Number(rep.totalOrders || 0);
+      const avgOrder = Number(rep.averageOrderValue || 0);
+      const delivRev = Number(rep.deliveryRevenue || 0);
+      const takeRev = Number(rep.takeawayRevenue || 0);
+      const delivCount = Number(rep.deliveryOrdersCount || 0);
+      const takeCount = Number(rep.takeawayOrdersCount || 0);
+
+      // THERMAL 80MM SLIP MODE
+      if (mode === 'THERMAL') {
+        const thermalRows = items.map(it => {
+          const qty = Number(it.quantity || 0);
+          const rev = Number(it.revenue || 0);
+          return `
+            <tr>
+              <td style="text-align: right; font-weight: 700; padding: 2.5px 0;">${it.name}</td>
+              <td style="text-align: center; font-family: monospace; font-weight: 700; padding: 2.5px 0;">${qty}</td>
+              <td style="text-align: left; font-family: monospace; font-weight: 900; padding: 2.5px 0; white-space: nowrap;">${rev.toFixed(2)} ج.م</td>
+            </tr>
+          `;
+        }).join('');
+
+        const thermalDoc = `
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="utf-8">
+            <title>تقرير مبيعات الفترة والأصناف - بون حراري</title>
+            <style>
+              @page { size: 80mm auto; margin: 0; }
+              * { box-sizing: border-box; margin: 0; padding: 0; color: #000 !important; background: transparent !important; }
+              body {
+                width: 72mm; max-width: 72mm; margin: 0 auto; padding: 2mm 1.5mm 4mm 1.5mm;
+                font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+                font-size: 11px; line-height: 1.25; background: #fff !important; color: #000 !important;
+              }
+              .dashed { border-bottom: 1.5px dashed #000; margin: 4px 0; }
+              .flex-between { display: flex; justify-content: space-between; align-items: center; }
+              table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+              th { border-bottom: 1.5px solid #000; font-size: 11px; font-weight: 900; padding: 3px 0; }
+            </style>
+          </head>
+          <body>
+            <div style="text-align: center; margin-bottom: 3px;">
+              <img src="/dajja_logo_thermal.png" style="width: 44mm; height: 44mm; object-fit: contain; margin: 0 auto; display: block;" />
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 17px; font-weight: 900;">مطعم ضـجـة 🔥</div>
+              <div style="font-size: 11px; font-weight: 800;">للمشويات والسندوتشات</div>
+              <div style="font-size: 13px; font-weight: 900; border: 2px solid #000; padding: 3px; margin: 4px 0;">
+                تقرير مبيعات الفترة والأصناف
+              </div>
+              <div style="font-size: 10px; font-weight: 700;">${periodLabel}</div>
+              <div style="font-size: 9px; color: #555;">تاريخ الطباعة: ${printDate}</div>
+            </div>
+
+            <div class="dashed"></div>
+
+            <div style="font-size: 12px; font-weight: bold; line-height: 1.5;">
+              <div class="flex-between" style="font-size: 15px; font-weight: 900; border-bottom: 1.5px solid #000; padding-bottom: 2px;">
+                <span>إجمالي الإيرادات:</span>
+                <span style="font-family: monospace;">${totalRev.toFixed(2)} ج.م</span>
+              </div>
+              <div class="flex-between">
+                <span>إجمالي الطلبات:</span>
+                <span style="font-family: monospace;">${totalOrders} طلب</span>
+              </div>
+              <div class="flex-between">
+                <span>مبيعات الدليفري:</span>
+                <span style="font-family: monospace;">${delivRev.toFixed(2)} ج.م (${delivCount} طلب)</span>
+              </div>
+              <div class="flex-between">
+                <span>مبيعات التيك واي:</span>
+                <span style="font-family: monospace;">${takeRev.toFixed(2)} ج.م (${takeCount} طلب)</span>
+              </div>
+              <div class="flex-between">
+                <span>تكلفة المواد الخام:</span>
+                <span style="font-family: monospace;">${totalFoodCost.toFixed(2)} ج.م</span>
+              </div>
+              <div class="flex-between" style="color: #047857;">
+                <span>صافي أرباح الطعام:</span>
+                <span style="font-family: monospace;">${grossProfit.toFixed(2)} ج.م (${grossMargin}%)</span>
+              </div>
+            </div>
+
+            <div class="dashed"></div>
+
+            <div style="font-size: 11px; font-weight: 900; margin-bottom: 2px;">تفاصيل الأصناف المباعة (Sold Menu Items):</div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: right; width: 50%;">الوجبة / الصنف</th>
+                  <th style="text-align: center; width: 20%;">الكمية</th>
+                  <th style="text-align: left; width: 30%;">المبلغ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${thermalRows || '<tr><td colspan="3" style="text-align: center; padding: 6px;">لا توجد أصناف مباعة في هذه الفترة.</td></tr>'}
+              </tbody>
+            </table>
+
+            <div class="dashed"></div>
+            <div style="text-align: center; font-size: 9px; margin-top: 3px;">
+              نظام مطعم ضجة لإدارة المطاعم والكاشير 🍔🔥
+            </div>
+          </body>
+          </html>
+        `;
+
+        printThroughIsolatedIframe(thermalDoc);
+        return;
+      }
+
+      // FULL A4 SHEET MODE
+      const a4Rows = items.map((it) => {
+        const qty = Number(it.quantity || 0);
+        const price = Number(it.unitPrice || 0);
+        const revenue = Number(it.revenue || 0);
+        const cost = Number(it.cost || 0);
+        const profit = Number(it.netProfit || 0);
+        const margin = Number(it.profitMargin || 0);
+        const share = Number(it.percentageOfSales || 0);
+
+        return `
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 5px 8px; text-align: right; font-weight: 700;">
+              <div>${it.name}</div>
+              <div style="font-size: 9.5px; color: #64748b;">${it.categoryName || 'عام'}</div>
+            </td>
+            <td style="padding: 5px 8px; text-align: center; font-family: monospace; font-weight: 900; font-size: 13px;">${qty}</td>
+            <td style="padding: 5px 8px; text-align: left; font-family: monospace;">${price.toFixed(2)}</td>
+            <td style="padding: 5px 8px; text-align: left; font-family: monospace; font-weight: 900; color: #000;">${revenue.toFixed(2)} ج.م</td>
+            <td style="padding: 5px 8px; text-align: left; font-family: monospace; color: #b45309;">${cost.toFixed(2)}</td>
+            <td style="padding: 5px 8px; text-align: left; font-family: monospace; font-weight: 700; color: ${profit < 0 ? '#b91c1c' : '#047857'};">${profit.toFixed(2)}</td>
+            <td style="padding: 5px 8px; text-align: center; font-family: monospace;">${margin}%</td>
+            <td style="padding: 5px 8px; text-align: center; font-family: monospace; font-size: 10px;">${share}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      const a4Doc = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8">
+          <title>تقرير مبيعات وأرباح الأصناف - مطعم ضجة</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            body {
+              font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+              font-size: 11px;
+              color: #0f172a;
+              background: #ffffff;
+              padding: 6mm;
+              line-height: 1.4;
+            }
+            .header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              border-bottom: 2.5px solid #ea580c;
+              padding-bottom: 10px;
+              margin-bottom: 14px;
+            }
+            .header-info h1 {
+              font-size: 20px;
+              font-weight: 900;
+              color: #000;
+            }
+            .header-info p {
+              font-size: 11px;
+              color: #475569;
+            }
+            .kpi-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 8px;
+              margin-bottom: 14px;
+            }
+            .kpi-card {
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              padding: 6px 10px;
+              background: #f8fafc;
+            }
+            .kpi-title {
+              font-size: 10px;
+              color: #64748b;
+              font-weight: 700;
+              margin-bottom: 2px;
+            }
+            .kpi-value {
+              font-size: 14px;
+              font-weight: 900;
+              font-family: monospace;
+              color: #0f172a;
+            }
+            .section-title {
+              font-size: 13px;
+              font-weight: 900;
+              margin-bottom: 6px;
+              padding-bottom: 4px;
+              border-bottom: 1.5px solid #0f172a;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 4px;
+              font-size: 11px;
+            }
+            th {
+              background: #f1f5f9;
+              border-bottom: 2px solid #0f172a;
+              padding: 6px 8px;
+              font-weight: 900;
+              color: #0f172a;
+            }
+            .footer {
+              margin-top: 16px;
+              padding-top: 8px;
+              border-top: 1px solid #cbd5e1;
+              display: flex;
+              justify-content: space-between;
+              font-size: 10px;
+              color: #64748b;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-info">
+              <h1>مطعم ضـجـة 🔥</h1>
+              <p>تقرير مبيعات وأرباح الأصناف والوجبات (Sold Menu Items Report)</p>
+              <p style="font-weight: bold; color: #ea580c; margin-top: 4px;">الفترة: ${periodLabel}</p>
+            </div>
+            <div style="text-align: left;">
+              <img src="/dajja_logo_thermal.png" style="width: 50px; height: 50px; object-fit: contain; margin-bottom: 4px;" />
+              <div style="font-size: 9px; color: #64748b;">تاريخ الطباعة: ${printDate}</div>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-title">إجمالي الإيرادات 💰</div>
+              <div class="kpi-value" style="color: #ea580c;">${totalRev.toFixed(2)} ج.م</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">تكلفة المواد الخام 🧂</div>
+              <div class="kpi-value" style="color: #b45309;">${totalFoodCost.toFixed(2)} ج.م</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">صافي أرباح الطعام 📈</div>
+              <div class="kpi-value" style="color: #047857;">${grossProfit.toFixed(2)} ج.م</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">نسبة هامش الربح 🎯</div>
+              <div class="kpi-value" style="color: #047857;">${grossMargin}%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">إجمالي الفواتير 📦</div>
+              <div class="kpi-value">${totalOrders} طلب</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">متوسط الفاتورة 🏷️</div>
+              <div class="kpi-value">${avgOrder.toFixed(2)} ج.م</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">مبيعات الدليفري 🛵</div>
+              <div class="kpi-value">${delivRev.toFixed(2)} ج.م (${delivCount})</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">مبيعات التيك واي 🥡</div>
+              <div class="kpi-value">${takeRev.toFixed(2)} ج.م (${takeCount})</div>
+            </div>
+          </div>
+
+          <div class="section-title">
+            <span>🍔 تفاصيل مبيعات وتكاليف وأرباح الأصناف (Sold Menu Items)</span>
+            <span style="font-size: 10px; font-weight: normal; color: #64748b;">عدد الأصناف المسجلة: ${items.length} صنف</span>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: right; width: 28%;">اسم الوجبة / الصنف</th>
+                <th style="text-align: center; width: 10%;">الكمية المباعة</th>
+                <th style="text-align: left; width: 10%;">سعر البيع</th>
+                <th style="text-align: left; width: 14%;">إجمالي الإيراد</th>
+                <th style="text-align: left; width: 10%;">التكلفة</th>
+                <th style="text-align: left; width: 12%;">صافي الربح</th>
+                <th style="text-align: center; width: 8%;">الهامش %</th>
+                <th style="text-align: center; width: 8%;">المساهمة %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${a4Rows || '<tr><td colspan="8" style="text-align: center; padding: 14px;">لا توجد مبيعات أصناف في هذه الفترة.</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <span>نظام مطعم ضجة لإدارة المطاعم والكاشير 🍔🔥</span>
+            <span>تم استخراج التقرير آلياً من قاعدة البيانات المركزية</span>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printThroughIsolatedIframe(a4Doc);
     }
 
     function closeReceiptModal() {
