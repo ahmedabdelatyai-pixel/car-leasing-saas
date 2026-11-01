@@ -182,6 +182,22 @@
       color: #ffffff !important;
       box-shadow: 0 0 24px rgba(16, 185, 129, 0.6) !important;
     }
+
+    /* POS Ticket Floating & Draggable Window Mode */
+    .pos-ticket-floating {
+      position: fixed !important;
+      z-index: 50 !important;
+      width: 420px !important;
+      max-width: 95vw !important;
+      max-height: 88vh !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(249, 115, 22, 0.45) !important;
+      border: 2px solid #f97316 !important;
+      animation: floatPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes floatPopIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body class="h-screen flex bg-[#0b0f19] overflow-hidden text-slate-200">
@@ -451,10 +467,11 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <!-- POS Main Grid with Flexible Side & Reordering -->
+      <div id="pos-layout-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start relative">
         
-        <!-- Left 7 Cols: Quick Menu Picker -->
-        <div class="lg:col-span-7 xl:col-span-8 space-y-4">
+        <!-- Menu Picker Column (Default 7-8 Cols) -->
+        <div id="pos-menu-column" class="lg:col-span-7 xl:col-span-8 space-y-4 transition-all duration-300">
           <!-- Filter by Category & Search -->
           <div class="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-[#111827] p-3 rounded-2xl border border-white/5">
             <div id="pos-category-pills" class="flex gap-1.5 overflow-x-auto custom-scrollbar py-0.5">
@@ -472,155 +489,220 @@
           </div>
         </div>
 
-        <!-- Right 5 Cols: Live Order Ticket & Billing -->
-        <div class="lg:col-span-5 xl:col-span-4 bg-[#111827] border border-white/10 rounded-3xl p-5 space-y-4 shadow-2xl sticky top-20">
+        <!-- Live Order Ticket & Billing Column (Default 4-5 Cols, with side swap, collapse, and float) -->
+        <div id="pos-ticket-column" class="lg:col-span-5 xl:col-span-4 transition-all duration-300">
           
-          <div class="flex justify-between items-center border-b border-white/5 pb-3">
-            <div>
-              <h3 class="text-sm font-black text-white flex items-center gap-2">
-                <span>🧾</span> تذكرة أوردر الكاشير
-              </h3>
-              <span class="text-[10px] text-slate-400">حساب الفاتورة وإرسالها للمطبخ</span>
-            </div>
-            <button onclick="clearPosCart()" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold px-2 py-1 rounded-lg bg-rose-500/10 transition-all">
-              تفريغ ✕
-            </button>
-          </div>
-
-          <!-- Order Type Switcher -->
-          <div class="grid grid-cols-2 gap-2 bg-black/40 p-1 rounded-2xl border border-white/5">
-            <button type="button" onclick="setPosOrderType('TAKEAWAY')" id="pos-type-takeaway" class="py-2 rounded-xl text-xs font-black transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md flex items-center justify-center gap-1.5">
-              <span>🥡 تيك واي</span>
-            </button>
-            <button type="button" onclick="setPosOrderType('DELIVERY')" id="pos-type-delivery" class="py-2 rounded-xl text-xs font-black transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
-              <span>🛵 دليفري</span>
-            </button>
-          </div>
-
-          <!-- Customer Details with Memory Engine -->
-          <div class="space-y-2 bg-black/20 p-3 rounded-2xl border border-white/5 text-xs relative">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-                <span>👤</span>
-                <span>بيانات العميل (البحث بالهاتف):</span>
-              </span>
-              <span id="pos-cust-status" class="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
-                <span>🧠</span>
-                <span>الذاكرة الذكية نشطة</span>
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 relative">
-              <div class="relative">
-                <input type="tel" id="pos-cust-phone" oninput="handlePosPhoneInput(this.value)" placeholder="رقم الهاتف 📞" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] font-mono focus:outline-none focus:border-orange-500 transition-all">
-                <span id="pos-phone-spinner" class="hidden absolute left-2 top-2 text-[10px] animate-spin">⏳</span>
+          <!-- Collapsed Ticket Strip (Visible when ticket is collapsed) -->
+          <div id="pos-ticket-collapsed-pill" onclick="togglePosTicketCollapse()" title="انقر لتوسيع تذكرة الأوردر" class="hidden cursor-pointer bg-[#111827] hover:bg-[#1f293d] border-2 border-orange-500/40 rounded-2xl p-3 shadow-xl flex items-center justify-between text-white transition-all active:scale-95">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🧾</span>
+              <div>
+                <span class="text-xs font-black block">تذكرة الأوردر (مطوية)</span>
+                <span id="pos-collapsed-items-count" class="text-[10px] text-amber-300 font-mono">0 أصناف</span>
               </div>
-              <input type="text" id="pos-cust-name" oninput="handlePosNameInput(this.value)" placeholder="اسم العميل" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
             </div>
+            <div class="flex items-center gap-2">
+              <span id="pos-collapsed-total-amount" class="text-sm font-black text-emerald-400 font-mono">0.00 ج.م</span>
+              <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded-lg">فتح ◀</span>
+            </div>
+          </div>
 
-            <!-- Customer Search / Suggestions Dropdown -->
-            <div id="pos-customer-suggestions" class="hidden absolute top-16 left-3 right-3 z-50 bg-[#1e293b] border border-orange-500/40 rounded-xl shadow-2xl p-1.5 space-y-1 max-h-56 overflow-y-auto custom-scrollbar">
-              <!-- Dynamically populated suggestions -->
-            </div>
-
-            <!-- Customer Memory Badge / Loyalty Indicator -->
-            <div id="pos-customer-badge" class="hidden p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-black/60 border border-emerald-500/30 text-[11px] text-emerald-300 transition-all">
-              <!-- Dynamically populated badge -->
-            </div>
-
-            <!-- Delivery fields (shown if delivery) -->
-            <div id="pos-delivery-fields" class="space-y-2 hidden pt-1">
-              <input type="text" id="pos-delivery-addr" placeholder="عنوان التوصيل بالتفصيل 📍" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
-              <select id="pos-select-captain" class="w-full h-8 px-2.5 rounded-lg bg-black/60 border border-white/10 text-slate-300 text-[11px] focus:outline-none">
-                <option value="">اختر كابتن التوصيل (اختياري)</option>
-              </select>
-            </div>
+          <!-- Full Ticket Card with Internal Scroll & Smart Sticky -->
+          <div id="pos-ticket-panel" class="bg-[#111827] border border-white/10 rounded-3xl shadow-2xl sticky top-2 flex flex-col lg:max-h-[calc(100vh-6rem)] overflow-hidden transition-all duration-300">
             
-            <input type="text" id="pos-order-notes" placeholder="ملاحظات المطبخ (بدون بصل، صوص زيادة...)" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none">
-          </div>
+            <!-- 1. Ticket Header (Pinned) with Drag & Position Controls -->
+            <div id="pos-ticket-drag-handle" class="shrink-0 p-3.5 sm:p-4 border-b border-white/10 flex justify-between items-center bg-black/20 select-none">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🧾</span>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="text-xs sm:text-sm font-black text-white">تذكرة أوردر الكاشير</h3>
+                    <span id="pos-ticket-items-count" class="px-1.5 py-0.2 rounded-full bg-orange-500/20 text-orange-300 text-[10px] font-mono font-bold">0</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 hidden sm:block">الفاتورة المباشرة والحساب</span>
+                </div>
+              </div>
 
-          <!-- Active Ticket Items List -->
-          <div class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1" id="pos-cart-items-container">
-            <p class="text-xs text-slate-500 text-center py-6">اضغط على أي وجبة لإضافتها للأوردر 🍔</p>
-          </div>
-
-          <!-- Billing & Total Breakdown -->
-          <div class="bg-black/40 p-3.5 rounded-2xl border border-white/5 space-y-2 text-xs">
-            <div class="flex justify-between text-slate-400 font-semibold">
-              <span>المجموع الفرعي:</span>
-              <span id="pos-subtotal" class="font-mono text-white font-bold">0.00 ج.م</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-slate-400 font-semibold" id="pos-delivery-fee-row">
-              <span>خدمة التوصيل:</span>
+              <!-- Ticket Flexibility Toolbar: Side Swap, Floating, Minimize, Clear -->
               <div class="flex items-center gap-1">
-                <input type="number" id="pos-fee-input" oninput="calculatePosTotals()" value="0" class="w-16 h-6 text-center rounded bg-white/5 border border-white/10 text-white font-mono text-[11px] focus:outline-none">
-                <span class="text-[10px]">ج.م</span>
+                <!-- Side Swap Button (Left <-> Right) -->
+                <button type="button" onclick="togglePosTicketSide()" title="تبديل جهة التذكرة (يمين ⇆ يسار)" class="h-7 px-2 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-slate-300 hover:text-white text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95">
+                  <span>↔️</span>
+                  <span id="pos-ticket-side-label" class="hidden xl:inline text-[10px]">نقل</span>
+                </button>
+
+                <!-- Floating Draggable Mode Button -->
+                <button type="button" id="pos-ticket-float-btn" onclick="togglePosTicketFloating()" title="تحويل التذكرة إلى نافذة عائمة قابلة للسحب في أي مكان" class="h-7 px-2 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-amber-300 hover:text-amber-200 text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95">
+                  <span>🪟</span>
+                  <span class="hidden xl:inline text-[10px]">عائم</span>
+                </button>
+
+                <!-- Collapse / Expand Button -->
+                <button type="button" onclick="togglePosTicketCollapse()" title="طي التذكرة لتوسيع مساحة عرض المنيو" class="h-7 w-7 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center active:scale-95">
+                  ⇲
+                </button>
+
+                <!-- Clear Cart Button -->
+                <button type="button" onclick="clearPosCart()" title="تفريغ كل الأصناف من السلة" class="h-7 px-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-[11px] font-bold transition-all flex items-center gap-0.5 active:scale-95">
+                  <span>✕</span>
+                  <span class="hidden sm:inline text-[10px]">تفريغ</span>
+                </button>
               </div>
             </div>
 
-            <div class="flex justify-between items-center text-slate-400 font-semibold">
-              <span>خصم إضافي:</span>
-              <div class="flex items-center gap-1">
-                <input type="number" id="pos-discount-input" oninput="calculatePosTotals()" value="0" class="w-16 h-6 text-center rounded bg-white/5 border border-white/10 text-rose-400 font-mono text-[11px] focus:outline-none">
-                <span class="text-[10px]">ج.م</span>
+            <!-- 2. Scrollable Body: Order Type, Customer Info & Items List -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-3.5 sm:p-4 space-y-3">
+              
+              <!-- Order Type Switcher -->
+              <div class="grid grid-cols-2 gap-2 bg-black/40 p-1 rounded-2xl border border-white/5 shrink-0">
+                <button type="button" onclick="setPosOrderType('TAKEAWAY')" id="pos-type-takeaway" class="py-2 rounded-xl text-xs font-black transition-all bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md flex items-center justify-center gap-1.5">
+                  <span>🥡 تيك واي</span>
+                </button>
+                <button type="button" onclick="setPosOrderType('DELIVERY')" id="pos-type-delivery" class="py-2 rounded-xl text-xs font-black transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+                  <span>🛵 دليفري</span>
+                </button>
               </div>
+
+              <!-- Customer Details with Memory Engine -->
+              <div class="space-y-2 bg-black/20 p-3 rounded-2xl border border-white/5 text-xs relative shrink-0">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                    <span>👤</span>
+                    <span>بيانات العميل (البحث بالهاتف):</span>
+                  </span>
+                  <span id="pos-cust-status" class="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
+                    <span>🧠</span>
+                    <span>الذاكرة الذكية نشطة</span>
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 relative">
+                  <div class="relative">
+                    <input type="tel" id="pos-cust-phone" oninput="handlePosPhoneInput(this.value)" placeholder="رقم الهاتف 📞" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] font-mono focus:outline-none focus:border-orange-500 transition-all">
+                    <span id="pos-phone-spinner" class="hidden absolute left-2 top-2 text-[10px] animate-spin">⏳</span>
+                  </div>
+                  <input type="text" id="pos-cust-name" oninput="handlePosNameInput(this.value)" placeholder="اسم العميل" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
+                </div>
+
+                <!-- Customer Search / Suggestions Dropdown -->
+                <div id="pos-customer-suggestions" class="hidden absolute top-16 left-3 right-3 z-50 bg-[#1e293b] border border-orange-500/40 rounded-xl shadow-2xl p-1.5 space-y-1 max-h-56 overflow-y-auto custom-scrollbar">
+                  <!-- Dynamically populated suggestions -->
+                </div>
+
+                <!-- Customer Memory Badge / Loyalty Indicator -->
+                <div id="pos-customer-badge" class="hidden p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-emerald-900/40 to-black/60 border border-emerald-500/30 text-[11px] text-emerald-300 transition-all">
+                  <!-- Dynamically populated badge -->
+                </div>
+
+                <!-- Delivery fields (shown if delivery) -->
+                <div id="pos-delivery-fields" class="space-y-2 hidden pt-1">
+                  <input type="text" id="pos-delivery-addr" placeholder="عنوان التوصيل بالتفصيل 📍" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none focus:border-orange-500 transition-all">
+                  <select id="pos-select-captain" class="w-full h-8 px-2.5 rounded-lg bg-black/60 border border-white/10 text-slate-300 text-[11px] focus:outline-none">
+                    <option value="">اختر كابتن التوصيل (اختياري)</option>
+                  </select>
+                </div>
+                
+                <input type="text" id="pos-order-notes" placeholder="ملاحظات المطبخ (بدون بصل، صوص زيادة...)" class="w-full h-8 px-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-[11px] focus:outline-none">
+              </div>
+
+              <!-- Active Ticket Items List (Auto-scrolls smoothly) -->
+              <div class="space-y-2 min-h-[90px] pr-1" id="pos-cart-items-container">
+                <p class="text-xs text-slate-500 text-center py-6">اضغط على أي وجبة لإضافتها للأوردر 🍔</p>
+              </div>
+
             </div>
 
-            <!-- Grand Total Highlight -->
-            <div class="pt-2 border-t border-white/10 flex justify-between items-center">
-              <div>
-                <span class="text-[11px] text-slate-300 font-black block">إجمالي الحساب المطلوب:</span>
-                <span class="text-[10px] text-emerald-400 font-bold">شامل الضريبة والخدمة</span>
+            <!-- 3. Pinned Ticket Footer: Breakdown, Cash Change & Instant Punch Buttons -->
+            <div class="shrink-0 p-3.5 sm:p-4 border-t border-white/10 bg-black/40 space-y-2 text-xs">
+              
+              <!-- Subtotal & Additions -->
+              <div class="flex justify-between text-slate-400 font-semibold">
+                <span>المجموع الفرعي:</span>
+                <span id="pos-subtotal" class="font-mono text-white font-bold">0.00 ج.م</span>
               </div>
-              <span id="pos-total-amount" class="text-2xl font-black text-orange-400 font-mono glow-orange">0.00 ج.م</span>
+              
+              <div class="flex justify-between items-center text-slate-400 font-semibold" id="pos-delivery-fee-row">
+                <span>خدمة التوصيل:</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="pos-fee-input" oninput="calculatePosTotals()" value="0" class="w-16 h-6 text-center rounded bg-white/5 border border-white/10 text-white font-mono text-[11px] focus:outline-none">
+                  <span class="text-[10px]">ج.م</span>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-slate-400 font-semibold">
+                <span>خصم إضافي:</span>
+                <div class="flex items-center gap-1">
+                  <input type="number" id="pos-discount-input" oninput="calculatePosTotals()" value="0" class="w-16 h-6 text-center rounded bg-white/5 border border-white/10 text-rose-400 font-mono text-[11px] focus:outline-none">
+                  <span class="text-[10px]">ج.م</span>
+                </div>
+              </div>
+
+              <!-- Grand Total Highlight -->
+              <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+                <div>
+                  <span class="text-[11px] text-slate-300 font-black block">إجمالي الحساب:</span>
+                  <span class="text-[10px] text-emerald-400 font-bold">شامل الضريبة والخدمة</span>
+                </div>
+                <span id="pos-total-amount" class="text-2xl font-black text-orange-400 font-mono glow-orange">0.00 ج.م</span>
+              </div>
+
+              <!-- Cash Paid & Change Calculator -->
+              <div class="pt-2 border-t border-white/10 grid grid-cols-2 gap-2 items-center bg-black/30 p-2 rounded-xl">
+                <div>
+                  <label class="text-[10px] text-slate-400 block font-bold">المستلم (كاش):</label>
+                  <input type="number" id="pos-cash-received" oninput="calculatePosChange()" placeholder="0" class="w-full h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-xs focus:outline-none">
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block font-bold">الباقي للعميل:</label>
+                  <span id="pos-change-return" class="text-sm font-black text-emerald-400 font-mono block">0.00 ج.م</span>
+                </div>
+              </div>
+
+              <!-- Punch Order Actions (ALWAYS Pinned & Visible!) -->
+              <div class="space-y-1.5 pt-1">
+                <button onclick="submitPosOrder(true)" class="w-full h-11 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-xl shadow-xl glow-orange flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                  <span>🖨️</span>
+                  <span>تأكيد وطباعة الفاتورة للعميل</span>
+                </button>
+                <button onclick="submitPosOrder(false)" class="w-full h-8 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-[11px] rounded-lg transition-all">
+                  تأكيد وإرسال للمطبخ فقط ✅
+                </button>
+              </div>
+
+              <!-- Drawer Float & Quick Expense Payout -->
+              <div class="pt-1.5 border-t border-white/5 flex items-center justify-between gap-2 text-[11px]">
+                <div class="flex items-center gap-1 text-slate-400">
+                  <span>💰 بداية الدرج:</span>
+                  <span id="pos-drawer-float-badge" class="font-mono font-bold text-amber-300">0 ج.م</span>
+                  <button type="button" onclick="openSetOpeningDrawerModal()" title="تعديل رصيد بداية الدرج" class="text-[10px] text-slate-400 hover:text-white px-1 py-0.5 rounded bg-white/5">✏️</button>
+                </div>
+
+                <button type="button" onclick="openAddExpenseModal()" title="صرف نقدية من الدرج" class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-[10px] border border-amber-500/20 transition-all">
+                  💸 تسجيل مصروف
+                </button>
+              </div>
+
             </div>
 
-            <!-- Cash Paid & Change Calculator -->
-            <div class="pt-2 border-t border-white/10 grid grid-cols-2 gap-2 items-center bg-black/30 p-2 rounded-xl">
-              <div>
-                <label class="text-[10px] text-slate-400 block font-bold">المبلغ المستلم (كاش):</label>
-                <input type="number" id="pos-cash-received" oninput="calculatePosChange()" placeholder="0" class="w-full h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-xs focus:outline-none">
-              </div>
-              <div>
-                <label class="text-[10px] text-slate-400 block font-bold">الباقي للعميل (فكة):</label>
-                <span id="pos-change-return" class="text-sm font-black text-emerald-400 font-mono block">0.00 ج.م</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Punch Order Actions -->
-          <div class="space-y-2 pt-1">
-            <button onclick="submitPosOrder(true)" class="w-full h-12 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs rounded-2xl shadow-xl glow-orange flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-              <span>🖨️</span>
-              <span>تأكيد وطباعة الفاتورة للعميل</span>
-            </button>
-            <button onclick="submitPosOrder(false)" class="w-full h-9 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-[11px] rounded-xl transition-all">
-              تأكيد وإرسال للمطبخ فقط ✅
-            </button>
-          </div>
-
-          <!-- Drawer Float & Quick Expense Payout -->
-          <div class="pt-2 border-t border-white/5 space-y-2">
-            <div class="flex items-center justify-between text-[11px] bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-              <span class="text-slate-400 font-bold flex items-center gap-1">
-                <span>💰</span>
-                <span>فكة بداية الدرج:</span>
-              </span>
-              <div class="flex items-center gap-1.5">
-                <span id="pos-drawer-float-badge" class="font-mono font-bold text-amber-300">0 ج.م</span>
-                <button type="button" onclick="openSetOpeningDrawerModal()" title="تعديل رصيد بداية الدرج" class="text-[10px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5">✏️</button>
-              </div>
-            </div>
-
-            <button type="button" onclick="openAddExpenseModal()" class="w-full h-9 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-300 hover:text-amber-200 font-bold text-[11px] rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95">
-              <span>💸</span>
-              <span>صرف نقدية من الدرج / تسجيل مصروف</span>
-            </button>
           </div>
 
         </div>
 
+      </div>
+
+      <!-- Mobile/Tablet Floating Quick Bar (Appears on small screens) -->
+      <div id="pos-floating-mobile-bar" onclick="focusPosTicketOnMobile()" class="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center justify-between active:scale-95 transition-all cursor-pointer backdrop-blur-md">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🧾</span>
+          <div>
+            <span id="pos-float-items-count" class="text-xs font-bold text-slate-300 block">0 أصناف في الفاتورة</span>
+            <span id="pos-float-total-amount" class="text-base font-black text-emerald-400 font-mono">0.00 ج.م</span>
+          </div>
+        </div>
+        <span class="text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-black px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-md">
+          <span>عرض التذكرة</span>
+          <span>⬆️</span>
+        </span>
       </div>
     </section>
 
@@ -3600,12 +3682,29 @@
       const discount = Number(discountInput?.value || 0);
 
       const total = Math.max(0, subtotal + deliveryFee - discount);
+      const totalItemsCount = posCart.reduce((sum, it) => sum + Number(it.quantity), 0);
 
       const subtotalEl = document.getElementById('pos-subtotal');
       if (subtotalEl) subtotalEl.innerText = `${subtotal.toFixed(2)} ج.م`;
 
       const totalEl = document.getElementById('pos-total-amount');
       if (totalEl) totalEl.innerText = `${total.toFixed(2)} ج.م`;
+
+      // Update Flexible Ticket Counter Badges & Mobile Floating Bar
+      const countEl = document.getElementById('pos-ticket-items-count');
+      if (countEl) countEl.innerText = totalItemsCount;
+
+      const collCountEl = document.getElementById('pos-collapsed-items-count');
+      if (collCountEl) collCountEl.innerText = `${totalItemsCount} أصناف`;
+
+      const collTotalEl = document.getElementById('pos-collapsed-total-amount');
+      if (collTotalEl) collTotalEl.innerText = `${total.toFixed(2)} ج.م`;
+
+      const floatCountEl = document.getElementById('pos-float-items-count');
+      if (floatCountEl) floatCountEl.innerText = `${totalItemsCount} أصناف في الفاتورة`;
+
+      const floatTotalEl = document.getElementById('pos-float-total-amount');
+      if (floatTotalEl) floatTotalEl.innerText = `${total.toFixed(2)} ج.م`;
 
       calculatePosChange();
     }
@@ -3625,6 +3724,172 @@
         } else {
           changeEl.innerText = '0.00 ج.م';
         }
+      }
+    }
+
+    // ==============================================
+    // 2.0 POS TICKET FLEXIBILITY (مرونة تحرك تذكرة الكاشير)
+    // ==============================================
+    let isDraggingPosTicket = false;
+    let posTicketDragOffset = { x: 0, y: 0 };
+
+    function initPosTicketFlexibility() {
+      // 1. Restore Side Preference (Right vs Left)
+      const savedSide = localStorage.getItem('dajja_pos_side') || 'right';
+      applyPosTicketSide(savedSide);
+
+      // 2. Setup Draggable Header
+      const panel = document.getElementById('pos-ticket-panel');
+      const handle = document.getElementById('pos-ticket-drag-handle');
+      if (!panel || !handle) return;
+
+      function onMouseDown(e) {
+        if (!panel.classList.contains('pos-ticket-floating')) return;
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+        isDraggingPosTicket = true;
+        const rect = panel.getBoundingClientRect();
+        posTicketDragOffset.x = e.clientX - rect.left;
+        posTicketDragOffset.y = e.clientY - rect.top;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+      }
+
+      function onMouseMove(e) {
+        if (!isDraggingPosTicket) return;
+        const x = Math.max(10, Math.min(window.innerWidth - panel.offsetWidth - 10, e.clientX - posTicketDragOffset.x));
+        const y = Math.max(10, Math.min(window.innerHeight - panel.offsetHeight - 10, e.clientY - posTicketDragOffset.y));
+        panel.style.left = `${x}px`;
+        panel.style.top = `${y}px`;
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+      }
+
+      function onMouseUp() {
+        isDraggingPosTicket = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      function onTouchStart(e) {
+        if (!panel.classList.contains('pos-ticket-floating')) return;
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+        const touch = e.touches[0];
+        isDraggingPosTicket = true;
+        const rect = panel.getBoundingClientRect();
+        posTicketDragOffset.x = touch.clientX - rect.left;
+        posTicketDragOffset.y = touch.clientY - rect.top;
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
+      }
+
+      function onTouchMove(e) {
+        if (!isDraggingPosTicket) return;
+        const touch = e.touches[0];
+        const x = Math.max(10, Math.min(window.innerWidth - panel.offsetWidth - 10, touch.clientX - posTicketDragOffset.x));
+        const y = Math.max(10, Math.min(window.innerHeight - panel.offsetHeight - 10, touch.clientY - posTicketDragOffset.y));
+        panel.style.left = `${x}px`;
+        panel.style.top = `${y}px`;
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        e.preventDefault();
+      }
+
+      function onTouchEnd() {
+        isDraggingPosTicket = false;
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+      }
+
+      handle.addEventListener('mousedown', onMouseDown);
+      handle.addEventListener('touchstart', onTouchStart, { passive: false });
+    }
+
+    function togglePosTicketSide() {
+      const currentSide = localStorage.getItem('dajja_pos_side') || 'right';
+      const newSide = currentSide === 'right' ? 'left' : 'right';
+      applyPosTicketSide(newSide);
+      localStorage.setItem('dajja_pos_side', newSide);
+    }
+
+    function applyPosTicketSide(side) {
+      const ticketCol = document.getElementById('pos-ticket-column');
+      const menuCol = document.getElementById('pos-menu-column');
+      const sideBtnLabel = document.getElementById('pos-ticket-side-label');
+      if (!ticketCol || !menuCol) return;
+
+      if (side === 'left') {
+        ticketCol.classList.remove('lg:order-last');
+        ticketCol.classList.add('lg:order-first');
+        menuCol.classList.remove('lg:order-first');
+        menuCol.classList.add('lg:order-last');
+        if (sideBtnLabel) sideBtnLabel.textContent = 'يمين ➡️';
+      } else {
+        ticketCol.classList.remove('lg:order-first');
+        ticketCol.classList.add('lg:order-last');
+        menuCol.classList.remove('lg:order-last');
+        menuCol.classList.add('lg:order-first');
+        if (sideBtnLabel) sideBtnLabel.textContent = 'يسار ⬅️';
+      }
+    }
+
+    function togglePosTicketCollapse() {
+      const panel = document.getElementById('pos-ticket-panel');
+      const collapsedPill = document.getElementById('pos-ticket-collapsed-pill');
+      const menuCol = document.getElementById('pos-menu-column');
+      const ticketCol = document.getElementById('pos-ticket-column');
+      if (!panel || !collapsedPill) return;
+
+      const isCollapsed = panel.classList.contains('hidden');
+      if (isCollapsed) {
+        // Expand
+        panel.classList.remove('hidden');
+        collapsedPill.classList.add('hidden');
+        if (menuCol) menuCol.className = "lg:col-span-7 xl:col-span-8 space-y-4 transition-all duration-300";
+        if (ticketCol) ticketCol.className = "lg:col-span-5 xl:col-span-4 transition-all duration-300";
+      } else {
+        // Collapse
+        panel.classList.add('hidden');
+        collapsedPill.classList.remove('hidden');
+        if (menuCol) menuCol.className = "lg:col-span-11 xl:col-span-11 space-y-4 transition-all duration-300";
+        if (ticketCol) ticketCol.className = "lg:col-span-1 xl:col-span-1 transition-all duration-300";
+      }
+    }
+
+    function togglePosTicketFloating() {
+      const panel = document.getElementById('pos-ticket-panel');
+      const dragHandle = document.getElementById('pos-ticket-drag-handle');
+      const floatBtn = document.getElementById('pos-ticket-float-btn');
+      if (!panel) return;
+
+      const isFloating = panel.classList.contains('pos-ticket-floating');
+      if (isFloating) {
+        // Dock back
+        panel.classList.remove('pos-ticket-floating');
+        panel.style.left = '';
+        panel.style.top = '';
+        panel.style.right = '';
+        panel.style.bottom = '';
+        if (dragHandle) dragHandle.classList.remove('cursor-move', 'bg-orange-500/20');
+        if (floatBtn) floatBtn.innerHTML = '<span>🪟</span><span class="hidden xl:inline text-[10px]">عائم</span>';
+      } else {
+        // Float
+        panel.classList.add('pos-ticket-floating');
+        panel.style.top = '75px';
+        panel.style.left = '25px';
+        if (dragHandle) dragHandle.classList.add('cursor-move', 'bg-orange-500/20');
+        if (floatBtn) floatBtn.innerHTML = '<span>📌</span><span class="hidden xl:inline text-[10px]">تثبيت</span>';
+      }
+    }
+
+    function focusPosTicketOnMobile() {
+      const ticketPanel = document.getElementById('pos-ticket-panel');
+      if (ticketPanel) {
+        ticketPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        ticketPanel.classList.add('ring-4', 'ring-orange-500/60');
+        setTimeout(() => {
+          ticketPanel.classList.remove('ring-4', 'ring-orange-500/60');
+        }, 1500);
       }
     }
 
@@ -7126,6 +7391,7 @@
     loadCustomersDirectory();
     loadStoriesData();
     updateAudioToggleUI();
+    initPosTicketFlexibility();
 
     // Auto-refresh live orders, shift summary, and expenses every 5 seconds for instant new order detection
     setInterval(() => {
