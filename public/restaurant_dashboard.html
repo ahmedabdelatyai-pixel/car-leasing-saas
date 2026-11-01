@@ -2311,6 +2311,9 @@
     let currentUser = null;
     let allCaptains = [];
     let currentReportsData = null;
+    let posCart = [];
+    let posOrderType = 'TAKEAWAY';
+    let posActiveCategory = 'ALL';
 
     // Audio Notification State & Generator for Cashier
     let audioNotificationsEnabled = localStorage.getItem('dajja_audio_notif') !== 'false';
@@ -2960,8 +2963,8 @@
         }
 
         return `
-          <div onclick="${isAvail ? `addPosCartItem('${it.id}', '${it.name.replace(/'/g, "\\'")}', ${it.price}, ${isOutOfStock})` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
-            <div class="relative w-full h-24 rounded-xl overflow-hidden mb-2 bg-black/40">
+          <div onclick="${isAvail ? `addPosCartItem('${it.id}')` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
+            <div class="relative w-full h-24 rounded-xl overflow-hidden mb-2 bg-black/40 pointer-events-none">
               <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300">
               ${it.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">${it.badge}</span>` : ''}
               ${stockBadge}
@@ -2972,7 +2975,7 @@
               <h4 class="text-xs font-black text-white line-clamp-1">${it.name}</h4>
               <div class="flex justify-between items-center mt-2 pt-1 border-t border-white/5">
                 <span class="text-sm font-black text-orange-400 font-mono">${it.price} ج.م</span>
-                <button type="button" class="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-sm font-black group-hover:bg-orange-500 transition-all shadow">+</button>
+                <button type="button" onclick="event.stopPropagation(); ${isAvail ? `addPosCartItem('${it.id}')` : ''}" class="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-sm font-black group-hover:bg-orange-500 transition-all shadow">+</button>
               </div>
             </div>
           </div>
@@ -2981,45 +2984,65 @@
     }
 
     function addPosCartItem(id, name, price, isOutOfStock) {
-      if (isOutOfStock) {
-        if (!confirm(`تنبيه: مكونات الصنف "${name}" أوشكت أو نفدت من المخزون! هل تريد المتابعة وإضافته للطلب؟`)) {
+      if (!Array.isArray(posCart)) posCart = [];
+
+      let item = null;
+      if (currentRestaurant && Array.isArray(currentRestaurant.categories)) {
+        for (const cat of currentRestaurant.categories) {
+          const found = (cat.items || []).find(i => String(i.id) === String(id));
+          if (found) { item = found; break; }
+        }
+      }
+
+      const itemName = item ? item.name : (name || 'صنف');
+      const itemPrice = item?.price !== undefined ? Number(item.price) : (Number(price) || 0);
+      const outOfStock = item?.isOutOfStock !== undefined ? !!item.isOutOfStock : !!isOutOfStock;
+
+      if (outOfStock) {
+        if (!confirm(`تنبيه: مكونات الصنف "${itemName}" أوشكت أو نفدت من المخزون! هل تريد المتابعة وإضافته للطلب؟`)) {
           return;
         }
       }
-      const existing = posCart.find(i => i.id === id);
+
+      const existing = posCart.find(i => String(i.id) === String(id));
       if (existing) {
         existing.quantity++;
       } else {
-        posCart.push({ id, name, price: Number(price), quantity: 1 });
+        posCart.push({ id: String(id), name: itemName, price: itemPrice, quantity: 1 });
       }
       renderPosCartUI();
     }
 
     function updatePosItemQty(id, delta) {
-      const it = posCart.find(i => i.id === id);
+      if (!Array.isArray(posCart)) posCart = [];
+      const it = posCart.find(i => String(i.id) === String(id));
       if (!it) return;
       it.quantity += delta;
       if (it.quantity <= 0) {
-        posCart = posCart.filter(i => i.id !== id);
+        posCart = posCart.filter(i => String(i.id) !== String(id));
       }
       renderPosCartUI();
     }
 
     function removePosItem(id) {
-      posCart = posCart.filter(i => i.id !== id);
+      if (!Array.isArray(posCart)) posCart = [];
+      posCart = posCart.filter(i => String(i.id) !== String(id));
       renderPosCartUI();
     }
 
     function clearPosCart() {
       posCart = [];
-      document.getElementById('pos-cash-received').value = '';
-      document.getElementById('pos-change-return').innerText = '0.00 ج.م';
+      const cashReceived = document.getElementById('pos-cash-received');
+      if (cashReceived) cashReceived.value = '';
+      const changeReturn = document.getElementById('pos-change-return');
+      if (changeReturn) changeReturn.innerText = '0.00 ج.م';
       renderPosCartUI();
     }
 
     function renderPosCartUI() {
       const container = document.getElementById('pos-cart-items-container');
-      if (posCart.length === 0) {
+      if (!container) return;
+      if (!Array.isArray(posCart) || posCart.length === 0) {
         container.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">اضغط على أي وجبة لإضافتها للأوردر 🍔</p>';
         calculatePosTotals();
         return;
@@ -3029,7 +3052,7 @@
         <div class="bg-black/40 border border-white/5 rounded-xl p-2.5 flex justify-between items-center gap-2">
           <div class="flex-1 min-w-0">
             <h5 class="text-xs font-bold text-white truncate">${it.name}</h5>
-            <span class="text-[10px] text-orange-400 font-mono">${it.price * it.quantity} ج.م <span class="text-slate-500 font-normal">(${it.price} × ${it.quantity})</span></span>
+            <span class="text-[10px] text-orange-400 font-mono">${(it.price * it.quantity).toFixed(2)} ج.م <span class="text-slate-500 font-normal">(${it.price} × ${it.quantity})</span></span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button onclick="updatePosItemQty('${it.id}', -1)" class="w-6 h-6 rounded bg-white/5 hover:bg-white/10 text-slate-300 font-bold flex items-center justify-center">-</button>
@@ -3044,28 +3067,40 @@
     }
 
     function calculatePosTotals() {
-      const subtotal = posCart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-      const deliveryFee = posOrderType === 'DELIVERY' ? Number(document.getElementById('pos-fee-input').value || 0) : 0;
-      const discount = Number(document.getElementById('pos-discount-input').value || 0);
+      if (!Array.isArray(posCart)) posCart = [];
+      const subtotal = posCart.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+      const isDelivery = (typeof posOrderType !== 'undefined' && posOrderType === 'DELIVERY');
+      const feeInput = document.getElementById('pos-fee-input');
+      const deliveryFee = isDelivery ? Number(feeInput?.value || 0) : 0;
+      const discountInput = document.getElementById('pos-discount-input');
+      const discount = Number(discountInput?.value || 0);
 
       const total = Math.max(0, subtotal + deliveryFee - discount);
 
-      document.getElementById('pos-subtotal').innerText = `${subtotal.toFixed(2)} ج.م`;
-      document.getElementById('pos-total-amount').innerText = `${total.toFixed(2)} ج.م`;
+      const subtotalEl = document.getElementById('pos-subtotal');
+      if (subtotalEl) subtotalEl.innerText = `${subtotal.toFixed(2)} ج.م`;
+
+      const totalEl = document.getElementById('pos-total-amount');
+      if (totalEl) totalEl.innerText = `${total.toFixed(2)} ج.م`;
 
       calculatePosChange();
     }
 
     function calculatePosChange() {
-      const totalText = document.getElementById('pos-total-amount').innerText;
+      const totalEl = document.getElementById('pos-total-amount');
+      const totalText = totalEl ? totalEl.innerText : '0';
       const total = parseFloat(totalText) || 0;
-      const received = parseFloat(document.getElementById('pos-cash-received').value) || 0;
+      const cashInput = document.getElementById('pos-cash-received');
+      const received = parseFloat(cashInput?.value || 0) || 0;
+      const changeEl = document.getElementById('pos-change-return');
 
-      if (received > 0 && received >= total) {
-        const change = received - total;
-        document.getElementById('pos-change-return').innerText = `${change.toFixed(2)} ج.م`;
-      } else {
-        document.getElementById('pos-change-return').innerText = '0.00 ج.م';
+      if (changeEl) {
+        if (received > 0 && received >= total) {
+          const change = received - total;
+          changeEl.innerText = `${change.toFixed(2)} ج.م`;
+        } else {
+          changeEl.innerText = '0.00 ج.م';
+        }
       }
     }
 
@@ -6475,6 +6510,7 @@
     loadLiveOrders();
     loadCaptains();
     loadMenuData();
+    renderPosCartUI();
     loadUserProfile();
     loadCurrentShiftSummary();
     loadExpensesData();
