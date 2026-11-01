@@ -797,9 +797,9 @@
           </div>
         </div>
 
-        <!-- Right 5 Cols: Live Order Ticket & Billing (Sticky & Follows the scroll as Cashier picks dishes) -->
-        <div class="lg:col-span-5 xl:col-span-4">
-          <div id="pos-ticket-panel" class="bg-[#111827] border border-white/10 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-2xl sticky top-4">
+        <!-- Right 5 Cols: Live Order Ticket & Billing (Follows the screen scroll down and up smoothly) -->
+        <div id="pos-ticket-column" class="lg:col-span-5 xl:col-span-4 relative self-stretch">
+          <div id="pos-ticket-panel" class="bg-[#111827] border border-white/10 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-2xl relative transition-transform duration-150 ease-out will-change-transform">
             
             <div class="flex justify-between items-center border-b border-white/5 pb-3">
               <div>
@@ -3787,7 +3787,10 @@
       const activePane = document.getElementById(`pane-${tab}`);
       if (activePane) activePane.classList.remove('hidden');
 
-      if (tab === 'pos') renderPosUI();
+      if (tab === 'pos') {
+        renderPosUI();
+        if (typeof updatePosTicketPosition === 'function') setTimeout(updatePosTicketPosition, 100);
+      }
       if (tab === 'orders') loadLiveOrders();
       if (tab === 'menu') loadMenuData();
       if (tab === 'reports') {
@@ -4029,6 +4032,9 @@
       `).join('');
 
       calculatePosTotals();
+      if (typeof updatePosTicketPosition === 'function') {
+        setTimeout(updatePosTicketPosition, 50);
+      }
     }
 
     function calculatePosTotals() {
@@ -4068,6 +4074,96 @@
           changeEl.innerText = '0.00 ج.م';
         }
       }
+    }
+
+    // ==============================================
+    // 2.0 POS TICKET SMOOTH SCROLL FOLLOWER (تتبع حركة الشاشة بسلاسة لتحت وفوق)
+    // ==============================================
+    let lastPosScrollTop = 0;
+    let posTicketCurrentY = 0;
+    let posScrollAnimFrame = null;
+
+    function updatePosTicketPosition() {
+      const mainViewport = document.querySelector('main');
+      const ticketPanel = document.getElementById('pos-ticket-panel');
+      if (!mainViewport || !ticketPanel) return;
+
+      if (window.innerWidth < 1024) {
+        ticketPanel.style.transform = 'none';
+        posTicketCurrentY = 0;
+        return;
+      }
+
+      const ticketCol = ticketPanel.parentElement;
+      if (!ticketCol) return;
+
+      const scrollTop = mainViewport.scrollTop;
+      const viewportH = mainViewport.clientHeight;
+      const ticketH = ticketPanel.offsetHeight;
+      const colH = ticketCol.offsetHeight;
+
+      const maxTranslate = Math.max(0, colH - ticketH);
+      if (maxTranslate <= 0) {
+        ticketPanel.style.transform = 'none';
+        posTicketCurrentY = 0;
+        return;
+      }
+
+      const isScrollingDown = scrollTop >= lastPosScrollTop;
+      lastPosScrollTop = scrollTop;
+
+      let targetY = posTicketCurrentY;
+
+      if (ticketH <= viewportH - 32) {
+        targetY = Math.min(scrollTop, maxTranslate);
+      } else {
+        const bottomTarget = scrollTop + viewportH - ticketH - 24;
+        const topTarget = scrollTop + 16;
+
+        if (isScrollingDown) {
+          if (posTicketCurrentY < bottomTarget) {
+            targetY = bottomTarget;
+          }
+        } else {
+          if (posTicketCurrentY > topTarget) {
+            targetY = topTarget;
+          }
+        }
+      }
+
+      targetY = Math.max(0, Math.min(targetY, maxTranslate));
+      posTicketCurrentY = targetY;
+
+      ticketPanel.style.transform = `translate3d(0, ${Math.round(targetY)}px, 0)`;
+    }
+
+    function initPosTicketScrollFollower() {
+      const mainViewport = document.querySelector('main');
+      if (!mainViewport) return;
+
+      const onScroll = () => {
+        if (posScrollAnimFrame) cancelAnimationFrame(posScrollAnimFrame);
+        posScrollAnimFrame = requestAnimationFrame(updatePosTicketPosition);
+      };
+
+      mainViewport.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => {
+        updatePosTicketPosition();
+      }, { passive: true });
+
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          updatePosTicketPosition();
+        });
+        ro.observe(mainViewport);
+        const ticketPanel = document.getElementById('pos-ticket-panel');
+        if (ticketPanel) ro.observe(ticketPanel);
+        const menuCol = document.getElementById('pos-items-grid');
+        if (menuCol) ro.observe(menuCol);
+      }
+
+      setTimeout(updatePosTicketPosition, 250);
     }
 
     // ==============================================
@@ -7708,6 +7804,7 @@
     loadCustomersDirectory();
     loadStoriesData();
     updateAudioToggleUI();
+    initPosTicketScrollFollower();
 
     // Auto-refresh live orders, shift summary, and expenses every 5 seconds for instant new order detection
     setInterval(() => {
