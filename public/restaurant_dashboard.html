@@ -178,6 +178,16 @@
           </div>
         </div>
       </div>
+      <!-- Network & Offline Sync Status Pill -->
+      <div id="network-status-pill" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-bold bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm">
+        <span id="network-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="network-status-text">متصل بالسحابة 🟢</span>
+        <button id="btn-sync-offline-now" onclick="triggerManualSync()" title="مزامنة الطلبات المحفوظة محلياً مع السيرفر" class="hidden px-2 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black transition-all items-center gap-1 shadow">
+          <span>🔄 مزامنة</span>
+          <span id="offline-queue-badge" class="px-1 rounded bg-black/30 text-white font-mono">0</span>
+        </button>
+      </div>
+
       <button id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="صوت تنبيه الطلبات الجديدة" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
         <span id="sound-toggle-icon">🔔</span>
         <span id="sound-toggle-label" class="hidden sm:inline">صوت التنبيه: مفعّل</span>
@@ -251,6 +261,20 @@
          TAB 1: POS CASHIER ORDER PUNCH (نقطة البيع)
          ============================================== -->
     <section id="pane-pos" class="space-y-4">
+      <!-- POS Offline Banner (Appears only when offline or orders pending) -->
+      <div id="pos-offline-banner" class="hidden bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-black/70 border border-amber-500/40 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+        <div class="flex items-center gap-2 text-xs font-bold text-amber-200">
+          <span class="text-base animate-pulse">📡</span>
+          <span>أنت تعمل حالياً في <strong class="text-white underline">وضع الأوفلاين (بدون إنترنت)</strong>. يمكنك ضرب الأوردرات وطباعة الفواتير بشكل طبيعي، وسيتم حفظها ومزامنتها تلقائياً فور عودة الشبكة.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="pos-offline-counter" class="text-xs font-mono font-black text-amber-300 bg-black/50 px-2 py-1 rounded-lg border border-amber-500/30">0 طلبات محفوظة محلياً</span>
+          <button type="button" onclick="triggerManualSync()" class="text-xs font-black bg-amber-500 hover:bg-amber-400 text-black px-3 py-1 rounded-lg transition-all shadow">
+            مزامنة الآن 🔄
+          </button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
         <!-- Left 7 Cols: Quick Menu Picker -->
@@ -2315,6 +2339,255 @@
     let posOrderType = 'TAKEAWAY';
     let posActiveCategory = 'ALL';
 
+    // ==============================================
+    // 0. OFFLINE-FIRST POS & AUTO-SYNC ENGINE
+    // ==============================================
+    const OFFLINE_QUEUE_KEY = 'dajja_pos_offline_orders_queue';
+    const CACHED_MENU_KEY = 'dajja_cached_pos_menu';
+    const CACHED_CAPTAINS_KEY = 'dajja_cached_pos_captains';
+    let isDeviceOnline = navigator.onLine;
+    let isSyncingOfflineOrders = false;
+
+    // Register Service Worker for PWA Offline Caching
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          console.log('Dajja ServiceWorker active:', reg.scope);
+        }).catch((err) => {
+          console.warn('ServiceWorker error:', err);
+        });
+      });
+    }
+
+    function getOfflineQueue() {
+      try {
+        const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOfflineQueue(queue) {
+      try {
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+      } catch (e) {
+        console.error('Failed to save offline queue:', e);
+      }
+      updateNetworkPillUI();
+    }
+
+    function enqueueOfflineOrder(payload, cartItems, displayOrder) {
+      const queue = getOfflineQueue();
+      const localOrder = {
+        localId: 'OFF-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000),
+        offlineCreatedAt: new Date().toISOString(),
+        payload: {
+          ...payload,
+          offlineCreatedAt: new Date().toISOString()
+        },
+        cartItems: cartItems || [],
+        displayOrder: displayOrder || null
+      };
+      queue.push(localOrder);
+      saveOfflineQueue(queue);
+      return localOrder;
+    }
+
+    function updateNetworkPillUI() {
+      const pill = document.getElementById('network-status-pill');
+      const dot = document.getElementById('network-status-dot');
+      const text = document.getElementById('network-status-text');
+      const syncBtn = document.getElementById('btn-sync-offline-now');
+      const badge = document.getElementById('offline-queue-badge');
+      const posBanner = document.getElementById('pos-offline-banner');
+      const posCounter = document.getElementById('pos-offline-counter');
+
+      const queue = getOfflineQueue();
+      const count = queue.length;
+
+      if (posCounter) {
+        posCounter.innerText = `${count} طلبات محفوظة محلياً`;
+      }
+
+      if (!isDeviceOnline) {
+        if (pill) {
+          pill.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-bold bg-amber-500/20 border-amber-400/40 text-amber-200 shadow-sm";
+        }
+        if (dot) {
+          dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+        }
+        if (text) {
+          text.innerText = count > 0 ? `أوفلاين (${count} معلق)` : 'أوفلاين (بدون إنترنت)';
+        }
+        if (posBanner) {
+          posBanner.classList.remove('hidden');
+        }
+        if (syncBtn) {
+          if (count > 0) {
+            syncBtn.classList.remove('hidden');
+            syncBtn.style.display = 'inline-flex';
+            if (badge) badge.innerText = count;
+          } else {
+            syncBtn.classList.add('hidden');
+            syncBtn.style.display = 'none';
+          }
+        }
+      } else {
+        // Online state
+        if (count > 0) {
+          if (pill) {
+            pill.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-bold bg-sky-500/20 border-sky-400/40 text-sky-200 shadow-sm";
+          }
+          if (dot) {
+            dot.className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
+          }
+          if (text) {
+            text.innerText = isSyncingOfflineOrders ? 'جاري المزامنة... ⏳' : `متصل (${count} بانتظار الرفع)`;
+          }
+          if (posBanner) {
+            posBanner.classList.remove('hidden');
+          }
+          if (syncBtn) {
+            syncBtn.classList.remove('hidden');
+            syncBtn.style.display = 'inline-flex';
+            if (badge) badge.innerText = count;
+          }
+        } else {
+          if (pill) {
+            pill.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all text-xs font-bold bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm";
+          }
+          if (dot) {
+            dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+          }
+          if (text) {
+            text.innerText = 'متصل بالسحابة 🟢';
+          }
+          if (posBanner) {
+            posBanner.classList.add('hidden');
+          }
+          if (syncBtn) {
+            syncBtn.classList.add('hidden');
+            syncBtn.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    async function checkNetworkConnectivity() {
+      if (!navigator.onLine) {
+        if (isDeviceOnline) {
+          isDeviceOnline = false;
+          updateNetworkPillUI();
+        }
+        return false;
+      }
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch('/api/v1/ping', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          if (!isDeviceOnline) {
+            isDeviceOnline = true;
+            updateNetworkPillUI();
+            triggerAutoSyncIfPending();
+          }
+          return true;
+        } else {
+          isDeviceOnline = false;
+          updateNetworkPillUI();
+          return false;
+        }
+      } catch (err) {
+        if (isDeviceOnline) {
+          isDeviceOnline = false;
+          updateNetworkPillUI();
+        }
+        return false;
+      }
+    }
+
+    async function triggerManualSync() {
+      const isOnline = await checkNetworkConnectivity();
+      if (!isOnline) {
+        alert('لا يوجد اتصال حقيقي بالإنترنت حالياً! تأكد من تشغيل الراوتر أو الباقة ثم حاول مجدداً.');
+        return;
+      }
+      await syncOfflineOrders(true);
+    }
+
+    async function triggerAutoSyncIfPending() {
+      const queue = getOfflineQueue();
+      if (queue.length > 0 && !isSyncingOfflineOrders) {
+        await syncOfflineOrders(false);
+      }
+    }
+
+    async function syncOfflineOrders(isManual = false) {
+      if (isSyncingOfflineOrders) return;
+      const queue = getOfflineQueue();
+      if (queue.length === 0) {
+        if (isManual) showNotificationToast('جميع الطلبات متزامنة ومحدثة بالفعل مع السحابة 👍');
+        updateNetworkPillUI();
+        return;
+      }
+
+      isSyncingOfflineOrders = true;
+      updateNetworkPillUI();
+      showNotificationToast(`🔄 جاري مزامنة ${queue.length} طلبات محفوظة محلياً مع السيرفر...`);
+
+      let successCount = 0;
+      let remainingQueue = [];
+
+      for (let i = 0; i < queue.length; i++) {
+        const item = queue[i];
+        try {
+          const res = await apiFetch('/api/v1/orders', {
+            method: 'POST',
+            body: JSON.stringify(item.payload)
+          });
+          if (res && res.order) {
+            successCount++;
+            if (res.order.id) knownOrderIds.add(res.order.id);
+          } else {
+            remainingQueue.push(item);
+          }
+        } catch (err) {
+          console.error(`Failed to sync offline order ${item.localId}:`, err);
+          remainingQueue.push(item);
+          for (let j = i + 1; j < queue.length; j++) {
+            remainingQueue.push(queue[j]);
+          }
+          break;
+        }
+      }
+
+      saveOfflineQueue(remainingQueue);
+      isSyncingOfflineOrders = false;
+      updateNetworkPillUI();
+
+      if (successCount > 0) {
+        showNotificationToast(`✅ تم بنجاح مزامنة ${successCount} طلبات مع السحابة وتحديث المخزون! 🔥`);
+        loadLiveOrders();
+        loadMenuData();
+        loadCurrentShiftSummary();
+      }
+    }
+
+    window.addEventListener('online', () => {
+      checkNetworkConnectivity();
+    });
+    window.addEventListener('offline', () => {
+      isDeviceOnline = false;
+      updateNetworkPillUI();
+    });
+    setInterval(checkNetworkConnectivity, 15000);
+
     // Audio Notification State & Generator for Cashier
     let audioNotificationsEnabled = localStorage.getItem('dajja_audio_notif') !== 'false';
     let knownOrderIds = new Set();
@@ -2554,22 +2827,39 @@
       }, { once: true });
     });
 
-    // Helper API with auth
+    // Helper API with auth & connectivity tracking
     async function apiFetch(endpoint, options = {}) {
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         ...(options.headers || {})
       };
-      const res = await fetch(endpoint, { ...options, headers });
-      if (res.status === 401 || res.status === 403) {
-        localStorage.clear();
-        window.location.href = 'index.html';
-        throw new Error('Unauthorized');
+      try {
+        const res = await fetch(endpoint, { ...options, headers });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.clear();
+          window.location.href = 'index.html';
+          throw new Error('Unauthorized');
+        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+
+        if (!isDeviceOnline) {
+          isDeviceOnline = true;
+          updateNetworkPillUI();
+          triggerAutoSyncIfPending();
+        }
+
+        return data;
+      } catch (err) {
+        if (!navigator.onLine || err.name === 'TypeError' || (err.message && err.message.includes('fetch'))) {
+          if (isDeviceOnline) {
+            isDeviceOnline = false;
+            updateNetworkPillUI();
+          }
+        }
+        throw err;
       }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Request failed');
-      return data;
     }
 
     // Dynamic Permission & Subscription Enforcer
@@ -3410,7 +3700,7 @@
     }
 
     async function submitPosOrder(shouldPrintReceipt = true) {
-      if (posCart.length === 0) {
+      if (!Array.isArray(posCart) || posCart.length === 0) {
         alert('الرجاء إضافة أصناف للأوردر أولاً!');
         return;
       }
@@ -3422,6 +3712,11 @@
       const notes = document.getElementById('pos-order-notes').value.trim();
       const customDeliveryFee = posOrderType === 'DELIVERY' ? Number(document.getElementById('pos-fee-input').value || 0) : 0;
       const discount = Number(document.getElementById('pos-discount-input').value || 0);
+
+      const cartCopy = JSON.parse(JSON.stringify(posCart));
+      const subtotal = cartCopy.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+      const deliveryFee = posOrderType === 'DELIVERY' ? customDeliveryFee : 0;
+      const totalAmount = Math.max(0, subtotal + deliveryFee - discount);
 
       const payload = {
         customerName: customerName || (posOrderType === 'DELIVERY' ? 'عميل دليفري' : 'عميل تيك واي'),
@@ -3439,6 +3734,12 @@
           quantity: it.quantity
         }))
       };
+
+      // Check if browser is currently offline or device connectivity is down
+      if (!navigator.onLine || !isDeviceOnline) {
+        handleOfflineOrderSave(payload, cartCopy, totalAmount, subtotal, deliveryFee, discount, shouldPrintReceipt);
+        return;
+      }
 
       try {
         const res = await apiFetch('/api/v1/orders', {
@@ -3465,8 +3766,55 @@
         }
 
       } catch (err) {
-        alert('حدث خطأ أثناء ضرب الطلب: ' + err.message);
+        console.warn('Network request failed in submitPosOrder, saving offline:', err);
+        handleOfflineOrderSave(payload, cartCopy, totalAmount, subtotal, deliveryFee, discount, shouldPrintReceipt);
       }
+    }
+
+    function handleOfflineOrderSave(payload, cartCopy, totalAmount, subtotal, deliveryFee, discount, shouldPrintReceipt) {
+      isDeviceOnline = false;
+      const localOrderNum = 'OFF-' + Math.floor(1000 + Math.random() * 9000);
+      const mockOrder = {
+        id: 'local-' + Date.now(),
+        orderNumber: localOrderNum,
+        customerName: payload.customerName,
+        customerPhone: payload.customerPhone,
+        orderType: payload.orderType,
+        deliveryAddress: payload.deliveryAddress,
+        notes: payload.notes,
+        subtotal,
+        deliveryFee,
+        discount,
+        totalAmount,
+        status: 'PREPARING',
+        paymentStatus: 'PAID',
+        createdAt: new Date().toISOString(),
+        isOffline: true,
+        items: cartCopy.map(i => ({
+          id: 'item-' + i.id,
+          name: i.name,
+          quantity: i.quantity,
+          unitPrice: i.price,
+          totalPrice: i.price * i.quantity
+        }))
+      };
+
+      enqueueOfflineOrder(payload, cartCopy, mockOrder);
+
+      clearPosCart();
+      clearCustomerMemorySelection();
+      const notesEl = document.getElementById('pos-order-notes');
+      if (notesEl) notesEl.value = '';
+
+      updateNetworkPillUI();
+
+      if (shouldPrintReceipt) {
+        printOrderReceipt(mockOrder.id, mockOrder);
+      } else {
+        alert(`⚠️ تم حفظ الطلب محلياً بنجاح برقم: ${localOrderNum} (أوفلاين)!\nسيتم رفعه وتحديث المخزون تلقائياً فور عودة الإنترنت.`);
+      }
+
+      showNotificationToast(`📡 تم حفظ الأوردر محلياً (${localOrderNum}) وجاهز للمزامنة التلقائية عند عودة النت.`);
     }
 
     // ==============================================
@@ -3782,11 +4130,24 @@
       try {
         const res = await apiFetch('/api/v1/restaurant/menu');
         currentRestaurant = res;
+        try {
+          localStorage.setItem(CACHED_MENU_KEY, JSON.stringify(res));
+        } catch (e) {}
         applySubscriptionPermissions();
         renderDashboardMenu();
         renderPosUI();
       } catch (err) {
-        console.error('Menu load error:', err);
+        console.warn('Menu load error, attempting offline cache fallback:', err);
+        const cached = localStorage.getItem(CACHED_MENU_KEY);
+        if (cached) {
+          try {
+            currentRestaurant = JSON.parse(cached);
+            applySubscriptionPermissions();
+            renderDashboardMenu();
+            renderPosUI();
+            console.log('✅ Loaded menu from offline cache successfully.');
+          } catch (e) {}
+        }
       }
     }
 
@@ -4950,10 +5311,21 @@
       try {
         const caps = await apiFetch('/api/v1/captains');
         allCaptains = caps;
+        try {
+          localStorage.setItem(CACHED_CAPTAINS_KEY, JSON.stringify(caps));
+        } catch (e) {}
         renderCaptainsList();
         renderPosUI();
       } catch (err) {
-        console.error('Failed to load captains:', err);
+        console.warn('Failed to load captains, attempting offline cache fallback:', err);
+        const cached = localStorage.getItem(CACHED_CAPTAINS_KEY);
+        if (cached) {
+          try {
+            allCaptains = JSON.parse(cached);
+            renderCaptainsList();
+            renderPosUI();
+          } catch (e) {}
+        }
       }
     }
 
@@ -6507,6 +6879,9 @@
     }
 
     // Initial boot
+    updateNetworkPillUI();
+    checkNetworkConnectivity();
+    triggerAutoSyncIfPending();
     loadLiveOrders();
     loadCaptains();
     loadMenuData();

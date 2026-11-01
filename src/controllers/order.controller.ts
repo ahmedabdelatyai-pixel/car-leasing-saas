@@ -151,6 +151,8 @@ export class OrderController {
 
       // 4. Create the order
       const tableNum = req.body.tableNumber ? String(req.body.tableNumber).trim() : null;
+      const offlineDate = req.body.offlineCreatedAt ? new Date(req.body.offlineCreatedAt) : undefined;
+      const validOfflineDate = (offlineDate && !isNaN(offlineDate.getTime())) ? offlineDate : undefined;
 
       const newOrder = await prisma.order.create({
         data: {
@@ -170,6 +172,7 @@ export class OrderController {
           pointsRedeemed,
           status: initialStatus,
           paymentStatus: paymentStatus === 'PAID' ? 'PAID' : 'UNPAID',
+          createdAt: validOfflineDate,
           items: {
             create: orderItemsData
           }

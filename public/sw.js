@@ -1,21 +1,20 @@
-// Service Worker for Dajja Restaurant PWA
-const CACHE_NAME = 'dajja-cache-v4';
+﻿// Service Worker for Dajja POS & Restaurant Dashboard (Offline-First Resilience)
+const CACHE_NAME = 'dajja-pos-cache-v1';
+
 const STATIC_ASSETS = [
   '/',
-  '/order.html',
-  '/dajja_dashboard.html',
-  '/restaurant_dashboard.html',
-  '/dashboard',
-  '/dajja_logo.jpg',
-  '/sounds/talabat_order_alert.wav',
-  '/manifest.json',
-  '/manifest-dashboard.json'
+  '/dajja-dashboard',
+  '/restaurant-dashboard',
+  '/order',
+  '/sounds/talabat_order_alert.wav'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => console.log('Cache addAll caught:', err));
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('PWA Cache prefetch partial warning:', err);
+      });
     })
   );
   self.skipWaiting();
@@ -37,29 +36,40 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first with cache fallback for HTML and API
-  if (event.request.method !== 'GET') return;
-  
   const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/api/')) {
-    // API calls should always go to network
+
+  // Skip caching for API calls or non-GET requests
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
     return;
   }
 
+  // Network-First with Cache Fallback for HTML pages & static assets
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
+        return networkResponse;
       })
-      .catch(() => {
-        return caches.match(event.request);
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        if (event.request.mode === 'navigate') {
+          const dashboardFallback = await caches.match('/dajja-dashboard') || await caches.match('/');
+          if (dashboardFallback) return dashboardFallback;
+        }
+
+        return new Response('Offline: Network unavailable and no cached version found.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
       })
   );
 });

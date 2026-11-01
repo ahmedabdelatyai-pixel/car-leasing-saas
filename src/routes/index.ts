@@ -64,6 +64,9 @@ router.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
   }
 });
 
+// Fast Connectivity Ping / Heartbeat Endpoint
+router.get('/ping', (req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
+
 // ==========================================
 // 2. AUTHENTICATION & LOGIN
 // ==========================================
