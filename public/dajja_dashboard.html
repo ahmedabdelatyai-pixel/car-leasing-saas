@@ -468,6 +468,177 @@
         background: #ffffff !important;
         color: #000000 !important;
       }
+    }
+
+    /* ========================================================
+       COLLAPSIBLE / HOVER-EXPANDABLE MINI SIDEBAR (DESKTOP)
+       ======================================================== */
+    #sidebar-wrapper {
+      display: contents; /* Seamless passthrough on mobile (< 1024px) */
+    }
+
+    @media (min-width: 1024px) {
+      #sidebar-wrapper {
+        display: block;
+        width: 72px; /* Slim mini column in unpinned mode */
+        height: 100vh;
+        position: relative;
+        flex-shrink: 0;
+        transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 40;
+      }
+
+      /* When pinned, wrapper occupies the full 288px column */
+      #sidebar-wrapper.sidebar-pinned {
+        width: 288px;
+      }
+
+      /* The actual sidebar inside the wrapper */
+      #sidebar-wrapper #app-sidebar {
+        position: absolute !important;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 72px !important;
+        height: 100vh;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+        z-index: 45;
+      }
+
+      /* Expanded on hover (Floating Overlay) when NOT pinned */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:hover {
+        width: 288px !important;
+        z-index: 60 !important;
+        box-shadow: -10px 0 35px rgba(0, 0, 0, 0.55) !important;
+      }
+
+      /* Pinned state: stays 288px */
+      #sidebar-wrapper.sidebar-pinned #app-sidebar {
+        position: relative !important;
+        width: 288px !important;
+        box-shadow: none !important;
+        z-index: 40;
+      }
+
+      /* Transition on label text */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar .sidebar-text-item {
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+      }
+
+      /* Collapsed state styling (unpinned AND not hovered) */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-text-item {
+        opacity: 0 !important;
+        width: 0 !important;
+        max-width: 0 !important;
+        transform: translateX(8px);
+        pointer-events: none !important;
+        display: none !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:hover .sidebar-text-item {
+        opacity: 1 !important;
+        transform: translateX(0);
+        display: inline-block !important;
+      }
+
+      /* Section titles become subtle dividers when collapsed */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-section-title {
+        opacity: 0.3 !important;
+        height: 1px !important;
+        margin: 8px 12px !important;
+        padding: 0 !important;
+        background: rgba(197, 168, 120, 0.3) !important;
+        overflow: hidden !important;
+        color: transparent !important;
+        font-size: 0 !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-brand-header {
+        padding: 0.85rem 0.5rem !important;
+        justify-content: center !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-brand-logo-frame {
+        width: 44px !important;
+        height: 44px !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .nav-tab {
+        justify-content: center !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+        position: relative !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-item-inner {
+        justify-content: center !important;
+        gap: 0 !important;
+      }
+
+      /* Floating count badge in collapsed mode */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-badge {
+        position: absolute !important;
+        top: 4px !important;
+        left: 8px !important;
+        padding: 1px 4px !important;
+        font-size: 9px !important;
+        line-height: 1 !important;
+        min-width: 16px !important;
+        height: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      /* Footer profile card collapsed */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-profile-card {
+        justify-content: center !important;
+        padding: 0.5rem 0.25rem !important;
+      }
+
+      /* Footer quick actions collapsed */
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-quick-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 4px !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-quick-actions a,
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .sidebar-quick-actions button {
+        width: 20px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 13px !important;
+      }
+
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .custom-scrollbar::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+      }
+      #sidebar-wrapper:not(.sidebar-pinned) #app-sidebar:not(:hover) .custom-scrollbar {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+      }
+    }
+
+    .sidebar-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-tab:hover .sidebar-icon {
+      transform: scale(1.15);
+    }
   </style>
   <script>
     function applyTheme(theme) {
@@ -499,6 +670,12 @@
       }
       document.addEventListener('DOMContentLoaded', function() {
         applyTheme(saved);
+        try {
+          if (localStorage.getItem('dajja_sidebar_pinned') === 'true') {
+            const w = document.getElementById('sidebar-wrapper');
+            if (w) w.classList.add('sidebar-pinned');
+          }
+        } catch(e) {}
       });
     })();
   </script>
@@ -509,189 +686,196 @@
   <div id="sidebar-mobile-backdrop" onclick="toggleSidebarMobile()" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
 
   <!-- VERTICAL SAAS SIDEBAR (RTL: Appears on the Right) -->
-  <aside id="app-sidebar" class="fixed inset-y-0 right-0 z-50 w-72 lg:static lg:z-auto shrink-0 bg-[#183B32] border-l border-[#C5A878]/30 flex flex-col h-screen text-white shadow-2xl transition-transform duration-300 transform translate-x-full lg:translate-x-0 select-none">
-    
-    <!-- 1. Top Brand Header: 64x64 Luxury 3D Logo + Status -->
-    <div class="p-4 border-b border-[#C5A878]/25 flex items-center gap-3.5 bg-black/10 shrink-0">
-      <div class="relative group cursor-pointer shrink-0" title="مطعم ضجة - النظام والفرع متصل بالسحابة 🟢">
-        <!-- 3D Luxury Multi-layer Frame (64x64px) with interactive hover -->
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-[3px] bg-gradient-to-br from-[#E6CA92] via-[#C5A878] to-[#6d552e] shadow-xl shadow-black/40 ring-1 ring-white/25 transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 group-hover:shadow-2xl">
-          <div class="w-full h-full rounded-[13px] overflow-hidden bg-white shadow-inner flex items-center justify-center p-0.5">
-            <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-full h-full object-cover rounded-[11px]">
-          </div>
-        </div>
-        <!-- Smart Green Online Dot on Logo -->
-        <div class="absolute -bottom-1 -left-1 flex items-center justify-center" title="الفرع والسيستم أونلاين 🟢">
-          <span class="absolute w-4 h-4 rounded-full bg-emerald-400 animate-ping opacity-75"></span>
-          <span class="relative w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#183B32] shadow-sm flex items-center justify-center">
-            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-          </span>
-        </div>
-      </div>
-
-      <div class="overflow-hidden">
-        <div class="flex items-center gap-1.5">
-          <span class="text-base font-black text-white tracking-wide truncate">مطعم ضجة</span>
-          <span class="text-[9px] bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/40 px-1.5 py-0.5 rounded-md font-mono font-bold shrink-0">مشويات 🔥</span>
-        </div>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-          <p class="text-[11px] text-[#E6E2D9]/90 font-medium truncate">الفرع مفعّل وأونلاين</p>
-        </div>
-      </div>
-
-      <!-- Mobile Close Button -->
-      <button onclick="toggleSidebarMobile()" class="lg:hidden mr-auto p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white" title="إغلاق القائمة">
-        ✕
-      </button>
-    </div>
-
-    <!-- 2. Scrollable Navigation Tabs List -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+  <div id="sidebar-wrapper" class="sidebar-wrapper">
+    <aside id="app-sidebar" class="fixed inset-y-0 right-0 z-50 w-72 lg:static lg:z-auto shrink-0 bg-[#183B32] border-l border-[#C5A878]/30 flex flex-col h-screen text-white shadow-2xl transition-transform duration-300 transform translate-x-full lg:translate-x-0 select-none">
       
-      <!-- HERO CASHIER (POS) BUTTON -->
-      <div>
-        <button onclick="switchTab('pos'); closeSidebarMobileIfOpen();" id="tab-btn-pos" class="nav-tab nav-tab-pos-hero w-full px-4 py-3 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-950/50 border border-emerald-400/40 ring-2 ring-emerald-400/30 glow-emerald flex items-center justify-between transition-all active:scale-95">
-          <div class="flex items-center gap-2.5">
-            <span class="text-base">🛒</span>
-            <span class="tracking-wide text-xs sm:text-[13px]">كاشير المبيعات</span>
-          </div>
-          <span class="px-2 py-0.5 rounded-md bg-black/30 text-emerald-100 text-[10px] font-mono font-bold">POS⚡</span>
-        </button>
-      </div>
-
-      <!-- GROUP 1: OPERATIONS & ORDERS -->
-      <div class="space-y-1">
-        <p class="px-3 text-[10px] font-black uppercase tracking-wider text-[#C5A878]/70 mb-1.5">العمليات والطلبات</p>
-        
-        <button onclick="switchTab('orders'); closeSidebarMobileIfOpen();" id="tab-btn-orders" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">📋</span>
-            <span>الطلبات الحية</span>
-          </div>
-          <span id="count-active-orders" class="nav-tab-badge">0</span>
-        </button>
-
-        <button onclick="switchTab('menu'); closeSidebarMobileIfOpen();" id="tab-btn-menu" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">🍔</span>
-            <span>قائمة الطعام</span>
-          </div>
-        </button>
-
-        <button onclick="switchTab('captains'); closeSidebarMobileIfOpen();" id="tab-btn-captains" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">🛵</span>
-            <span>كباتن الدليفري</span>
-          </div>
-        </button>
-
-        <button onclick="switchTab('customers'); closeSidebarMobileIfOpen();" id="tab-btn-customers" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">👥</span>
-            <span>دليل العملاء</span>
-          </div>
-          <span id="count-registered-customers" class="nav-tab-badge font-mono">0</span>
-        </button>
-      </div>
-
-      <!-- GROUP 2: ANALYTICS & MANAGEMENT -->
-      <div class="space-y-1">
-        <p class="px-3 text-[10px] font-black uppercase tracking-wider text-[#C5A878]/70 mb-1.5">التحليلات والإدارة</p>
-
-        <button onclick="switchTab('reports'); closeSidebarMobileIfOpen();" id="tab-btn-reports" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">📊</span>
-            <span>التقارير والأرباح</span>
-          </div>
-        </button>
-
-        <button onclick="switchTab('qr'); closeSidebarMobileIfOpen();" id="tab-btn-qr" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">📱</span>
-            <span>كود الـ QR والمنيو</span>
-          </div>
-        </button>
-
-        <button onclick="switchTab('stories'); closeSidebarMobileIfOpen();" id="tab-btn-stories" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-pink-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">✨</span>
-            <span>الستوري والعروض</span>
-          </div>
-          <span id="count-stories-badge" class="nav-tab-badge">0</span>
-        </button>
-
-        <a href="/inventory" id="nav-link-inventory" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">📦</span>
-            <span>المخزون والمستودع</span>
-          </div>
-        </a>
-
-        <a href="/recipes" id="nav-link-recipes" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-emerald-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">🧪</span>
-            <span>الوصفات والتكاليف</span>
-          </div>
-        </a>
-
-        <button onclick="switchTab('settings'); closeSidebarMobileIfOpen();" id="tab-btn-settings" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all">
-          <div class="flex items-center gap-2.5">
-            <span class="text-sm">⚙️</span>
-            <span>إعدادات المطعم</span>
-          </div>
-        </button>
-      </div>
-
-    </div>
-
-    <!-- 3. Sidebar Footer: Profile Card & Quick Actions -->
-    <div class="p-3 border-t border-[#C5A878]/25 bg-black/20 shrink-0 space-y-2">
-      <!-- User Profile Card -->
-      <div onclick="switchTab('settings'); closeSidebarMobileIfOpen();" title="تعديل بيانات الحساب والإعدادات" class="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 cursor-pointer text-white transition-all flex items-center justify-between">
-        <div class="flex items-center gap-2.5 overflow-hidden">
-          <div class="w-8 h-8 rounded-full bg-[#C5A878]/30 text-[#F4EFE6] border border-[#C5A878]/50 flex items-center justify-center text-xs font-bold shrink-0">👤</div>
-          <div class="overflow-hidden leading-tight">
-            <div class="flex items-center gap-1.5">
-              <span id="header-user-name" class="text-xs font-bold text-white truncate">مدير ضجة</span>
-              <span id="header-user-role-badge" class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/30 shrink-0">👑</span>
+      <!-- 1. Top Brand Header: 64x64 Luxury 3D Logo + Status -->
+      <div class="sidebar-brand-header p-4 border-b border-[#C5A878]/25 flex items-center gap-3.5 bg-black/10 shrink-0 transition-all">
+        <div class="sidebar-brand-logo-frame relative group cursor-pointer shrink-0" title="مطعم ضجة - النظام والفرع متصل بالسحابة 🟢">
+          <!-- 3D Luxury Multi-layer Frame with interactive hover -->
+          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl p-[2.5px] bg-gradient-to-br from-[#E6CA92] via-[#C5A878] to-[#6d552e] shadow-xl shadow-black/40 ring-1 ring-white/25 transition-all duration-300 group-hover:scale-105 group-hover:rotate-1">
+            <div class="w-full h-full rounded-[13px] overflow-hidden bg-white shadow-inner flex items-center justify-center p-0.5">
+              <img src="/dajja_logo.jpg" alt="لوجو مطعم ضجة" class="w-full h-full object-cover rounded-[11px]">
             </div>
-            <p id="header-user-email" class="text-[10px] text-[#E6E2D9]/70 font-mono truncate">admin@dajja.com</p>
-            <span id="header-plan-badge" class="hidden text-[9px] font-mono font-bold text-[#C5A878]">PREMIUM</span>
+          </div>
+          <!-- Smart Green Online Dot on Logo -->
+          <div class="absolute -bottom-1 -left-1 flex items-center justify-center" title="الفرع والسيستم أونلاين 🟢">
+            <span class="absolute w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping opacity-75"></span>
+            <span class="relative w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#183B32] shadow-sm flex items-center justify-center">
+              <span class="w-1 h-1 rounded-full bg-white"></span>
+            </span>
           </div>
         </div>
-        <span class="text-xs text-white/60">⚙️</span>
+
+        <div class="overflow-hidden sidebar-text-item flex-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm font-black text-white tracking-wide truncate">مطعم ضجة</span>
+            <span class="text-[9px] bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/40 px-1.5 py-0.5 rounded-md font-mono font-bold shrink-0">مشويات 🔥</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+            <p class="text-[11px] text-[#E6E2D9]/90 font-medium truncate">الفرع مفعّل وأونلاين</p>
+          </div>
+        </div>
+
+        <!-- Desktop Pin / Mini Sidebar Toggle Button -->
+        <button id="sidebar-pin-btn" onclick="toggleSidebarPin()" class="hidden lg:flex mr-auto p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[#C5A878] hover:text-white transition-all items-center justify-center shrink-0" title="تثبيت القائمة مفتوحة">
+          <span class="pin-icon text-sm">📌</span>
+        </button>
+
+        <!-- Mobile Close Button -->
+        <button onclick="toggleSidebarMobile()" class="lg:hidden mr-auto p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white" title="إغلاق القائمة">
+          ✕
+        </button>
       </div>
 
-      <!-- Quick Action Buttons Row -->
-      <div class="grid grid-cols-3 gap-1.5 pt-1">
-        <!-- Customer Menu Link -->
-        <a href="order.html" target="_blank" title="فتح صفحة منيو وطلب الزبائن" class="h-8 flex items-center justify-center gap-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/20 border border-white/15 text-[#F4EFE6] hover:text-white transition-all shadow-xs">
-          <span>🌐</span>
-          <span>المنيو</span>
+      <!-- 2. Scrollable Navigation Tabs List -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+        
+        <!-- HERO CASHIER (POS) BUTTON -->
+        <div>
+          <button onclick="switchTab('pos'); closeSidebarMobileIfOpen();" id="tab-btn-pos" class="nav-tab nav-tab-pos-hero w-full px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-950/50 border border-emerald-400/40 ring-2 ring-emerald-400/30 glow-emerald flex items-center justify-between transition-all active:scale-95" title="كاشير المبيعات (POS)">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">🛒</span>
+              <span class="tracking-wide text-xs sm:text-[13px] sidebar-text-item">كاشير المبيعات</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-md bg-black/30 text-emerald-100 text-[10px] font-mono font-bold sidebar-text-item">POS⚡</span>
+          </button>
+        </div>
+
+        <!-- GROUP 1: OPERATIONS & ORDERS -->
+        <div class="space-y-1">
+          <p class="sidebar-section-title px-3 text-[10px] font-black uppercase tracking-wider text-[#C5A878]/70 mb-1.5">العمليات والطلبات</p>
+          
+          <button onclick="switchTab('orders'); closeSidebarMobileIfOpen();" id="tab-btn-orders" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="الطلبات الحية">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">📋</span>
+              <span class="sidebar-text-item">الطلبات الحية</span>
+            </div>
+            <span id="count-active-orders" class="nav-tab-badge sidebar-badge">0</span>
+          </button>
+
+          <button onclick="switchTab('menu'); closeSidebarMobileIfOpen();" id="tab-btn-menu" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="قائمة الطعام">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">🍔</span>
+              <span class="sidebar-text-item">قائمة الطعام</span>
+            </div>
+          </button>
+
+          <button onclick="switchTab('captains'); closeSidebarMobileIfOpen();" id="tab-btn-captains" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="كباتن الدليفري (🛵)">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">🛵</span>
+              <span class="sidebar-text-item">كباتن الدليفري</span>
+            </div>
+          </button>
+
+          <button onclick="switchTab('customers'); closeSidebarMobileIfOpen();" id="tab-btn-customers" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="دليل العملاء">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">👥</span>
+              <span class="sidebar-text-item">دليل العملاء</span>
+            </div>
+            <span id="count-registered-customers" class="nav-tab-badge font-mono sidebar-badge">0</span>
+          </button>
+        </div>
+
+        <!-- GROUP 2: ANALYTICS & MANAGEMENT -->
+        <div class="space-y-1">
+          <p class="sidebar-section-title px-3 text-[10px] font-black uppercase tracking-wider text-[#C5A878]/70 mb-1.5">التحليلات والإدارة</p>
+
+          <button onclick="switchTab('reports'); closeSidebarMobileIfOpen();" id="tab-btn-reports" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="التقارير والأرباح">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">📊</span>
+              <span class="sidebar-text-item">التقارير والأرباح</span>
+            </div>
+          </button>
+
+          <button onclick="switchTab('qr'); closeSidebarMobileIfOpen();" id="tab-btn-qr" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="كود الـ QR والمنيو">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">📱</span>
+              <span class="sidebar-text-item">كود الـ QR والمنيو</span>
+            </div>
+          </button>
+
+          <button onclick="switchTab('stories'); closeSidebarMobileIfOpen();" id="tab-btn-stories" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-pink-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="الستوري والعروض">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">✨</span>
+              <span class="sidebar-text-item">الستوري والعروض</span>
+            </div>
+            <span id="count-stories-badge" class="nav-tab-badge sidebar-badge">0</span>
+          </button>
+
+          <a href="/inventory" id="nav-link-inventory" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="المخزون والمستودع">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">📦</span>
+              <span class="sidebar-text-item">المخزون والمستودع</span>
+            </div>
+          </a>
+
+          <a href="/recipes" id="nav-link-recipes" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-emerald-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="الوصفات والتكاليف">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">🧪</span>
+              <span class="sidebar-text-item">الوصفات والتكاليف</span>
+            </div>
+          </a>
+
+          <button onclick="switchTab('settings'); closeSidebarMobileIfOpen();" id="tab-btn-settings" class="nav-tab w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between transition-all" title="إعدادات المطعم">
+            <div class="flex items-center gap-2.5 sidebar-item-inner">
+              <span class="sidebar-icon">⚙️</span>
+              <span class="sidebar-text-item">إعدادات المطعم</span>
+            </div>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 3. Sidebar Footer: Profile Card & Quick Actions -->
+      <div class="p-3 border-t border-[#C5A878]/25 bg-black/20 shrink-0 space-y-2">
+        <!-- User Profile Card -->
+        <div onclick="switchTab('settings'); closeSidebarMobileIfOpen();" title="تعديل بيانات الحساب والإعدادات" class="sidebar-profile-card p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 cursor-pointer text-white transition-all flex items-center justify-between">
+          <div class="flex items-center gap-2.5 overflow-hidden sidebar-item-inner">
+            <div class="w-8 h-8 rounded-full bg-[#C5A878]/30 text-[#F4EFE6] border border-[#C5A878]/50 flex items-center justify-center text-xs font-bold shrink-0 sidebar-icon">👤</div>
+            <div class="overflow-hidden leading-tight sidebar-text-item">
+              <div class="flex items-center gap-1.5">
+                <span id="header-user-name" class="text-xs font-bold text-white truncate">مدير ضجة</span>
+                <span id="header-user-role-badge" class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-[#C5A878]/25 text-[#F4EFE6] border border-[#C5A878]/30 shrink-0">👑</span>
+              </div>
+              <p id="header-user-email" class="text-[10px] text-[#E6E2D9]/70 font-mono truncate">admin@dajja.com</p>
+              <span id="header-plan-badge" class="hidden text-[9px] font-mono font-bold text-[#C5A878]">PREMIUM</span>
+            </div>
+          </div>
+          <span class="text-xs text-white/60 sidebar-text-item">⚙️</span>
+        </div>
+
+        <!-- Quick Action Buttons Row -->
+        <div class="grid grid-cols-3 gap-1.5 pt-1 sidebar-quick-actions">
+          <!-- Customer Menu Link -->
+          <a href="order.html" target="_blank" title="فتح صفحة منيو وطلب الزبائن" class="h-8 flex items-center justify-center gap-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/20 border border-white/15 text-[#F4EFE6] hover:text-white transition-all shadow-xs">
+            <span class="sidebar-icon text-xs">🌐</span>
+            <span class="sidebar-text-item">المنيو</span>
+          </a>
+
+          <!-- Install PWA App -->
+          <button id="btn-install-dash" onclick="promptInstallPwa()" title="تثبيت النظام كتطبيق سطح مكتب أو جوال" class="h-8 flex items-center justify-center gap-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 hover:text-amber-200 transition-all shadow-xs">
+            <span class="sidebar-icon text-xs">📲</span>
+            <span class="sidebar-text-item">تثبيت</span>
+          </button>
+
+          <!-- Logout -->
+          <button onclick="logoutSession()" title="تسجيل الخروج" class="h-8 flex items-center justify-center gap-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-[11px] font-bold transition-all shadow-xs">
+            <span class="sidebar-icon text-xs">🚪</span>
+            <span class="sidebar-text-item">خروج</span>
+          </button>
+        </div>
+
+        <!-- Super Admin Pill (Hidden by default unless super-admin) -->
+        <a href="/super-admin" id="link-super-admin" class="hidden w-full h-8 items-center justify-center gap-1.5 rounded-lg text-xs font-bold bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 text-purple-200 hover:text-white transition-all shadow-xs">
+          <span class="sidebar-icon text-xs">👑</span>
+          <span class="sidebar-text-item">لوحة السوبر أدمن</span>
         </a>
-
-        <!-- Install PWA App -->
-        <button id="btn-install-dash" onclick="promptInstallPwa()" title="تثبيت النظام كتطبيق سطح مكتب أو جوال" class="h-8 flex items-center justify-center gap-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 hover:text-amber-200 transition-all shadow-xs">
-          <span>📲</span>
-          <span>تثبيت</span>
-        </button>
-
-        <!-- Logout -->
-        <button onclick="logoutSession()" title="تسجيل الخروج" class="h-8 flex items-center justify-center gap-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 text-[11px] font-bold transition-all shadow-xs">
-          <span>🚪</span>
-          <span>خروج</span>
-        </button>
       </div>
 
-      <!-- Super Admin Pill (Hidden by default unless super-admin) -->
-      <a href="/super-admin" id="link-super-admin" class="hidden w-full h-8 items-center justify-center gap-1.5 rounded-lg text-xs font-bold bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 text-purple-200 hover:text-white transition-all shadow-xs">
-        <span>👑</span>
-        <span>لوحة السوبر أدمن</span>
-      </a>
-    </div>
-
-  </aside>
+    </aside>
+  </div>
 
   <!-- CONTENT WRAPPER (Executive Top Bar + Scrollable Main Content) -->
   <div class="flex-1 flex flex-col h-screen overflow-hidden min-w-0 bg-[#F5F3EE]">
@@ -704,6 +888,11 @@
         <!-- Mobile Sidebar Toggle Button -->
         <button onclick="toggleSidebarMobile()" class="lg:hidden w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white text-base transition-all active:scale-95" title="فتح القائمة الرئيسية" aria-label="القائمة">
           ☰
+        </button>
+
+        <!-- Desktop Sidebar Mini/Pin Toggle Button -->
+        <button id="topbar-sidebar-toggle-btn" onclick="toggleSidebarPin()" class="hidden lg:flex w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 items-center justify-center text-white text-sm transition-all active:scale-95 hover:border-[#C5A878]/50" title="تبديل تثبيت/تصغير القائمة الجانبية (شريط مصغر)">
+          <span id="topbar-pin-icon">📌</span>
         </button>
 
         <div>
@@ -3887,6 +4076,63 @@
         sidebar.classList.add('translate-x-full');
         if (backdrop) backdrop.classList.add('hidden');
       }
+    }
+
+    // Sidebar Desktop Pin / Collapsible Mini Controls
+    function toggleSidebarPin() {
+      const wrapper = document.getElementById('sidebar-wrapper');
+      if (!wrapper) return;
+      const isPinned = wrapper.classList.toggle('sidebar-pinned');
+      try {
+        localStorage.setItem('dajja_sidebar_pinned', isPinned ? 'true' : 'false');
+      } catch (e) {}
+      updateSidebarPinUI(isPinned);
+    }
+
+    function updateSidebarPinUI(isPinned) {
+      const pinBtn = document.getElementById('sidebar-pin-btn');
+      const topbarToggleBtn = document.getElementById('topbar-sidebar-toggle-btn');
+      const topbarPinIcon = document.getElementById('topbar-pin-icon');
+
+      if (pinBtn) {
+        if (isPinned) {
+          pinBtn.classList.add('bg-[#C5A878]', 'text-[#183B32]', 'shadow-md');
+          pinBtn.classList.remove('bg-white/10', 'text-[#C5A878]');
+          pinBtn.title = "فك تثبيت القائمة (الوضع المصغر التلقائي)";
+        } else {
+          pinBtn.classList.remove('bg-[#C5A878]', 'text-[#183B32]', 'shadow-md');
+          pinBtn.classList.add('bg-white/10', 'text-[#C5A878]');
+          pinBtn.title = "تثبيت القائمة مفتوحة";
+        }
+      }
+
+      if (topbarToggleBtn) {
+        if (isPinned) {
+          topbarToggleBtn.classList.add('bg-[#C5A878]/30', 'border-[#C5A878]/60');
+          topbarToggleBtn.title = "القائمة مثبتة مفتوحة - اضغط للوضع المصغر التلقائي";
+          if (topbarPinIcon) topbarPinIcon.textContent = "📍";
+        } else {
+          topbarToggleBtn.classList.remove('bg-[#C5A878]/30', 'border-[#C5A878]/60');
+          topbarToggleBtn.title = "القائمة مصغرة تلقائياً - اضغط للتثبيت مفتوحة";
+          if (topbarPinIcon) topbarPinIcon.textContent = "📌";
+        }
+      }
+    }
+
+    function initSidebarPin() {
+      const wrapper = document.getElementById('sidebar-wrapper');
+      if (!wrapper) return;
+      let isPinned = false;
+      try {
+        isPinned = localStorage.getItem('dajja_sidebar_pinned') === 'true';
+      } catch (e) {}
+
+      if (isPinned) {
+        wrapper.classList.add('sidebar-pinned');
+      } else {
+        wrapper.classList.remove('sidebar-pinned');
+      }
+      updateSidebarPinUI(isPinned);
     }
 
     // ==============================================
@@ -8233,6 +8479,7 @@
     loadStoriesData();
     updateAudioToggleUI();
     initPosTicketScrollFollower();
+    initSidebarPin();
 
     // Auto-refresh live orders, shift summary, and expenses every 5 seconds for instant new order detection
     setInterval(() => {
