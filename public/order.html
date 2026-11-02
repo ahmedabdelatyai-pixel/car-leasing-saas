@@ -1066,7 +1066,7 @@
           const regularBadge = item.badge 
             ? `<span class="bg-gradient-to-r from-orange-600 to-amber-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md">${item.badge}</span>` 
             : '';
-          const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80';
+          const img = (item.imageUrl && !item.imageUrl.includes('unsplash.com')) ? item.imageUrl : '/dajja_logo.jpg';
           const inCart = cart.find(i => i.id === item.id);
 
           let actionBtnHtml = '';
@@ -1091,7 +1091,7 @@
           return `
             <div class="bg-[#111827] border ${!isAvailable ? 'border-white/5 opacity-60' : inCart ? 'border-orange-500/40 bg-orange-950/10' : 'border-white/5 hover:border-orange-500/20'} rounded-2xl p-3 flex gap-3 relative transition-all duration-300">
               <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-black/40">
-                <img src="${img}" alt="${item.name}" class="w-full h-full object-cover">
+                <img src="${img}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='/dajja_logo.jpg'">
                 <div class="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
                   ${regularBadge}
                   ${pointsRewardBadge}

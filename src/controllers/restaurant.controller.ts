@@ -75,7 +75,7 @@ export class RestaurantController {
             name: 'سوبر ضجة برجر دبل',
             description: 'قطعتين لحم بلدي صافي مشوي على اللهب، صوص شيدر سايح، بيكون بقري مقرمش، صوص ضجة الخاص وخيار مخلل',
             price: 135.00,
-            imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             badge: 'الأكثر مبيعاً 🔥',
             isAvailable: true
           },
@@ -85,7 +85,7 @@ export class RestaurantController {
             name: 'ضجة تشيز كلاسيك برجر',
             description: 'قطعة لحم مشوية 150 جرام مع دبل جبنة أمريكية، بصل مكرمل وخس فريش',
             price: 95.00,
-            imageUrl: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             badge: 'كلاسيك',
             isAvailable: true
           }
@@ -110,7 +110,7 @@ export class RestaurantController {
             name: 'ساندوتش زنجر ناري سبايسي',
             description: 'صدر فراخ كرسبي مقرمش مع هالابينو وصوص حار وجبنة سايحة في خبز بريوش طازج',
             price: 90.00,
-            imageUrl: 'https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             badge: 'سبايسي 🌶️',
             isAvailable: true
           },
@@ -120,7 +120,7 @@ export class RestaurantController {
             name: 'وجبة توفير ضجة كرانشي (3 قطع)',
             description: '3 قطع دجاج كرسبي مع بطاطس مقلية، كول سلو وخبز طازج وصوص باربيكيو',
             price: 110.00,
-            imageUrl: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             badge: 'توفير 💰',
             isAvailable: true
           }
@@ -145,7 +145,7 @@ export class RestaurantController {
             name: 'بطاطس تشيزي ضجة بالبيكون',
             description: 'بطاطس فارم فريتس مقرمشة مغطاة بصوص جبنة شيدر غني وقطع بيكون وهالابينو',
             price: 55.00,
-            imageUrl: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             isAvailable: true
           },
           {
@@ -154,7 +154,7 @@ export class RestaurantController {
             name: 'أصابع موتزاريلا ستيكس (4 قطع)',
             description: 'أصابع جبنة موتزاريلا مقرمشة وسايحة مع صوص المارينارا اللذيذ',
             price: 45.00,
-            imageUrl: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=600&q=80',
+            imageUrl: '/dajja_logo.jpg',
             isAvailable: true
           }
         ]

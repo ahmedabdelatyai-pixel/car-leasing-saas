@@ -2086,7 +2086,7 @@
           
           <div class="flex items-center gap-3">
             <div class="w-16 h-16 rounded-xl bg-black/50 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
-              <img id="item-img-preview" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80" class="w-full h-full object-cover">
+              <img id="item-img-preview" src="/dajja_logo.jpg" class="w-full h-full object-cover">
             </div>
             
             <div class="flex-1 space-y-1.5">
@@ -3917,7 +3917,7 @@
         const isAvail = it.isAvailable !== false;
         const isOutOfStock = it.isOutOfStock;
         const isLowStock = it.isLowStock;
-        const img = it.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+        const img = (it.imageUrl && !it.imageUrl.includes('unsplash.com')) ? it.imageUrl : '/dajja_logo.jpg';
         
         let stockBadge = '';
         if (isOutOfStock) {
@@ -3931,7 +3931,7 @@
         return `
           <div onclick="${isAvail ? `addPosCartItem('${it.id}')` : ''}" class="${isAvail ? 'cursor-pointer hover:border-orange-500/40 hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'} bg-[#111827] border ${isOutOfStock ? 'border-rose-500/30' : 'border-white/5'} rounded-2xl p-2.5 flex flex-col justify-between transition-all group select-none">
             <div class="relative w-full h-24 rounded-xl overflow-hidden mb-2 bg-black/40 pointer-events-none">
-              <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300">
+              <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" onerror="this.src='/dajja_logo.jpg'">
               ${it.isAddon ? `<span class="absolute top-1 left-1 bg-amber-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">✨ مقبلات بالسلة</span>` : ''}
               ${it.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">${it.badge}</span>` : ''}
               ${stockBadge}
@@ -4945,7 +4945,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             ${(cat.items || []).map(item => {
               const isAvail = item.isAvailable !== false;
-              const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+              const img = (item.imageUrl && !item.imageUrl.includes('unsplash.com')) ? item.imageUrl : '/dajja_logo.jpg';
               const isOutOfStock = item.isOutOfStock;
               const isLowStock = item.isLowStock;
               const portions = item.availablePortions !== null ? item.availablePortions : 'غير محدد';
@@ -4965,7 +4965,7 @@
               return `
                 <div class="bg-black/30 border ${isOutOfStock ? 'border-rose-500/30' : (item.isAddon ? 'border-amber-500/40 bg-amber-950/10' : 'border-white/5')} rounded-2xl p-3 flex gap-3 justify-between relative hover:border-white/10 transition-all">
                   <div class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-black/40">
-                    <img src="${img}" class="w-full h-full object-cover">
+                    <img src="${img}" class="w-full h-full object-cover" onerror="this.src='/dajja_logo.jpg'">
                     ${item.isAddon ? `<span class="absolute top-1 left-1 bg-amber-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded shadow z-10">✨ بالسلة</span>` : ''}
                     ${item.badge ? `<span class="absolute top-1 right-1 bg-orange-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow">${item.badge}</span>` : ''}
                     ${isOutOfStock ? `<span class="absolute inset-0 bg-black/80 flex items-center justify-center text-[9px] font-black text-rose-400 text-center p-1">نفد المخزون ⚠️</span>` : ''}
@@ -5055,7 +5055,7 @@
       document.getElementById('item-badge').value = '';
       document.getElementById('item-points-cost').value = '0';
       document.getElementById('item-img').value = '';
-      document.getElementById('item-img-preview').src = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+      document.getElementById('item-img-preview').src = '/dajja_logo.jpg';
       document.getElementById('item-available').checked = true;
       document.getElementById('item-is-addon').checked = false;
 
@@ -5083,7 +5083,7 @@
       document.getElementById('item-badge').value = foundItem.badge || '';
       document.getElementById('item-points-cost').value = foundItem.pointsCost || 0;
       document.getElementById('item-img').value = foundItem.imageUrl || '';
-      document.getElementById('item-img-preview').src = foundItem.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+      document.getElementById('item-img-preview').src = (foundItem.imageUrl && !foundItem.imageUrl.includes('unsplash.com')) ? foundItem.imageUrl : '/dajja_logo.jpg';
       document.getElementById('item-available').checked = foundItem.isAvailable !== false;
       document.getElementById('item-is-addon').checked = foundItem.isAddon === true;
 
@@ -5178,11 +5178,11 @@
 
       container.innerHTML = filtered.map(item => {
         const isSelected = item.isAddon === true;
-        const img = item.imageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80';
+        const img = (item.imageUrl && !item.imageUrl.includes('unsplash.com')) ? item.imageUrl : '/dajja_logo.jpg';
         return `
           <div class="flex items-center justify-between p-3 rounded-2xl border ${isSelected ? 'bg-amber-950/20 border-amber-500/40' : 'bg-black/30 border-white/5 hover:border-white/10'} transition-all gap-3">
             <div class="flex items-center gap-3 min-w-0">
-              <img src="${img}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10">
+              <img src="${img}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" onerror="this.src='/dajja_logo.jpg'">
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <h5 class="text-xs sm:text-sm font-black text-white truncate">${item.name}</h5>
