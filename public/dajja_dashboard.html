@@ -718,6 +718,12 @@
 
       <!-- Left: Executive Status Pills & Toggles -->
       <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Active Operating Business Day Pill -->
+        <div id="business-day-pill" title="تاريخ يوم العمل المستمر - لا يتغير بعد 12 إلا عند تقفيل اليوم" class="h-[36px] px-3 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 rounded-full border transition-all text-xs font-black backdrop-blur-md bg-amber-500/15 border-amber-400/30 text-amber-300 shadow-sm whitespace-nowrap">
+          <span class="text-sm">📅</span>
+          <span id="business-day-text">يوم العمل: جارِ التحديد...</span>
+        </div>
+
         <!-- Network & Offline Sync Status Pill (36px) -->
         <div id="network-status-pill" class="h-[36px] px-3 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 rounded-full border transition-all text-xs font-bold backdrop-blur-md bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-sm whitespace-nowrap">
           <span id="network-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -2917,6 +2923,58 @@
     let posCart = [];
     let posOrderType = 'TAKEAWAY';
     let posActiveCategory = 'ALL';
+    let currentActiveBusinessDate = '';
+
+    // ==============================================
+    // OPERATING BUSINESS DATE (يوم العمل المستمر)
+    // Rule: Today's date does NOT change after 12 midnight as long as the day hasn't been closed!
+    // ==============================================
+    function updateBusinessDayUI(bDate) {
+      if (bDate) currentActiveBusinessDate = bDate;
+      const el = document.getElementById('business-day-text');
+      if (!el) return;
+      if (!currentActiveBusinessDate) {
+        el.innerHTML = 'يوم العمل: <span class="text-white font-bold">مفتوح</span> 🟢';
+        return;
+      }
+      try {
+        const [y, m, d] = currentActiveBusinessDate.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        const dayName = dt.toLocaleDateString('ar-EG', { weekday: 'long' });
+        const dateStr = dt.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+        el.innerHTML = `يوم العمل: <span class="text-white font-black underline">${dayName} (${dateStr})</span> <span class="text-emerald-400 font-bold">مستمر 🟢</span>`;
+      } catch (e) {
+        el.innerHTML = `يوم العمل: ${currentActiveBusinessDate} 🟢`;
+      }
+    }
+
+    function formatOrderBusinessDateTime(order) {
+      const rawDate = new Date(order.createdAt || Date.now());
+      const timeStr = rawDate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      let dateObj = rawDate;
+      if (order.businessDate) {
+        const [y, m, d] = order.businessDate.split('-').map(Number);
+        dateObj = new Date(y, m - 1, d);
+      } else if (currentActiveBusinessDate && (!order.closureId || order.closureId === null)) {
+        const [y, m, d] = currentActiveBusinessDate.split('-').map(Number);
+        dateObj = new Date(y, m - 1, d);
+      }
+
+      const dayName = dateObj.toLocaleDateString('ar-EG', { weekday: 'long' });
+      const dateStr = dateObj.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+      const fullDateStr = dateObj.toLocaleDateString('ar-EG', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+      return {
+        dayName,
+        dateStr,
+        fullDateStr,
+        timeStr,
+        display: `${dayName} ${dateStr} - ${timeStr}`,
+        shortDisplay: `${dayName} (${dateStr})`,
+        receiptDateStr: `${fullDateStr} - ${timeStr}`
+      };
+    }
 
     // ==============================================
     // 0. OFFLINE-FIRST POS & AUTO-SYNC ENGINE
@@ -4650,52 +4708,11 @@
         filtered = allOrders.filter(o => o.status === currentFilter);
       }
 
-      // Check for unclosed previous day orders in current shift view
+      // In active shift view, all unclosed orders belong to the continuous day
       const banner = document.getElementById('unclosed-shift-warning-banner');
       if (banner) {
-        if (currentShiftView === 'current' && Array.isArray(allOrders) && allOrders.length > 0) {
-          const todayStr = (new Date()).toDateString();
-          const previousDayOrders = allOrders.filter(o => {
-            const od = new Date(o.createdAt);
-            return od.toDateString() !== todayStr;
-          });
-
-          if (previousDayOrders.length > 0) {
-            // Collect unique days
-            const uniqueDays = Array.from(new Set(previousDayOrders.map(o => {
-              const od = new Date(o.createdAt);
-              return od.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' });
-            }))).join(' ، ');
-
-            banner.className = "mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-red-600/25 via-amber-600/20 to-rose-600/25 border-2 border-red-500/50 text-white text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl";
-            banner.innerHTML = `
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center text-xl flex-shrink-0 animate-bounce">
-                  ⚠️
-                </div>
-                <div>
-                  <div class="font-black text-white text-sm flex items-center gap-2">
-                    <span>تنبيه: الوردية الحالية بها طلبات من أيام سابقة لم يتم إغلاقها!</span>
-                    <span class="px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-mono font-bold">${previousDayOrders.length} طلب قديم</span>
-                  </div>
-                  <p class="text-rose-200 text-xs mt-0.5 font-medium">
-                    يوجد طلبات مفتوحة مسجلة بتاريخ: <strong class="text-amber-300 font-bold underline">${uniqueDays}</strong> لأن اليومية السابقة لم تُقفل بعد من الكاشير.
-                  </p>
-                </div>
-              </div>
-              <button onclick="openCloseDayModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95">
-                <span>🔒</span>
-                <span>تقفيل اليومية السابقة الآن</span>
-              </button>
-            `;
-          } else {
-            banner.className = "hidden";
-            banner.innerHTML = "";
-          }
-        } else {
-          banner.className = "hidden";
-          banner.innerHTML = "";
-        }
+        banner.className = "hidden";
+        banner.innerHTML = "";
       }
 
       if (filtered.length === 0) {
@@ -4729,36 +4746,21 @@
         const badge = statusMap[o.status] || { label: o.status, bg: 'bg-slate-500/10 text-slate-400' };
         const itemsSummary = o.items ? o.items.map(it => `${it.quantity}x ${it.name}`).join(' ، ') : '';
 
-        // Date and Day calculation
-        const orderDate = new Date(o.createdAt);
-        const todayStr = (new Date()).toDateString();
-        const isToday = orderDate.toDateString() === todayStr;
-
-        // Day name (السبت، الأحد، ...)
-        const dayName = orderDate.toLocaleDateString('ar-EG', { weekday: 'long' });
-        // Day number + Month (31 أكتوبر أو 31/10)
-        const dateStr = orderDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
-        // Time (04:15 م)
-        const timeStr = orderDate.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        // Operating Business Day and Time calculation
+        const dtInfo = formatOrderBusinessDateTime(o);
 
         return `
-          <div class="bg-[#111827] border ${!isToday ? 'border-2 border-rose-500/60 bg-[#161214] shadow-[0_0_20px_rgba(244,63,94,0.2)]' : (isPending ? 'border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.25)]' : 'border-white/5')} rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
+          <div class="bg-[#111827] border ${isPending ? 'border-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.25)]' : 'border-white/5'} rounded-2xl p-4 space-y-3 relative hover:border-orange-500/20 transition-all">
             <div class="flex justify-between items-start border-b border-white/5 pb-2">
               <div>
                 <div class="flex items-center gap-2">
                   <span class="text-base font-black text-white font-mono">${o.orderNumber}</span>
-                  ${!isToday ? `
-                    <span class="text-[9px] px-2 py-0.5 rounded-md font-black bg-rose-600/30 text-rose-300 border border-rose-500/50 animate-pulse flex items-center gap-1">
-                      <span>⚠️</span>
-                      <span>يومية سابقة لم تُقفل</span>
-                    </span>
-                  ` : ''}
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <span class="text-[11px] font-bold ${!isToday ? 'text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20' : 'text-slate-300'}">
-                    📅 ${dayName} (${dateStr})
+                  <span class="text-[11px] font-bold text-slate-300">
+                    📅 ${dtInfo.dayName} (${dtInfo.dateStr})
                   </span>
-                  <span class="text-[10px] text-slate-400 font-mono">🕒 ${timeStr}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">🕒 ${dtInfo.timeStr}</span>
                 </div>
               </div>
               <div class="flex flex-col items-end gap-1">
@@ -5356,9 +5358,10 @@
         to = '';
         label = 'اليوم الحالي المفتوح (الوردية النشطة)';
       } else if (preset === 'today') {
-        from = formatDate(today);
-        to = formatDate(today);
-        label = `اليوم (${from})`;
+        const bDate = currentActiveBusinessDate || formatDate(today);
+        from = bDate;
+        to = bDate;
+        label = `اليومية النشطة (${from})`;
       } else if (preset === 'yesterday') {
         const y = new Date();
         y.setDate(y.getDate() - 1);
@@ -5575,6 +5578,9 @@
       try {
         const shift = await apiFetch('/api/v1/reports/current-shift');
         currentShiftData = shift;
+        if (shift.businessDate) {
+          updateBusinessDayUI(shift.businessDate);
+        }
         const openFloat = Number(shift.openingDrawerFloat !== undefined ? shift.openingDrawerFloat : (shift.openingDrawer !== undefined ? shift.openingDrawer : 0));
         currentOpeningDrawerFloat = openFloat;
 
@@ -5596,13 +5602,15 @@
         if (openEl) {
           if (shift.openedAt) {
             const od = new Date(shift.openedAt);
-            const isToday = od.toDateString() === (new Date()).toDateString();
-            const dayName = od.toLocaleDateString('ar-EG', { weekday: 'long' });
-            const dateStr = od.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+            let dateObj = od;
+            if (shift.businessDate) {
+              const [y, m, d] = shift.businessDate.split('-').map(Number);
+              dateObj = new Date(y, m - 1, d);
+            }
+            const dayName = dateObj.toLocaleDateString('ar-EG', { weekday: 'long' });
+            const dateStr = dateObj.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
             const timeStr = od.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-            openEl.innerHTML = isToday
-              ? `${dayName} (${dateStr}) - ${timeStr}`
-              : `<span class="text-rose-400 font-black animate-pulse">⚠️ ${dayName} (${dateStr}) ${timeStr} (يومية سابقة لم تُقفل)</span>`;
+            openEl.innerHTML = `${dayName} (${dateStr}) - ${timeStr} <span class="text-emerald-400 font-bold">(مستمر 🟢)</span>`;
           } else {
             openEl.innerText = '--';
           }
@@ -6537,7 +6545,8 @@
       if (!order) return;
       activeReceiptOrder = order;
 
-      document.getElementById('receipt-date').innerText = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
+      const dtInfo = formatOrderBusinessDateTime(order);
+      document.getElementById('receipt-date').innerText = dtInfo.receiptDateStr;
       document.getElementById('receipt-number').innerText = order.orderNumber;
       
       const typeBadge = document.getElementById('receipt-type-badge');
@@ -6645,8 +6654,9 @@
       const includeKitchen = (mode === 'KITCHEN') || (mode === 'BOTH' && (document.getElementById('receipt-include-kitchen')?.checked !== false));
       const includeCustomer = (mode === 'CUSTOMER') || (mode === 'BOTH');
       const separatePage = (mode === 'BOTH') && (document.getElementById('receipt-cut-page')?.checked !== false);
-      const orderDate = new Date(order.createdAt || Date.now()).toLocaleString('ar-EG');
-      const orderTime = new Date(order.createdAt || Date.now()).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+      const dtInfo = formatOrderBusinessDateTime(order);
+      const orderDate = dtInfo.receiptDateStr;
+      const orderTime = dtInfo.timeStr;
       const isDelivery = order.orderType === 'DELIVERY';
 
       // 1. CUSTOMER RECEIPT SECTION (فاتورة العميل)

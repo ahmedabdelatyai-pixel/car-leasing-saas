@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { resolveActiveBusinessDate, formatCairoDate } from '../utils/businessDate';
 
 export class ReportController {
   /**
@@ -95,9 +96,11 @@ export class ReportController {
       });
       const openingDrawer = Number(rest?.openingDrawerFloat || 0);
       const netDrawerCash = Math.round((openingDrawer + totalRevenue - totalExpenses) * 100) / 100;
+      const activeBusinessDate = await resolveActiveBusinessDate(restaurantId);
 
       return res.json({
         hasActiveShift: orders.length > 0 || expenses.length > 0,
+        businessDate: activeBusinessDate,
         orderCount: orders.length,
         totalSales: Math.round(totalRevenue * 100) / 100,
         totalFoodCost: Math.round(totalFoodCost * 100) / 100,
@@ -236,13 +239,15 @@ export class ReportController {
       const openedAt = orders.length > 0 ? orders[0].createdAt : (expenses.length > 0 ? expenses[0].createdAt : new Date());
       const closedAt = new Date();
       const closedBy = userPayload?.fullName || userPayload?.email || 'الإدارة';
+      const activeBusinessDate = await resolveActiveBusinessDate(restaurantId);
 
       // Create Daily Closure record & link orders and expenses in a transaction
       const closure = await prisma.$transaction(async (tx) => {
         const createdClosure = await tx.dailyClosure.create({
           data: {
             restaurantId,
-            closureDate: new Date(),
+            closureDate: openedAt,
+            businessDate: activeBusinessDate,
             openedAt,
             closedAt,
             totalSales: totalRevenue,
@@ -270,6 +275,7 @@ export class ReportController {
             where: { id: { in: orderIds } },
             data: {
               closureId: createdClosure.id,
+              businessDate: activeBusinessDate,
               status: 'DELIVERED'
             }
           });
@@ -379,15 +385,21 @@ export class ReportController {
         // Current active shift: only unclosed orders
         where.closureId = null;
       } else {
-        where.createdAt = {};
-        if (from) {
-          const fromDate = new Date(`${from}T00:00:00.000Z`);
-          where.createdAt.gte = fromDate;
-        }
-        if (to) {
-          const toDate = new Date(`${to}T23:59:59.999Z`);
-          where.createdAt.lte = toDate;
-        }
+        const fromStr = from ? String(from) : null;
+        const toStr = to ? String(to) : null;
+
+        const dateConditions: any[] = [];
+        const bDateCondition: any = {};
+        if (fromStr) bDateCondition.gte = fromStr;
+        if (toStr) bDateCondition.lte = toStr;
+        dateConditions.push({ businessDate: bDateCondition });
+
+        const createdAtCondition: any = {};
+        if (fromStr) createdAtCondition.gte = new Date(`${fromStr}T00:00:00.000Z`);
+        if (toStr) createdAtCondition.lte = new Date(`${toStr}T23:59:59.999Z`);
+        dateConditions.push({ createdAt: createdAtCondition });
+
+        where.OR = dateConditions;
       }
 
       const orders = await prisma.order.findMany({
@@ -443,8 +455,8 @@ export class ReportController {
           takeawayRevenue += orderTotal;
         }
 
-        // Daily revenue grouping (YYYY-MM-DD)
-        const dateKey = order.createdAt.toISOString().split('T')[0];
+        // Daily revenue grouping by businessDate (or fallback to Cairo date)
+        const dateKey = order.businessDate || formatCairoDate(order.createdAt);
         const dayStat = dailySalesMap.get(dateKey) || { date: dateKey, amount: 0, count: 0 };
         dayStat.amount += orderTotal;
         dayStat.count += 1;
@@ -526,6 +538,7 @@ export class ReportController {
           orderType: o.orderType,
           totalAmount: Number(o.totalAmount),
           status: o.status,
+          businessDate: o.businessDate,
           createdAt: o.createdAt
         }))
       });

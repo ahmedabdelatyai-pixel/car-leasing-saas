@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { OrderStatus, OrderType } from '@prisma/client';
+import { resolveActiveBusinessDate } from '../utils/businessDate';
 
 export class OrderController {
   /**
@@ -153,6 +154,7 @@ export class OrderController {
       const tableNum = req.body.tableNumber ? String(req.body.tableNumber).trim() : null;
       const offlineDate = req.body.offlineCreatedAt ? new Date(req.body.offlineCreatedAt) : undefined;
       const validOfflineDate = (offlineDate && !isNaN(offlineDate.getTime())) ? offlineDate : undefined;
+      const activeBusinessDate = await resolveActiveBusinessDate(restaurant.id);
 
       const newOrder = await prisma.order.create({
         data: {
@@ -172,6 +174,7 @@ export class OrderController {
           pointsRedeemed,
           status: initialStatus,
           paymentStatus: paymentStatus === 'PAID' ? 'PAID' : 'UNPAID',
+          businessDate: activeBusinessDate,
           createdAt: validOfflineDate,
           items: {
             create: orderItemsData
