@@ -20,9 +20,21 @@ const server = app.listen(PORT, async () => {
 });
 
 // Handle server termination events gracefully
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server...');
+const shutdown = (signal: string) => {
+  console.log(`${signal} signal received: closing HTTP server...`);
   server.close(() => {
     console.log('HTTP server closed.');
+    process.exit(0);
   });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception thrown:', err);
 });

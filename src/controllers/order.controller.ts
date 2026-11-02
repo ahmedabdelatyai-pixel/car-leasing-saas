@@ -64,8 +64,9 @@ export class OrderController {
         const dbItem = dbItemsMap.get(item.menuItemId);
         if (!dbItem) continue;
 
-        const qty = Number(item.quantity) || 1;
-        const unitPrice = Number(dbItem.price);
+        const rawQty = Math.floor(Number(item.quantity));
+        const qty = (isNaN(rawQty) || rawQty < 1) ? 1 : rawQty;
+        const unitPrice = Math.max(0, Number(dbItem.price) || 0);
         const lineTotal = unitPrice * qty;
         subtotal += lineTotal;
 
@@ -88,10 +89,10 @@ export class OrderController {
       const finalOrderType = isDineIn ? OrderType.DINE_IN : (isDelivery ? OrderType.DELIVERY : OrderType.TAKEAWAY);
 
       const deliveryFee = isDelivery 
-        ? (customDeliveryFee !== undefined ? Number(customDeliveryFee) : Number(restaurant.deliveryFee))
+        ? (customDeliveryFee !== undefined ? Math.max(0, Number(customDeliveryFee) || 0) : Math.max(0, Number(restaurant.deliveryFee) || 0))
         : 0;
       
-      const discountAmount = Number(discount) || 0;
+      const discountAmount = Math.max(0, Number(discount) || 0);
       const totalAmount = Math.max(0, subtotal + deliveryFee - discountAmount);
       const orderNumber = OrderController.generateOrderNumber();
 
@@ -407,6 +408,46 @@ export class OrderController {
       const { id } = req.params;
       const { status, captainId, paymentStatus } = req.body;
 
+      const existingOrder = await prisma.order.findUnique({
+        where: { id },
+        include: { items: true }
+      });
+
+      if (!existingOrder) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // If status is transitioning to CANCELLED from an active status, restore inventory ingredients
+      if (status === 'CANCELLED' && existingOrder.status !== 'CANCELLED') {
+        try {
+          for (const itm of existingOrder.items) {
+            if (!itm.menuItemId) continue;
+
+            const recipe = await prisma.recipe.findUnique({
+              where: { productId: itm.menuItemId },
+              include: { ingredients: true }
+            });
+
+            if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
+              const orderQty = Math.max(1, Number(itm.quantity) || 1);
+              for (const ing of recipe.ingredients) {
+                const toRestore = Number(ing.quantityUsed) * orderQty;
+                if (toRestore > 0 && ing.inventoryItemId) {
+                  await prisma.inventoryItem.update({
+                    where: { id: ing.inventoryItemId },
+                    data: {
+                      currentStock: { increment: toRestore }
+                    }
+                  });
+                }
+              }
+            }
+          }
+        } catch (invErr) {
+          console.warn('Inventory rollback warning upon order cancellation:', invErr);
+        }
+      }
+
       const updated = await prisma.order.update({
         where: { id },
         data: {
@@ -445,35 +486,37 @@ export class OrderController {
         return res.status(404).json({ error: 'Order not found' });
       }
 
-      // 1. Restore inventory ingredients that were deducted when the order was created
-      try {
-        for (const itm of order.items) {
-          if (!itm.menuItemId) continue;
+      // 1. Restore inventory ingredients if not already cancelled
+      if (order.status !== 'CANCELLED') {
+        try {
+          for (const itm of order.items) {
+            if (!itm.menuItemId) continue;
 
-          const recipe = await prisma.recipe.findUnique({
-            where: { productId: itm.menuItemId },
-            include: {
-              ingredients: true
-            }
-          });
+            const recipe = await prisma.recipe.findUnique({
+              where: { productId: itm.menuItemId },
+              include: {
+                ingredients: true
+              }
+            });
 
-          if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
-            const orderQty = Number(itm.quantity) || 1;
-            for (const ing of recipe.ingredients) {
-              const toRestore = Number(ing.quantityUsed) * orderQty;
-              if (toRestore > 0 && ing.inventoryItemId) {
-                await prisma.inventoryItem.update({
-                  where: { id: ing.inventoryItemId },
-                  data: {
-                    currentStock: { increment: toRestore }
-                  }
-                });
+            if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
+              const orderQty = Math.max(1, Number(itm.quantity) || 1);
+              for (const ing of recipe.ingredients) {
+                const toRestore = Number(ing.quantityUsed) * orderQty;
+                if (toRestore > 0 && ing.inventoryItemId) {
+                  await prisma.inventoryItem.update({
+                    where: { id: ing.inventoryItemId },
+                    data: {
+                      currentStock: { increment: toRestore }
+                    }
+                  });
+                }
               }
             }
           }
+        } catch (invErr) {
+          console.warn('Inventory rollback warning upon order deletion:', invErr);
         }
-      } catch (invErr) {
-        console.warn('Inventory rollback warning upon order deletion:', invErr);
       }
 
       // 2. Rollback customer spend and points if customer exists
@@ -496,13 +539,9 @@ export class OrderController {
               data: {
                 pointsBalance: Math.max(0, customer.pointsBalance - netPoints),
                 lifetimePoints: Math.max(0, customer.lifetimePoints - (order.pointsEarned || 0)),
-                totalSpent: { decrement: Number(order.totalAmount) },
-                totalOrders: { decrement: 1 }
+                totalSpent: Math.max(0, Number(customer.totalSpent) - Number(order.totalAmount)),
+                totalOrders: Math.max(0, customer.totalOrders - 1)
               }
-            });
-
-            await prisma.pointTransaction.deleteMany({
-              where: { orderId: order.id }
             });
           }
         }
@@ -510,7 +549,16 @@ export class OrderController {
         console.warn('Customer points rollback warning upon order deletion:', custErr);
       }
 
-      // 3. Delete the order (cascades to order_items)
+      // 3. Always clean up point transactions associated with this order
+      try {
+        await prisma.pointTransaction.deleteMany({
+          where: { orderId: order.id }
+        });
+      } catch (ptErr) {
+        console.warn('Point transaction delete warning upon order deletion:', ptErr);
+      }
+
+      // 4. Delete the order (cascades to order_items)
       await prisma.order.delete({ where: { id } });
 
       return res.json({ message: 'تم حذف الطلب نهائياً واسترجاع المكونات للمخزون بنجاح' });

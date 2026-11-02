@@ -238,6 +238,7 @@ export class AuthController {
           email: true,
           fullName: true,
           role: true,
+          permissions: true,
           restaurantId: true
         }
       });
@@ -249,6 +250,7 @@ export class AuthController {
           email: updatedUser.email,
           fullName: updatedUser.fullName,
           role: updatedUser.role,
+          permissions: updatedUser.permissions,
           restaurantId: updatedUser.restaurantId
         },
         JWT_SECRET,

@@ -411,14 +411,20 @@ export class CustomerController {
    */
   static async getCustomerHistory(req: Request, res: Response) {
     try {
-      const phone = (req.params.phone || '').trim().replace(/[\s-]/g, '');
+      const rawPhone = (req.params.phone || '').trim();
+      const cleanPhone = rawPhone.replace(/[\s-]/g, '');
 
-      if (!phone) {
+      if (!cleanPhone) {
         return res.status(400).json({ error: 'Missing phone number.' });
       }
 
+      const stripped = cleanPhone.replace(/^0+/, '');
+      const phoneVariants = Array.from(new Set([rawPhone, cleanPhone, stripped, `0${stripped}`])).filter(Boolean);
+
       const orders = await prisma.order.findMany({
-        where: { customerPhone: phone },
+        where: {
+          customerPhone: { in: phoneVariants }
+        },
         orderBy: { createdAt: 'desc' },
         include: {
           items: true,
@@ -429,7 +435,7 @@ export class CustomerController {
       });
 
       return res.json({
-        phone,
+        phone: cleanPhone,
         totalOrders: orders.length,
         orders
       });

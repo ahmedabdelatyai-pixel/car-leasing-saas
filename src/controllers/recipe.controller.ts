@@ -45,7 +45,8 @@ export class RecipeController {
         let directCost = 0;
 
         const ingredientsList = recipe.ingredients.map(ing => {
-          const unitPrice = Number(ing.inventoryItem.pricePerUnit) || 0;
+          const inv = ing.inventoryItem;
+          const unitPrice = inv ? (Number(inv.pricePerUnit) || 0) : 0;
           const qty = Number(ing.quantityUsed) || 0;
           const lineCost = qty * unitPrice;
           directCost += lineCost;
@@ -53,8 +54,8 @@ export class RecipeController {
           return {
             id: ing.id,
             inventoryItemId: ing.inventoryItemId,
-            name: ing.inventoryItem.name,
-            unit: ing.inventoryItem.unit,
+            name: inv?.name || 'مكون غير معروف',
+            unit: inv?.unit || 'وحدة',
             quantityUsed: qty,
             pricePerUnit: Number(unitPrice.toFixed(4)),
             cost: Number(lineCost.toFixed(2))
@@ -132,7 +133,8 @@ export class RecipeController {
 
       let directCost = 0;
       const ingredientsList = recipe.ingredients.map(ing => {
-        const unitPrice = Number(ing.inventoryItem.pricePerUnit) || 0;
+        const inv = ing.inventoryItem;
+        const unitPrice = inv ? (Number(inv.pricePerUnit) || 0) : 0;
         const qty = Number(ing.quantityUsed) || 0;
         const lineCost = qty * unitPrice;
         directCost += lineCost;
@@ -140,8 +142,8 @@ export class RecipeController {
         return {
           id: ing.id,
           inventoryItemId: ing.inventoryItemId,
-          name: ing.inventoryItem.name,
-          unit: ing.inventoryItem.unit,
+          name: inv?.name || 'مكون غير معروف',
+          unit: inv?.unit || 'وحدة',
           quantityUsed: qty,
           pricePerUnit: Number(unitPrice.toFixed(4)),
           cost: Number(lineCost.toFixed(2))
