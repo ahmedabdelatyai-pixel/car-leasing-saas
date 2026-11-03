@@ -1989,6 +1989,61 @@
               <input type="url" id="set-google-maps" oninput="updateGmapsTestLink(this.value)" placeholder="https://maps.google.com/?q=31.2156,29.9553" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-orange-500/30 text-white focus:outline-none font-mono">
               <p class="text-[10px] text-slate-500">افتح تطبيق خرائط جوجل على موبايلك ➔ اختر مكان مطعمك ➔ اضغط "مشاركة" (Share) ➔ انسخ الرابط والصقه هنا.</p>
             </div>
+
+            <!-- SECTION: روابط صفحات السوشيال ميديا والتواصل -->
+            <div class="space-y-3 pt-3 border-t border-white/5">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-black text-slate-300 flex items-center gap-1.5">
+                  <span>📱</span> روابط صفحات السوشيال ميديا للمطعم (Social Media)
+                </h4>
+                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">تظهر للعملاء تلقائياً ✨</span>
+              </div>
+              <p class="text-[10px] text-slate-400">ستظهر هذه الروابط مع شعار كل منصة في صفحة العميل، أي منصة تترك رابطها فارغاً لن تظهر للعملاء.</p>
+
+              <div class="space-y-3">
+                <!-- Facebook -->
+                <div class="space-y-1 bg-white/[0.02] p-2.5 rounded-2xl border border-white/5">
+                  <div class="flex justify-between items-center">
+                    <label class="text-[11px] text-blue-400 font-bold flex items-center gap-1.5">
+                      <svg class="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      <span>رابط صفحة الفيسبوك (Facebook Page)</span>
+                    </label>
+                    <a id="btn-test-fb-link" href="#" target="_blank" class="hidden text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                      <span>فتح وتجربة ↗</span>
+                    </a>
+                  </div>
+                  <input type="url" id="set-facebook-url" oninput="updateSocialTestLink('fb', this.value)" placeholder="https://www.facebook.com/dajja.restaurant" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-blue-500/30 text-white focus:outline-none font-mono">
+                </div>
+
+                <!-- Instagram -->
+                <div class="space-y-1 bg-white/[0.02] p-2.5 rounded-2xl border border-white/5">
+                  <div class="flex justify-between items-center">
+                    <label class="text-[11px] text-pink-400 font-bold flex items-center gap-1.5">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24"><radialGradient id="dajja-ig-grad" cx="0.2" cy="1" r="1"><stop offset="0%" stop-color="#FFD521"/><stop offset="50%" stop-color="#F50000"/><stop offset="100%" stop-color="#B900B4"/></radialGradient><rect width="24" height="24" rx="6" fill="url(#dajja-ig-grad)"/><path fill="#fff" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                      <span>رابط حساب انستجرام (Instagram Profile)</span>
+                    </label>
+                    <a id="btn-test-ig-link" href="#" target="_blank" class="hidden text-[10px] text-pink-400 hover:text-pink-300 font-bold flex items-center gap-1">
+                      <span>فتح وتجربة ↗</span>
+                    </a>
+                  </div>
+                  <input type="url" id="set-instagram-url" oninput="updateSocialTestLink('ig', this.value)" placeholder="https://www.instagram.com/dajja_restaurant" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-pink-500/30 text-white focus:outline-none font-mono">
+                </div>
+
+                <!-- TikTok -->
+                <div class="space-y-1 bg-white/[0.02] p-2.5 rounded-2xl border border-white/5">
+                  <div class="flex justify-between items-center">
+                    <label class="text-[11px] text-cyan-400 font-bold flex items-center gap-1.5">
+                      <svg class="w-4 h-4 fill-[#00F2FE]" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 2.89 3.5 2.76 1.54-.05 2.85-1.19 3.11-2.71.09-.59.1-1.19.1-1.79V.02z"/></svg>
+                      <span>رابط حساب تيك توك (TikTok Profile)</span>
+                    </label>
+                    <a id="btn-test-tt-link" href="#" target="_blank" class="hidden text-[10px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1">
+                      <span>فتح وتجربة ↗</span>
+                    </a>
+                  </div>
+                  <input type="url" id="set-tiktok-url" oninput="updateSocialTestLink('tt', this.value)" placeholder="https://www.tiktok.com/@dajja_restaurant" class="w-full h-10 px-3 rounded-xl text-xs bg-white/5 border border-cyan-500/30 text-white focus:outline-none font-mono">
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- SECTION C: شروط التوصيل والوقت -->
@@ -6614,6 +6669,24 @@
           renderZonesPreview(zonesEl.value);
         }
 
+        // Social Media Links
+        const social = res.socialLinks || {};
+        const fbEl = document.getElementById('set-facebook-url');
+        const igEl = document.getElementById('set-instagram-url');
+        const ttEl = document.getElementById('set-tiktok-url');
+        if (fbEl) {
+          fbEl.value = social.facebook || res.facebookUrl || '';
+          updateSocialTestLink('fb', fbEl.value);
+        }
+        if (igEl) {
+          igEl.value = social.instagram || res.instagramUrl || '';
+          updateSocialTestLink('ig', igEl.value);
+        }
+        if (ttEl) {
+          ttEl.value = social.tiktok || res.tiktokUrl || '';
+          updateSocialTestLink('tt', ttEl.value);
+        }
+
         document.getElementById('set-delivery-fee').value = res.deliveryFee !== undefined ? Number(res.deliveryFee) : 15;
         document.getElementById('set-min-order').value = res.minOrderAmount !== undefined ? Number(res.minOrderAmount) : 0;
         document.getElementById('set-estimated-time').value = res.estimatedTime || '30 - 45 دقيقة';
@@ -6629,6 +6702,18 @@
 
       } catch (err) {
         console.error('Settings error:', err);
+      }
+    }
+
+    function updateSocialTestLink(type, val) {
+      const btn = document.getElementById(`btn-test-${type}-link`);
+      if (!btn) return;
+      const cleanVal = (val || '').trim();
+      if (cleanVal && (cleanVal.startsWith('http://') || cleanVal.startsWith('https://'))) {
+        btn.href = cleanVal;
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
       }
     }
 
@@ -6698,6 +6783,9 @@
         whatsappNumber: document.getElementById('set-whatsapp').value.trim(),
         address: document.getElementById('set-address').value.trim(),
         googleMapsUrl: document.getElementById('set-google-maps')?.value?.trim() || undefined,
+        facebookUrl: document.getElementById('set-facebook-url')?.value?.trim() || '',
+        instagramUrl: document.getElementById('set-instagram-url')?.value?.trim() || '',
+        tiktokUrl: document.getElementById('set-tiktok-url')?.value?.trim() || '',
         deliveryZones: document.getElementById('set-delivery-zones')?.value?.trim() || undefined,
         deliveryFee: Number(document.getElementById('set-delivery-fee').value),
         minOrderAmount: Number(document.getElementById('set-min-order').value),

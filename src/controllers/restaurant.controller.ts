@@ -257,8 +257,28 @@ export class RestaurantController {
         })
       }));
 
+      let socialLinks = { facebook: '', instagram: '', tiktok: '' };
+      if (restaurant.notes) {
+        try {
+          const parsed = JSON.parse(restaurant.notes);
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.socialLinks) {
+              socialLinks = { ...socialLinks, ...parsed.socialLinks };
+            } else {
+              socialLinks = { ...socialLinks, ...parsed };
+            }
+          }
+        } catch (e) {
+          // not JSON, keep defaults
+        }
+      }
+
       return res.json({
         ...restaurant,
+        socialLinks,
+        facebookUrl: socialLinks.facebook || '',
+        instagramUrl: socialLinks.instagram || '',
+        tiktokUrl: socialLinks.tiktok || '',
         totalMonthlyOverheads: totalOverheads,
         indirectCostPerOrder,
         categories: categoriesFormatted
@@ -292,8 +312,49 @@ export class RestaurantController {
         logoUrl,
         loyaltyEnabled,
         loyaltySpendRatio,
-        loyaltyMinRedeem
+        loyaltyMinRedeem,
+        facebookUrl,
+        instagramUrl,
+        tiktokUrl,
+        socialLinks
       } = req.body;
+
+      // Handle social media links stored in notes
+      let notesToSave: string | undefined = undefined;
+      if (
+        facebookUrl !== undefined ||
+        instagramUrl !== undefined ||
+        tiktokUrl !== undefined ||
+        socialLinks !== undefined
+      ) {
+        let currentNotesObj: any = {};
+        if (restaurant.notes) {
+          try {
+            currentNotesObj = JSON.parse(restaurant.notes);
+            if (!currentNotesObj || typeof currentNotesObj !== 'object') {
+              currentNotesObj = {};
+            }
+          } catch (e) {
+            currentNotesObj = { textNote: restaurant.notes };
+          }
+        }
+
+        const existingSocial = currentNotesObj.socialLinks || {};
+        const mergedSocial = {
+          facebook: facebookUrl !== undefined ? (facebookUrl ? String(facebookUrl).trim() : '') : (existingSocial.facebook || ''),
+          instagram: instagramUrl !== undefined ? (instagramUrl ? String(instagramUrl).trim() : '') : (existingSocial.instagram || ''),
+          tiktok: tiktokUrl !== undefined ? (tiktokUrl ? String(tiktokUrl).trim() : '') : (existingSocial.tiktok || '')
+        };
+
+        if (socialLinks && typeof socialLinks === 'object') {
+          if (socialLinks.facebook !== undefined) mergedSocial.facebook = String(socialLinks.facebook || '').trim();
+          if (socialLinks.instagram !== undefined) mergedSocial.instagram = String(socialLinks.instagram || '').trim();
+          if (socialLinks.tiktok !== undefined) mergedSocial.tiktok = String(socialLinks.tiktok || '').trim();
+        }
+
+        currentNotesObj.socialLinks = mergedSocial;
+        notesToSave = JSON.stringify(currentNotesObj);
+      }
 
       const updated = await prisma.restaurant.update({
         where: { id: restaurant.id },
@@ -315,11 +376,29 @@ export class RestaurantController {
           logoUrl: logoUrl !== undefined ? logoUrl : undefined,
           loyaltyEnabled: loyaltyEnabled !== undefined ? Boolean(loyaltyEnabled) : undefined,
           loyaltySpendRatio: loyaltySpendRatio !== undefined ? Number(loyaltySpendRatio) : undefined,
-          loyaltyMinRedeem: loyaltyMinRedeem !== undefined ? Number(loyaltyMinRedeem) : undefined
+          loyaltyMinRedeem: loyaltyMinRedeem !== undefined ? Number(loyaltyMinRedeem) : undefined,
+          notes: notesToSave !== undefined ? notesToSave : undefined
         }
       });
 
-      return res.json({ message: 'Settings updated successfully', restaurant: updated });
+      let updatedSocial = { facebook: '', instagram: '', tiktok: '' };
+      if (updated.notes) {
+        try {
+          const parsed = JSON.parse(updated.notes);
+          if (parsed?.socialLinks) updatedSocial = { ...updatedSocial, ...parsed.socialLinks };
+        } catch (e) {}
+      }
+
+      return res.json({
+        message: 'Settings updated successfully',
+        restaurant: {
+          ...updated,
+          socialLinks: updatedSocial,
+          facebookUrl: updatedSocial.facebook,
+          instagramUrl: updatedSocial.instagram,
+          tiktokUrl: updatedSocial.tiktok
+        }
+      });
     } catch (err: any) {
       return res.status(500).json({ error: 'Failed to update settings', message: err.message });
     }
